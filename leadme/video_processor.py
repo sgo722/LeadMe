@@ -10,7 +10,7 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
 # MongoDB 연결 설정
-client = MongoClient('mongodb://i11c109.p.ssafy.io:27017/')
+client = MongoClient('mongodb://localhost:27017/')
 db = client['local']  # 'local' 데이터베이스 이름 설정
 collection = db['landmarks']  # 'landmarks' 컬렉션 이름 설정
 
@@ -21,12 +21,22 @@ def download_video(url, output_path='downloaded_video.mp4'):
         os.remove(output_path)
 
     ydl_opts = {
-        'format': 'bestvideo+bestaudio/best',
-        'outtmpl': output_path,
-        'quiet': True
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',  # mp4 확장자 지정
+        'outtmpl': output_path,  # 출력 파일명 설정
+        'quiet': True,
+        'external_downloader': 'aria2c',  # 빠른 다운로드를 위한 외부 다운로더 사용
+        'external_downloader_args': ['-x', '16', '-k', '1M']  # 병렬 연결 수와 단위 설정
     }
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
+
+    # 다운로드 후 파일 확장자 확인 및 변경
+    base, ext = os.path.splitext(output_path)
+    if ext == '.webm':
+        new_output_path = base + '.mp4'
+        os.rename(output_path, new_output_path)
+        output_path = new_output_path
+
     return output_path
 
 
@@ -55,6 +65,8 @@ def process_video(youtubeId, video_path):
         ret, frame = cap.read()
         if not ret:
             break
+
+
 
         # BGR 이미지를 RGB 이미지로 변환
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

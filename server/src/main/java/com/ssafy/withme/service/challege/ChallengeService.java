@@ -35,6 +35,11 @@ public class ChallengeService {
      * @param request
      */
     public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request){
+        String youtubeId = request.getYoutubeId();
+        Challenge challengeByYoutubeId = challengeRepository.findByYoutubeId(youtubeId);
+        if(challengeByYoutubeId != null){
+            return ChallengeCreateResponse.toResponse(challengeByYoutubeId);
+        }
         Challenge challenge = request.toEntity();
         System.out.println(challenge);
         Challenge savedChallenge = challengeRepository.save(challenge);

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import shutil
 import os
 import uuid
+import config
 from video_processor import download_video, process_video, process_video_user
 
 app = FastAPI()
@@ -12,9 +13,17 @@ class Video(BaseModel):
     youtubeId : str
 
 UPLOAD_DIRECTORY = "."
-TEMP_DIRECTORY = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\temporary"  # 임시 저장 디렉토리 경로
-PERMANENT_DIRECTORY_USER = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\user"  # 영구 저장 디렉토리 경로
-PERMANENT_DIRECTORY_CHALLENGE = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\challenge"  # 영구 저장 디렉토리 경로
+# TEMP_DIRECTORY = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\temporary"  # 임시 저장 디렉토리 경로
+# PERMANENT_DIRECTORY_USER = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\user"  # 영구 저장 디렉토리 경로
+# PERMANENT_DIRECTORY_CHALLENGE = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\challenge"  # 영구 저장 디렉토리 경로
+
+TEMP_DIRECTORY = "/temporary"
+PERMANENT_DIRECTORY_USER = "/user"
+PERMANENT_DIRECTORY_CHALLENGE = "/challenge"
+
+BASE_PATH = config.FILE_STORAGE_PATH
+
+
 
 @app.get("/")
 async def read_root():
@@ -42,3 +51,4 @@ async def saveVideDataByUserFile(videoFile: UploadFile = File(...)):
     keypoints = process_video_user(temp_video_path)
 
     return {"keypoints": keypoints, "uuid": unique_id}
+
