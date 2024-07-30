@@ -18,4 +18,5 @@ public class CommentLikeController {
     public Integer createCommentLike(@RequestBody CommentLikeCreateRequest request){
         return commentLikeService.create(request);
     }
+
 }

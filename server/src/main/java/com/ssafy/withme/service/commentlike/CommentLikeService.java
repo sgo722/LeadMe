@@ -3,7 +3,6 @@ package com.ssafy.withme.service.commentlike;
 import com.ssafy.withme.controller.commentlike.request.CommentLikeCreateRequest;
 import com.ssafy.withme.domain.comment.Comment;
 import com.ssafy.withme.domain.commentLike.CommentLike;
-import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.repository.comment.CommentRepository;
 import com.ssafy.withme.repository.commentlike.CommentLikeRepository;
 import com.ssafy.withme.repository.user.UserRepository;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 public class CommentLikeService {
 
     private final CommentLikeRepository commentLikeRepository;
-
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
@@ -23,6 +21,10 @@ public class CommentLikeService {
     public Integer create(CommentLikeCreateRequest request) {
         Long userId = request.getUserId();
         Long commentId = request.getCommentId();
+        commentLikeRepository.findByUserIdAndCommentId(userId, commentId).ifPresent(like -> {
+            throw new IllegalArgumentException("User has already liked this comment.");
+                });
+
         Comment comment = commentRepository.findById(commentId).get();
         comment.clickLike();
 
