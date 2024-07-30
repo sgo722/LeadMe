@@ -6,8 +6,8 @@ import com.ssafy.withme.domain.landmark.Landmark;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
+import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,11 +22,7 @@ import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
 @Service
 public class ChallengeService {
 
-    @Value("${python-server.url}")
-    String FAST_API_URL;
-
-    //static final String FAST_API_URL = "http://localhost:8000/videoUrl";
-
+    static final String FAST_API_URL = "http://localhost:8000/videoUrl";
     private final ChallengeRepository challengeRepository;
 
     private final LandmarkRepository landmarkRepository;
@@ -38,9 +34,9 @@ public class ChallengeService {
      * 클라이언트가 youtubeURL로 요청하면 영상을 저장하고, 몽고디비에 스켈레톤 데이터를 저장한다.
      * @param request
      */
-    public void createChallenge(ChallengeCreateRequest request){
+    public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request){
         Challenge challenge = request.toEntity();
-        challengeRepository.save(challenge);
+        Challenge savedChallenge = challengeRepository.save(challenge);
 
         // 헤더 설정
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -55,6 +51,7 @@ public class ChallengeService {
 
         HttpEntity<HashMap<String, String>> CreateLandMarkDataRequest = new HttpEntity<>(requestBody, httpHeaders);
         restTemplate.postForEntity(FAST_API_URL, CreateLandMarkDataRequest, String.class);
+        return ChallengeCreateResponse.toResponse(savedChallenge);
     }
 
     /**
