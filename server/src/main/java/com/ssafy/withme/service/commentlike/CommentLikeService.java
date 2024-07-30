@@ -8,22 +8,24 @@ import com.ssafy.withme.repository.commentlike.CommentLikeRepository;
 import com.ssafy.withme.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class CommentLikeService {
 
     private final CommentLikeRepository commentLikeRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
-
+    @Transactional
     public Integer create(CommentLikeCreateRequest request) {
         Long userId = request.getUserId();
         Long commentId = request.getCommentId();
-        commentLikeRepository.findByUserIdAndCommentId(userId, commentId).ifPresent(like -> {
-            throw new IllegalArgumentException("User has already liked this comment.");
-                });
+//        commentLikeRepository.findByUserIdAndCommentId(userId, commentId).ifPresent(like -> {
+//            throw new IllegalArgumentException("User has already liked this comment.");
+//                });
 
         Comment comment = commentRepository.findById(commentId).get();
         comment.clickLike();
@@ -39,4 +41,13 @@ public class CommentLikeService {
     }
 
 
+    public void delete(CommentLikeCreateRequest request) {
+        Long userId = request.getUserId();
+        Long commentId = request.getCommentId();
+        CommentLike findCommentLike = commentLikeRepository.findByUserIdAndCommentId(userId, commentId).orElseThrow(() ->
+                new IllegalArgumentException("User has already liked this comment.")
+        );
+
+        commentLikeRepository.delete(findCommentLike);
+    }
 }
