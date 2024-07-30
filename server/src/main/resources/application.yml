@@ -65,8 +65,8 @@ youtube:
 
 python-server:
   url: http://i11c109.p.ssafy.io:4567
-  temp-directory: C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\user
-  permanent-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\temporary
+  temp-directory: C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\0730\\S11P12C109\\leadme\\video\\user
+  permanent-directory: C:\Users\SSAFY\Desktop\Jun\2024\\0730\S11P12C109\leadme\video\temporary
 
 
 ---

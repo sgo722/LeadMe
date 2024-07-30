@@ -26,7 +26,7 @@ public class UserChallenge {
 
     private String videoPath;
 
-    private Integer like;
+    private Integer likes;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name="challenge_id")
@@ -40,10 +40,10 @@ public class UserChallenge {
     private List<Comment> comments;
 
     @Builder
-    public UserChallenge(String name, String videoPath, Integer like, Challenge challenge, User user, List<Comment> comments) {
+    public UserChallenge(String name, String videoPath, Integer likes, Challenge challenge, User user, List<Comment> comments) {
         this.name = name;
         this.videoPath = videoPath;
-        this.like = like;
+        this.likes = likes;
         this.challenge = challenge;
         this.user = user;
         this.comments = comments;

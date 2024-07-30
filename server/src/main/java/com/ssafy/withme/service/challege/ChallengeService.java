@@ -36,8 +36,9 @@ public class ChallengeService {
      */
     public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request){
         Challenge challenge = request.toEntity();
+        System.out.println(challenge);
         Challenge savedChallenge = challengeRepository.save(challenge);
-
+        System.out.println(savedChallenge);
         // 헤더 설정
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
