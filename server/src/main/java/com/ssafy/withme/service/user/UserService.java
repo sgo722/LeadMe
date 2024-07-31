@@ -67,9 +67,6 @@ public class UserService {
                 .map(User::getNickname)
                 .toList();
 
-        if (list.isEmpty())
-            throw new EntityNotFoundException(ErrorCode.USER_NOT_EXISTS);
-
         return list;
     }
 
