@@ -16,4 +16,6 @@ public interface UserRepository extends JpaRepository<User,Long>, UserRepository
 
     @Override
     List<User> findByNameContaining(String name);
+
+    Optional<User> findByName(String name);
 }

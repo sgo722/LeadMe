@@ -59,7 +59,7 @@ public class NaverResponse implements OAuth2Response{
             hexString.append(hex);
         }
 
-        return hexString.toString();
+        return hexString.toString().substring(0, 10);
     }
 
     @Override

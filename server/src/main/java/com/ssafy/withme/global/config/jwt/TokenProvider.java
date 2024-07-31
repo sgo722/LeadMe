@@ -50,14 +50,14 @@ public class TokenProvider {
     // JWT 토큰 생성 메서드
     private String makeAccessToken(Date expiry, User user) {
 
-        String encryptedId;
-
-        // user id 암호화
-        try {
-            encryptedId = CryptoUtils.encrypt(String.valueOf(user.getId()));
-        } catch (Exception e){
-            throw new RuntimeException("Error encrypting user id", e);
-        }
+//        String encryptedId;
+//
+//        // user id 암호화
+//        try {
+//            encryptedId = CryptoUtils.encrypt(String.valueOf(user.getId()));
+//        } catch (Exception e){
+//            throw new RuntimeException("Error encrypting user id", e);
+//        }
 
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE) // 헤더 타입은 JWT
@@ -65,20 +65,20 @@ public class TokenProvider {
                 .setIssuedAt(new Date(System.currentTimeMillis())) // 내용 issue at : 현재 시간
                 .setExpiration(expiry) // 내용 exp : expiry 멤버 변수값
                 .setSubject(TokenType.ACCESS.name()) // 내용 sub : 유저의 이메일
-                .claim("id", encryptedId) // 클레임 id : 유저 id
+                .claim("id", user.getId()) // 클레임 id : 유저 id
                 .compact();
     }
 
     private String makeRefereshToken(Date expiry, User user) {
 
-        String encryptedId;
-
-        // user id 암호화
-        try {
-            encryptedId = CryptoUtils.encrypt(String.valueOf(user.getId()));
-        } catch (Exception e){
-            throw new RuntimeException("Error encrypting user id", e);
-        }
+//        String encryptedId;
+//
+//        // user id 암호화
+//        try {
+//            encryptedId = CryptoUtils.encrypt(String.valueOf(user.getId()));
+//        } catch (Exception e){
+//            throw new RuntimeException("Error encrypting user id", e);
+//        }
 
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE) // 헤더 타입은 JWT
@@ -86,7 +86,7 @@ public class TokenProvider {
                 .setIssuedAt(new Date(System.currentTimeMillis())) // 내용 issue at : 현재 시간
                 .setExpiration(expiry) // 내용 exp : expiry 멤버 변수값
                 .setSubject(TokenType.REFRESH.name()) // 내용 sub : 유저의 이메일
-                .claim("id", encryptedId) // 클레임 id : 유저 id
+                .claim("id", user.getId()) // 클레임 id : 유저 id
                 .compact();
     }
 
@@ -126,13 +126,15 @@ public class TokenProvider {
     public Long getUserId(String token) {
         Claims claims = getClaims(token);
 
-        String encrypted = claims.get("id", String.class);
+//        String encrypted = claims.get("id", String.class);
+//
+//        try {
+//            return Long.parseLong(CryptoUtils.decrypt(encrypted));
+//        } catch (Exception e) {
+//            throw new RuntimeException("Error decrypting user ID", e);
+//        }
 
-        try {
-            return Long.parseLong(CryptoUtils.decrypt(encrypted));
-        } catch (Exception e) {
-            throw new RuntimeException("Error decrypting user ID", e);
-        }
+        return claims.get("id", Long.class);
     }
 
     // 토큰을 분석하면서 claims을 빼낸다.
