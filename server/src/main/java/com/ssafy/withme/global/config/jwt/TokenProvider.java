@@ -37,7 +37,7 @@ public class TokenProvider {
         Date expiryDate = new Date(now.getTime() + expiredAt.toMillis());
         String token = makeToken(expiryDate, user, tokenType);
 
-        LocalDateTime expiryDateTime = expiryDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime expiryDateTime = expiryDate.toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime();
 
         return new TokenDetails(token, expiryDateTime);
     }
