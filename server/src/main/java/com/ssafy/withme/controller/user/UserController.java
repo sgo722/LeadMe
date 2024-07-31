@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -43,5 +44,16 @@ public class UserController {
 
         return SuccessResponse.of(userDto);
     }
+
+    @GetMapping("/user/search/{name}")
+    public SuccessResponse<List> findByName(@PathVariable String name) {
+
+        List<UserInfoDto> findList = userService.findByNameContaining(name).stream()
+                .map(UserInfoDto::from)
+                .toList();
+
+        return SuccessResponse.of(findList);
+    }
+
 
 }
