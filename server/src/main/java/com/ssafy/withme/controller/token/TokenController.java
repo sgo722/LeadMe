@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/token")
 @RequiredArgsConstructor
@@ -23,14 +22,6 @@ public class TokenController {
     public SuccessResponse<AccessTokenResponseDto> issueAccessToken(HttpServletRequest request){
 
         String authorization = request.getHeader("Authorization");
-
-        log.info("===================================");
-        log.info("===================================");
-        log.info("===================================");
-        log.info("authorization: {}", authorization);
-        log.info("===================================");
-        log.info("===================================");
-        log.info("===================================");
 
         String refreshToken = authorization.split(" ")[1];
 
