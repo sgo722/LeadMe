@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { SiNaver } from "react-icons/si";
 import { FcGoogle } from "react-icons/fc";
 import { RiKakaoTalkFill } from "react-icons/ri";
-import { testUrl } from "axiosInstance/constants";
+import { baseUrl } from "axiosInstance/constants";
 interface LoginModalProps {
   onClose: () => void;
 }
@@ -14,7 +14,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>Login</Title>
 
-        <SNSLink href={`${testUrl}/oauth2/authorization/kakao`}>
+        <SNSLink href={`${baseUrl}/oauth2/authorization/kakao`}>
           <SNSBox $bgColor="#FFF039" $hoverColor="#FFEC00">
             <IconWrapper>
               <RiKakaoTalkFill style={{ color: "#533030" }} />
@@ -23,7 +23,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
           </SNSBox>
         </SNSLink>
 
-        <SNSLink href={`${testUrl}/oauth2/authorization/naver`}>
+        <SNSLink href={`${baseUrl}/oauth2/authorization/naver`}>
           <SNSBox $bgColor="#03CF5D" $hoverColor="#0ec25c">
             <IconWrapper>
               <SiNaver
@@ -34,7 +34,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
           </SNSBox>
         </SNSLink>
 
-        <SNSLink href={`${testUrl}/oauth2/authorization/google`}>
+        <SNSLink href={`${baseUrl}/oauth2/authorization/google`}>
           <SNSBox $bgColor="#ffffff" $hoverColor="#f3f3f3">
             <IconWrapper>
               <FcGoogle />

@@ -27,13 +27,30 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const token = params.get("token");
+    const accessToken = params.get("accessToken");
+    const accessTokenExpireTime = params.get("accessTokenExpireTime");
+    const refreshToken = params.get("refreshToken");
+    const refreshTokenExpireTime = params.get("refreshTokenExpireTime");
 
-    if (token) {
-      // URL에서 access_token 추출 후 세션 스토리지에 저장
-      sessionStorage.setItem("access_token", token);
-      setAccessToken(token);
-      params.delete("token");
+    if (accessToken) {
+      // URL에서 accessToken, accessTokenExpireTime, refreshToken, refreshTokenExpireTime 추출 후 세션 스토리지에 저장
+      sessionStorage.setItem("access_token", accessToken);
+      sessionStorage.setItem(
+        "access_token_expire_time",
+        accessTokenExpireTime || ""
+      );
+      sessionStorage.setItem("refresh_token", refreshToken || "");
+      sessionStorage.setItem(
+        "refresh_token_expire_time",
+        refreshTokenExpireTime || ""
+      );
+
+      setAccessToken(accessToken);
+
+      params.delete("accessToken");
+      params.delete("accessTokenExpireTime");
+      params.delete("refreshToken");
+      params.delete("refreshTokenExpireTime");
 
       navigate(
         {
@@ -43,9 +60,6 @@ const Home: React.FC = () => {
         { replace: true }
       );
     }
-
-    // refresh_token 쿠키에 저장된 것 확인
-    // console.log(document.cookie);
   }, [location, navigate, setAccessToken]);
 
   return (
