@@ -86,8 +86,9 @@ public class UserChallengeService {
         });
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
+        String url = FAST_API_URL + "/upload/userFile";
         // Fast API 반환값
-        ResponseEntity<String> response = restTemplate.exchange(FAST_API_URL, HttpMethod.POST, requestEntity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
         System.out.println(response);
         String result = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
