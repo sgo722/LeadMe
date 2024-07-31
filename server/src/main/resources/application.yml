@@ -43,7 +43,7 @@ spring:
 
     redis:
       host: i11c109.p.ssafy.io
-      port: 6379
+      port: 6380
 
   config:
     activate:
@@ -68,6 +68,9 @@ python-server:
   temp-directory: host/python/video/temporary
   permanent-directory: host/python/video/user
 
+openvidu:
+  url: https://i11c109.p.ssafy.io:8443
+  secret: leadme
 
 ---
 spring:
