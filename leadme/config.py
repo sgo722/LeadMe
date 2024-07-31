@@ -9,6 +9,15 @@ else:
 
 os.makedirs(FILE_STORAGE_PATH, exist_ok=True)
 
+try:
+    os.makedirs(FILE_STORAGE_PATH, exist_ok=True)
+    print(f"Directory {FILE_STORAGE_PATH} created successfully.")
+except PermissionError:
+    print(f"PermissionError: Unable to create directory at {FILE_STORAGE_PATH}.")
+except Exception as e:
+    print(f"Error: {e}")
+
+
 # 파일 경로에서 디렉토리 부분을 추출하고, 해당 디렉토리가 없으면 생성
 def ensure_dir(file_path):
     directory = os.path.dirname(file_path)
