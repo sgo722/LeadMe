@@ -3,7 +3,6 @@ package com.ssafy.withme.service.userchellenge;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.client.util.Value;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeDeleteRequest;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeSaveRequest;
@@ -25,6 +24,8 @@ import com.ssafy.withme.service.userchellenge.response.UserChallengeAnalyzeRespo
 import com.ssafy.withme.service.userchellenge.response.UserChallengeSaveResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -49,13 +50,17 @@ import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_USER_CHALLENGE_
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class UserChallengeService {
 
-    private final String TEMP_DIRECTORY = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\temporary";
+    @Value("${temp-directory}")
+    String TEMP_DIRECTORY;
 
-    private final String PERMANENT_DIRECTORY = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\user";
+    @Value("${permanent-directory}")
+    String PERMANENT_DIRECTORY;
 
-    static final String FAST_API_URL = "http://localhost:8000/upload/userFile";
+    @Value("${python-server.url}")
+    String FAST_API_URL;
 
     private final UserChallengeRepository userChallengeRepository;
 
@@ -156,7 +161,14 @@ public class UserChallengeService {
     public UserChallengeSaveResponse saveUserFile(UserChallengeSaveRequest request) {
         Challenge challenge = challengeRepository.findById(request.getChallengeId()).orElse(null);
 //        User user = userRepository.findById(request.getUserId()).get();
+
+        log.info("설정된 폴더 경로 " + TEMP_DIRECTORY);
+        log.info("uuid : " + request.getUuid());
+
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + ".mp4");
+
+        log.info("임시 비디오 경로 : " + tempVideoPath.toString());
+
         if (!Files.exists(tempVideoPath)) {
             throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_FILE);
         }
