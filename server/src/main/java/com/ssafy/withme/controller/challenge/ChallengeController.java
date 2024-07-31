@@ -3,6 +3,8 @@ package com.ssafy.withme.controller.challenge;
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.BaseEntity;
 import com.ssafy.withme.domain.landmark.Landmark;
+import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.challege.ChallengeService;
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
@@ -21,7 +23,7 @@ public class ChallengeController extends BaseEntity {
      * @param request
      */
     @PostMapping("/api/v1/challenge")
-    public SuccessResponse<ChallengeCreateResponse> createChallenge(@RequestBody ChallengeCreateRequest request){
+    public SuccessResponse<ChallengeCreateResponse> createChallenge(@CurrentUser User user, @RequestBody ChallengeCreateRequest request){
         return SuccessResponse.of(challengeService.createChallenge(request));
     }
 

@@ -3,6 +3,7 @@ package com.ssafy.withme.service.challege;
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.landmark.Landmark;
+import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
