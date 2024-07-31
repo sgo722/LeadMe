@@ -9,16 +9,15 @@ import {
   NormalizedLandmark,
 } from "@mediapipe/tasks-vision";
 import { useState, useRef, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
-interface PracticeProps {
-  videoId?: string;
-}
-
-export const Practice: React.FC<PracticeProps> = ({ videoId }) => {
+export const Practice: React.FC = ({}) => {
+  const { videoId } = useParams<{ videoId?: string }>();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [poseLandmarker, setPoseLandmarker] = useState<any>(null);
   const [webcamRunning, setWebcamRunning] = useState(false);
+  const nav = useNavigate();
 
   useEffect(() => {
     const initializePoseLandmarker = async () => {
@@ -171,11 +170,17 @@ export const Practice: React.FC<PracticeProps> = ({ videoId }) => {
     };
   }, [webcamRunning]);
 
+  const handleSearchButtonClick = () => {
+    nav("/home");
+  };
+  const handleBackButtonClick = () => {
+    nav(-1);
+  };
   return (
     <>
       <Header stickyOnly />
       <Container>
-        <BackButton>
+        <BackButton onClick={handleBackButtonClick}>
           <FaChevronLeft />
           &nbsp;목록
         </BackButton>
@@ -183,29 +188,49 @@ export const Practice: React.FC<PracticeProps> = ({ videoId }) => {
           <VideoWrapper>
             <VideoContainer>
               <YouTubeWrapper>
-                <YouTube
-                  videoId={videoId || "OvJn-xojCXE"}
-                  opts={{
-                    width: "309",
-                    height: "550",
-                    playerVars: {
-                      autoplay: 0,
-                      rel: 0,
-                    },
-                  }}
-                />
+                {videoId ? (
+                  <YouTube
+                    videoId={videoId}
+                    opts={{
+                      width: "309",
+                      height: "550",
+                      playerVars: {
+                        autoplay: 0,
+                        rel: 0,
+                      },
+                    }}
+                  />
+                ) : (
+                  <SearchUrl>
+                    <Title>참고 영상을 첨부하세요</Title>
+                    <SubTitle>
+                      <span>방법 1</span>
+                    </SubTitle>
+                    <SearchButton onClick={handleSearchButtonClick}>
+                      영상 검색하러 가기
+                    </SearchButton>
+                    <SubTitle>
+                      <span>방법 2</span>
+                    </SubTitle>
+
+                    <SearchInput placeholder="숏츠 영상 url을 입력하세요" />
+                    <SearchButton>url 영상 불러오기</SearchButton>
+                  </SearchUrl>
+                )}
               </YouTubeWrapper>
-              <Buttons>
-                <button>
-                  <FaPlayCircle style={{ fontSize: "20px" }} />
-                  재생속도
-                </button>
-                <button>
-                  <FaExchangeAlt style={{ fontSize: "20px" }} />
-                  좌우반전
-                </button>
-                <button>영상변경</button>
-              </Buttons>
+              {videoId && (
+                <Buttons>
+                  <button>
+                    <FaPlayCircle style={{ fontSize: "20px" }} />
+                    재생속도
+                  </button>
+                  <button>
+                    <FaExchangeAlt style={{ fontSize: "20px" }} />
+                    좌우반전
+                  </button>
+                  <button>영상변경</button>
+                </Buttons>
+              )}
             </VideoContainer>
           </VideoWrapper>
           <VideoWrapper>
@@ -356,4 +381,69 @@ const Canvas = styled.canvas`
   top: 0;
   width: 100%;
   height: 100%;
+`;
+
+// 영상 url 입력하는 경우 ui
+const SearchUrl = styled.div`
+  width: 309px;
+  height: 550px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 8px 8px 4px 0px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  gap: 25px;
+`;
+
+const Title = styled.div`
+  color: #b4b4b4;
+  font-size: 18px;
+  font-weight: 500;
+`;
+
+const SubTitle = styled.div`
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #b4b4b4;
+  font-size: 14px;
+  width: 100%;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #cecece;
+  }
+
+  & > span {
+    padding: 0 10px;
+  }
+`;
+
+const SearchButton = styled.button`
+  border-radius: 4px;
+  background: #f7f7f7;
+  box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.15);
+  border: none;
+  color: #ee5050;
+  cursor: pointer;
+  width: 250px;
+  height: 44px;
+  font-size: 18px;
+  font-weight: 500;
+`;
+
+const SearchInput = styled.input`
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.15);
+  border: none;
+  width: 250px;
+  height: 44px;
+  outline: none;
+  padding-left: 15px;
 `;
