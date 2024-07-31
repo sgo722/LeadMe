@@ -61,10 +61,11 @@ public class TokenProvider {
 
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE) // 헤더 타입은 JWT
+                .setHeaderParam(TokenType.ACCESS.name(), TokenType.ACCESS.name())
                 .setIssuer(jwtProperties.getIssuer()) // 내용 : 프로퍼티에스에서 지정한 발급자명
                 .setIssuedAt(new Date(System.currentTimeMillis())) // 내용 issue at : 현재 시간
                 .setExpiration(expiry) // 내용 exp : expiry 멤버 변수값
-                .setSubject(TokenType.ACCESS.name()) // 내용 sub : 유저의 이메일
+                .setSubject(user.getEmail()) // 내용 sub : 유저의 이메일
                 .claim("id", user.getId()) // 클레임 id : 유저 id
                 .compact();
     }
@@ -82,10 +83,11 @@ public class TokenProvider {
 
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE) // 헤더 타입은 JWT
+                .setHeaderParam(TokenType.REFRESH.name(), TokenType.REFRESH.name())
                 .setIssuer(jwtProperties.getIssuer()) // 내용 : 프로퍼티에스에서 지정한 발급자명
                 .setIssuedAt(new Date(System.currentTimeMillis())) // 내용 issue at : 현재 시간
                 .setExpiration(expiry) // 내용 exp : expiry 멤버 변수값
-                .setSubject(TokenType.REFRESH.name()) // 내용 sub : 유저의 이메일
+                .setSubject(user.getEmail()) // 내용 sub : 유저의 이메일
                 .claim("id", user.getId()) // 클레임 id : 유저 id
                 .compact();
     }
