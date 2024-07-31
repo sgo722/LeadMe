@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
 import styled from "styled-components";
 import { FaTiktok } from "react-icons/fa6";
 import { FaYoutube } from "react-icons/fa";
 import { LoginModal } from "components/LoginModal";
+import useAuth from "hooks/useAuth";
 
 interface HeaderProps {
   stickyOnly?: boolean;
@@ -16,8 +17,9 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
   const [loginModal, setLoginModal] = useState<boolean>(false);
 
   const accessToken = useRecoilValue(accessTokenState);
-  const setAccessToken = useSetRecoilState(accessTokenState);
-  const isLogin = !!accessToken; // 로그인 상태를 accessToken 여부로 확인
+  const isLogin = !!accessToken;
+
+  const { logout } = useAuth();
 
   const getPageTitle = (path: string): string => {
     switch (path) {
@@ -34,12 +36,6 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
 
   const handleCloseModal = () => {
     setLoginModal(false);
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem("access_token");
-    setAccessToken(null);
-    window.location.reload();
   };
 
   return (
@@ -88,13 +84,7 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
                   </LeftHoverBox>
                 </Fake>
               </Mypage>
-              <LeftBtn
-                onClick={() => {
-                  handleLogout();
-                }}
-              >
-                logout
-              </LeftBtn>
+              <LeftBtn onClick={logout}>logout</LeftBtn>
             </LeftContainer>
           ) : (
             <LeftContainer>
