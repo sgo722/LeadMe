@@ -53,10 +53,10 @@ import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_USER_CHALLENGE_
 @Slf4j
 public class UserChallengeService {
 
-    @Value("${temp-directory}")
+    @Value("${python-server.temp-directory}")
     String TEMP_DIRECTORY;
 
-    @Value("${permanent-directory}")
+    @Value("${python-server.permanent-directory}")
     String PERMANENT_DIRECTORY;
 
     @Value("${python-server.url}")
