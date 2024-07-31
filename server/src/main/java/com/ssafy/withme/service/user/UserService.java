@@ -61,6 +61,18 @@ public class UserService {
         return findUserList;
     }
 
+    public List<String> findListByNickname(String nickname) {
+
+        List<String> list = userRepository.findByNicknameContaining(nickname).stream()
+                .map(User::getNickname)
+                .toList();
+
+        if (list.isEmpty())
+            throw new EntityNotFoundException(ErrorCode.USER_NOT_EXISTS);
+
+        return list;
+    }
+
     public User findUserIdByToken(String token) {
 
         Long userId = tokenProvider.getUserId(token);

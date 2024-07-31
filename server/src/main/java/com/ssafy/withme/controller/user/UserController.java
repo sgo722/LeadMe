@@ -56,11 +56,9 @@ public class UserController {
     }
 
     @GetMapping("/user/search")
-    public SuccessResponse<List> findByName(@RequestParam("name") String name) {
+    public SuccessResponse<List> findByName(@RequestParam("nickname") String nickname) {
 
-        List<UserInfoDto> findList = userService.findByNameContaining(name).stream()
-                .map(UserInfoDto::from)
-                .toList();
+        List<String> findList = userService.findListByNickname(nickname);
 
         return SuccessResponse.of(findList);
     }
