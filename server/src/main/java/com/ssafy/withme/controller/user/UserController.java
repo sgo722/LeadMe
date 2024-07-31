@@ -45,6 +45,16 @@ public class UserController {
         return SuccessResponse.of(userDto);
     }
 
+    @GetMapping("/user/info/{id}")
+    public SuccessResponse<?> getUserInfo(@PathVariable("id") Long id) {
+
+        User findUser = userService.findById(id);
+
+        UserInfoDto userInfo = UserInfoDto.from(findUser);
+
+        return SuccessResponse.of(userInfo);
+    }
+
     @GetMapping("/user/search")
     public SuccessResponse<List> findByName(@RequestParam("name") String name) {
 

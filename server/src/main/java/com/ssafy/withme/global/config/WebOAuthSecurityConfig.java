@@ -65,7 +65,8 @@ public class WebOAuthSecurityConfig {
 
                 .authorizeRequests(auth -> auth
                         // 토큰 재발급 url은 인증없이 접근 가능하도록 설정 permitAll()? denyAll()?
-                        .requestMatchers(new AntPathRequestMatcher("/api/token")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/token/issue")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/v1/user/info/**")).permitAll()
                         // /api/~ 권한 요규
                         .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
                         // 이외에는 모두 허가
