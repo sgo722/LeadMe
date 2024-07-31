@@ -56,11 +56,11 @@ public class UserController {
     }
 
     @GetMapping("/user/search")
-    public SuccessResponse<List> findByName(@RequestParam("nickname") String nickname) {
+    public ResponseEntity<List> findByName(@RequestParam("nickname") String nickname) {
 
         List<String> findList = userService.findListByNickname(nickname);
 
-        return SuccessResponse.of(findList);
+        return ResponseEntity.ok(findList);
     }
 
 
