@@ -8,16 +8,20 @@ import {
   FilesetResolver,
   NormalizedLandmark,
 } from "@mediapipe/tasks-vision";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-export const Practice: React.FC = ({}) => {
+export const Practice: React.FC = () => {
   const { videoId } = useParams<{ videoId?: string }>();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [poseLandmarker, setPoseLandmarker] = useState<any>(null);
+  const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
+    null
+  );
   const [webcamRunning, setWebcamRunning] = useState(false);
   const nav = useNavigate();
+  const [inputUrl, setInputUrl] = useState<string>("");
+  const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
 
   useEffect(() => {
     const initializePoseLandmarker = async () => {
@@ -28,7 +32,7 @@ export const Practice: React.FC = ({}) => {
       const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task`,
-          delegate: "GPU",
+          delegate: "CPU",
         },
         runningMode: "VIDEO",
         numPoses: 2,
@@ -123,32 +127,34 @@ export const Practice: React.FC = ({}) => {
     ctx.restore();
   };
 
-  const predictWebcam = () => {
+  const predictWebcam = useCallback(() => {
     if (!poseLandmarker || !videoRef.current || !canvasRef.current) return;
 
     const canvasCtx = canvasRef.current.getContext("2d");
     if (!canvasCtx) return;
 
     const detectAndDraw = async () => {
-      const results = await poseLandmarker.detectForVideo(
-        videoRef.current,
-        performance.now()
-      );
-      canvasCtx.clearRect(
-        0,
-        0,
-        canvasRef.current!.width,
-        canvasRef.current!.height
-      );
+      if (videoRef.current && canvasRef.current) {
+        const results = await poseLandmarker.detectForVideo(
+          videoRef.current,
+          performance.now()
+        );
+        canvasCtx.clearRect(
+          0,
+          0,
+          canvasRef.current!.width,
+          canvasRef.current!.height
+        );
 
-      if (results.landmarks) {
-        results.landmarks.forEach((pose: NormalizedLandmark[]) => {
-          const scaledPose = pose.map(({ x, y }) => [
-            x * canvasRef.current!.width,
-            y * canvasRef.current!.height,
-          ]);
-          drawPose(canvasCtx, scaledPose);
-        });
+        if (results.landmarks) {
+          results.landmarks.forEach((pose: NormalizedLandmark[]) => {
+            const scaledPose = pose.map(({ x, y }) => [
+              x * canvasRef.current!.width,
+              y * canvasRef.current!.height,
+            ]);
+            drawPose(canvasCtx, scaledPose);
+          });
+        }
       }
 
       if (webcamRunning) {
@@ -157,28 +163,54 @@ export const Practice: React.FC = ({}) => {
     };
 
     detectAndDraw();
-  };
+  }, [poseLandmarker, webcamRunning]);
 
   useEffect(() => {
-    if (webcamRunning && videoRef.current) {
-      videoRef.current.addEventListener("loadeddata", predictWebcam);
+    const videoElement = videoRef.current;
+
+    if (webcamRunning && videoElement) {
+      videoElement.addEventListener("loadeddata", predictWebcam);
     }
+
     return () => {
-      if (videoRef.current) {
-        videoRef.current.removeEventListener("loadeddata", predictWebcam);
+      if (videoElement) {
+        videoElement.removeEventListener("loadeddata", predictWebcam);
       }
     };
-  }, [webcamRunning]);
+  }, [webcamRunning, predictWebcam]);
 
-  const handleSearchButtonClick = () => {
-    nav("/home");
-  };
+  // 목록 버튼 클릭 시 실행할 함수
   const handleBackButtonClick = () => {
     nav(-1);
   };
+
+  // 영상변경 버튼 클릭 시 실행할 함수
   const handleChangeButtonClick = () => {
     nav("/practice");
   };
+
+  // url 입력 후 영상검색하러 가기 버튼 클릭 시 실행할 함수
+  const handleSearchButtonClick = () => {
+    nav("/home");
+  };
+
+  // url 유효성 검사 함수
+  const validateUrl = (url: string) => {
+    return url.toLowerCase().includes("shorts");
+  };
+
+  // url input onChange 이벤트 핸들러
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    setInputUrl(url);
+    setIsValidUrl(validateUrl(url));
+  };
+
+  // 영상 불러오기 버튼 클릭 시 실행할 함수
+  const handleLoadVideo = () => {
+    console.log("여기에 구현하셈");
+  };
+
   return (
     <>
       <Header stickyOnly />
@@ -216,8 +248,18 @@ export const Practice: React.FC = ({}) => {
                       <span>방법 2</span>
                     </SubTitle>
 
-                    <SearchInput placeholder="숏츠 영상 url을 입력하세요" />
-                    <SearchButton>url 영상 불러오기</SearchButton>
+                    <SearchInput
+                      placeholder="숏츠 영상 url을 입력하세요"
+                      value={inputUrl}
+                      onChange={handleInputChange}
+                    />
+                    <SearchButton
+                      onClick={handleLoadVideo}
+                      disabled={!isValidUrl}
+                      style={{ opacity: isValidUrl ? 1 : 0.5 }}
+                    >
+                      url 영상 불러오기
+                    </SearchButton>
                   </SearchUrl>
                 )}
               </YouTubeWrapper>
