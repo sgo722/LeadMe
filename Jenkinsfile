@@ -36,24 +36,24 @@ pipeline {
             }
         }
 
-        stage('Build Python') {
-            steps {
-                dir('S11P12C109/leadme') {
+//        stage('Build Python') {
+//            steps {
+//                dir('S11P12C109/leadme') {
                     
                     // 기존 컨테이너 중단
-                    sh 'docker stop python-container || true'
+//                    sh 'docker stop python-container || true'
 
                     // 기존 컨테이너가 있을 경우 삭제
-                    sh 'docker rm -f python-container || true'
+//                    sh 'docker rm -f python-container || true'
 
                     // 이미지 빌드
-                    sh 'docker build -t python-image .'
+//                    sh 'docker build -t python-image .'
                     
                     // 컨테이너를 실행
-                    sh 'docker run -d --name python-container -p 4567:4567 python-image'
-                }
-            }
-        }
+//                    sh 'docker run -d --name python-container -p 4567:4567 python-image'
+//               }
+//            }
+//        }
 
         stage('Docker Build and Push') {
             steps {
