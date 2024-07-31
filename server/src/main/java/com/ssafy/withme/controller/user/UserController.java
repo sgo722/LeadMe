@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,6 +60,9 @@ public class UserController {
     public ResponseEntity<List> findByName(@RequestParam("nickname") String nickname) {
 
         List<String> findList = userService.findListByNickname(nickname);
+
+        if (nickname.equals(""))
+            return ResponseEntity.ok(new ArrayList());
 
         return ResponseEntity.ok(findList);
     }
