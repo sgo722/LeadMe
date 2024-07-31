@@ -12,9 +12,9 @@ class Video(BaseModel):
     youtubeId : str
 
 UPLOAD_DIRECTORY = "."
-TEMP_DIRECTORY = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\temporary"  # 임시 저장 디렉토리 경로
-PERMANENT_DIRECTORY_USER = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\user"  # 영구 저장 디렉토리 경로
-PERMANENT_DIRECTORY_CHALLENGE = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\challenge"  # 영구 저장 디렉토리 경로
+TEMP_DIRECTORY = "\\home\\ubuntu\\python\\video\\temporary"  # 임시 저장 디렉토리 경로
+PERMANENT_DIRECTORY_USER = "\\home\\ubuntu\\python\\video\\user"  # 영구 저장 디렉토리 경로
+PERMANENT_DIRECTORY_CHALLENGE = "\\home\\ubuntu\\python\\video\\challenge"  # 영구 저장 디렉토리 경로
 
 @app.get("/")
 async def read_root():
@@ -22,10 +22,21 @@ async def read_root():
 
 @app.post("/videoUrl")
 async def saveVideoData(video: Video):
-    # 비디오 다운로드 및 처리
-    video_path = download_video(video.url, 'downloaded_video.mp4')
-    keypoints = process_video(video.youtubeId, video_path)
-    return {"youtubeId": video.youtubeId, "keypoints": keypoints}
+
+    try:
+        # 비디오 다운로드 및 처리
+        video_path = download_video(video.url, 'downloaded_video.mp4')
+        keypoints = process_video(video.youtubeId, video_path)
+        print(f"Video processing successful for YouTube ID: {video.youtubeId}")
+        return {"youtubeId": video.youtubeId, "keypoints": keypoints}
+    except Exception as e:
+        print(f"Error processing video: {e}")
+        return {"error": str(e)}
+
+    # # 비디오 다운로드 및 처리
+    # video_path = download_video(video.url, 'downloaded_video.mp4')
+    # keypoints = process_video(video.youtubeId, video_path)
+    # return {"youtubeId": video.youtubeId, "keypoints": keypoints}
 
 
 @app.post("/upload/userFile")
