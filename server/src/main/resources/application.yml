@@ -65,8 +65,8 @@ youtube:
 
 python-server:
   url: http://i11c109.p.ssafy.io:4567
-  temp-directory: /home/ubuntu/python/video/temporary
-  permanent-directory: /home/ubuntu/python/video/user
+  temp-directory: host/python/video/temporary
+  permanent-directory: host/python/video/user
 
 
 ---
