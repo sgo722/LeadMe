@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import shutil
 import os
 import uuid
+import config
 from video_processor import download_video, process_video, process_video_user
 
 app = FastAPI()
@@ -23,18 +24,11 @@ async def read_root():
 @app.post("/videoUrl")
 async def saveVideoData(video: Video):
 
-    
+
     # 비디오 다운로드 및 처리
     video_path = download_video(video.url, 'downloaded_video.mp4')
-    print("비디오 경로 : " + video_path)
     keypoints = process_video(video.youtubeId, video_path)
-    print(f"Video processing successful for YouTube ID: {video.youtubeId}")
     return {"youtubeId": video.youtubeId, "keypoints": keypoints}
-
-    # # 비디오 다운로드 및 처리
-    # video_path = download_video(video.url, 'downloaded_video.mp4')
-    # keypoints = process_video(video.youtubeId, video_path)
-    # return {"youtubeId": video.youtubeId, "keypoints": keypoints}
 
 
 @app.post("/upload/userFile")

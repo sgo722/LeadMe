@@ -104,9 +104,7 @@ def process_video(youtubeId, video_path):
     # upsert를 사용하여 문서가 없으면 삽입하고, 있으면 업데이트
     filter_query = {'_id': youtubeId}
     update_query = {'$set': document}
-    print("데이터베이스 삽입전")
     collection.update_one(filter_query, update_query, upsert=True)
-    print("데이터베이스 삽입후")
 
     # 리소스 해제
     cap.release()
