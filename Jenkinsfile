@@ -1,118 +1,88 @@
-pipeline {
-    agent any
+spring:
+  profiles:
+    default : local
 
-    environment {
-        GITLAB_REPOSITORY_URL = credentials('GITLAB_REPOSITORY_URL')
-        DOCKERHUB_USERNAME = credentials('DOCKERHUB_USERNAME')
-        DOCKERHUB_PASSWORD = credentials('DOCKERHUB_PASSWORD')
-        DOCKERHUB_REPOSITORY = credentials('DOCKERHUB_REPOSITORY')
-        EC2_INSTANCE_PRIVATE_KEY = credentials('EC2_INSTANCE_PRIVATE_KEY')
-        EC2_INSTANCE_PORT = 22
-        DOCKERHUB_NAME = 'leadme'
-        VM_OPTION_NAME = credentials('VM_OPTION_NAME')
-        VM_OPTION_PASSWORD = credentials('VM_OPTION_PASSWORD')
-    }
+server:
+  port: 8090
 
-    stages {
-        stage('Clone Repository') {
-            steps {
-                script {
-                    sh 'rm -rf S11P12C109'
-                    echo "Cloning repository from: ${GITLAB_REPOSITORY_URL}"
-                    sh "git clone ${GITLAB_REPOSITORY_URL}"
-                }
-            }
-        }
+---
+spring:
 
-        stage('Build Project') {
-            steps {
-                script {
-                    dir('S11P12C109/server') {
-                        sh 'chmod +x ./gradlew'
-                        
-                        sh './gradlew clean build -x test'
-                    }
-                }
-            }
-        }
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 500
+    database: mysql
+    show-sql: true
+    open-in-view: true
 
-//        stage('Build Python') {
-//            steps {
-//                dir('S11P12C109/leadme') {
-                    
-                    // 기존 컨테이너 중단
-//                    sh 'docker stop python-container || true'
 
-                    // 기존 컨테이너가 있을 경우 삭제
-//                    sh 'docker rm -f python-container || true'
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://i11c109.p.ssafy.io:3306/leadme?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+#    url: jdbc:mysql://localhost:3306/leadme?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ssafy
+    password: ssafy
 
-                    // 이미지 빌드
-//                    sh 'docker build -t python-image .'
-                    
-                    // 컨테이너를 실행
-//                    sh 'docker run -d --name python-container -p 4567:4567 python-image'
-//               }
-//            }
-//        }
+  # 파일 전송 시 20MB를 초과할 수 없으며 모든 데이터가 25MB를 초과할 수 없다.
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
 
-        stage('Docker Build and Push') {
-            steps {
-                script {
-                    // Docker build and push
-                    dir('S11P12C109/server'){
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                        sh '''
-                        docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-                        '''
-                    }
-                        sh "docker build -t ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY} ."
-                        sh "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest"
-                    }
-                }
-            }
-        }
+  data:
+    mongodb:
+      uri: mongodb://i11c109.p.ssafy.io:27017/local
 
-        stage('Deploy to EC2') {
-            steps {
-                script {
-                    sshPublisher(
-                        publishers: [
-                            sshPublisherDesc(
-                                configName: 'ubuntu',
-                                transfers: [
-                                    sshTransfer(
-                                        sourceFiles: '',
-                                        execCommand: """
-                                        docker pull ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
-                                        docker stop ${DOCKERHUB_NAME} || true
-                                        docker rm ${DOCKERHUB_NAME} || true
-                                        docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
-                                        docker image prune -f
-                                        """,
-                                        execTimeout: 120000
-                                    )
-                                ],
-                                usePromotionTimestamp: false,
-                                alwaysPublishFromMaster: false,
-                                retry: 1,
-                                verbose: true
-                            )
-                        ]
-                    )
-                }
-            }
-        }
-    }
+#  data:
+#    mongodb:
+#      uri: mongodb://localhost:27017/local
 
-    post {
-        always {
-            echo 'Pipeline completed.'
-        }
-        success {
-            echo 'Build was successful!'
-        }
-        failure {
-            echo 'Build failed.'
-        }
-    }
-}
+    redis:
+      host: i11c109.p.ssafy.io
+      port: 6379
+
+  config:
+    activate:
+      on-profile: local
+    import: optional:application-secret.properties
+
+logging:
+  level:
+    org.hibernate.type: trace
+    com.ssafy.withme: debug
+
+jwt:
+  issuer: secretkey@gmail.com
+  secret_key: leadme
+
+youtube:
+  api:
+    keys: AIzaSyCu0oBuaDUV8ygWfz3bQca0jhcj_1AR7MQ,AIzaSyAQ3pFZNGvYRfQdXArQFsTOW7IZRZYJl4M,AIzaSyChYqKKvvbN266NScADZSkuX6hBHHgnLqc,AIzaSyD2nOKRgfaakgVN0AeM8eLJ2z4AAuQZP3Q,AIzaSyASk6YJlMuLa3HdUywUHEawON3DuyJx_CE,AIzaSyDTJ60OEpf-Py9_Z_PTgCKlU5iuJtmyKAk,AIzaSyCu0oBuaDUV8ygWfz3bQca0jhcj_1AR7MQ,AIzaSyCyfz2EdcJOPQ2ymzHdEwpoFvLbfAaqZAk,AIzaSyDHBUPg9QWDHmuUVCru0eBDqGYRG03KF5Q,AIzaSyAvzeYNTgi3rxLbfdcPJ13DQ5TvF7E0xVc,AIzaSyBM45MzHUgO-RmK5pKPjqv7zLTElSkRuyo,AIzaSyBcPUSKi45t98gNLbw-LYgWzqemIEHgC8A,AIzaSyBleMRtO0sCEp0DIkLSTYiPuCai7azafTs,AIzaSyDYFmmfbl68r6RkUQ5hpsYXFT2lvaEjzRA,AIzaSyDvAoM3iDqVfeiE9rMAPpVmn23Gc5FguQ0,AIzaSyCAeAXrl8MO5D_9b59v1dr0C9O7sYMzUX4,AIzaSyD33a0wftIaRh30O58gK-yCVDONOE1hzfE,AIzaSyA7akjqLy7E1lf9A5ie_Oz4lvDMSSkYsU0,AIzaSyAhmAOcy47IeJZLtLdTJANICnThjx1jAGc
+
+python-server:
+  url: http://i11c109.p.ssafy.io:4567
+  temp-directory: home/ubuntu/python/video/temporary
+  permanent-directory: home/ubuntu/python/video/user
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: never
