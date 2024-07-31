@@ -2,6 +2,7 @@ package com.ssafy.withme.global.config.jwt;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.dto.AccessTokenResponseDto;
+import com.ssafy.withme.dto.TokenDetails;
 import com.ssafy.withme.global.config.jwt.constant.TokenType;
 import com.ssafy.withme.global.util.CryptoUtils;
 import com.ssafy.withme.service.user.UserService;
@@ -30,7 +31,6 @@ import java.util.Set;
 public class TokenProvider {
 
     private final JwtProperties jwtProperties;
-    private final UserService userService;
 
     public TokenDetails generateToken(User user, Duration expiredAt, TokenType tokenType) {
         Date now = new Date();
@@ -95,18 +95,6 @@ public class TokenProvider {
                 .compact();
     }
 
-    public AccessTokenResponseDto createAccessTokenByRefreshToken(String refreshToken) {
-
-        Long findId = getUserId(refreshToken);
-
-        TokenDetails tokenDetails = generateToken(userService.findById(findId), Duration.ofDays(1), TokenType.ACCESS);
-
-        return AccessTokenResponseDto.builder()
-                .accessToken(tokenDetails.token)
-                .accessTokenExpireTime(tokenDetails.expireTime)
-                .build();
-    }
-
     // JWT 토큰 유효성 검증메서드
     public boolean validToken(String token) {
         try {
@@ -161,13 +149,4 @@ public class TokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
     }
-
-    public User findUserByToken(String token){
-
-        Long userId = getUserId(token);
-
-        return userService.findById(userId);
-    }
-
-    public record TokenDetails(String token, LocalDateTime expireTime) {}
 }
