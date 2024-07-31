@@ -17,6 +17,11 @@ public class FollowController {
 
     private final FollowService followService;
 
+    /**
+     * Follower 목록 조회
+     * @param user
+     * @return
+     */
     @GetMapping("/user/follower/list")
     public SuccessResponse<?> getFollowers(@CurrentUser User user) {
 
@@ -25,6 +30,11 @@ public class FollowController {
         return SuccessResponse.of(followers);
     }
 
+    /**
+     * Following 목록 조회
+     * @param user
+     * @return
+     */
     @GetMapping("/user/following/list")
     public SuccessResponse<?> getFollowings(@CurrentUser User user) {
 
@@ -33,8 +43,26 @@ public class FollowController {
         return SuccessResponse.of(followings);
     }
 
-    @PostMapping("/user/following/")
+    /**
+     * Follow 요청 전송
+     * @param id 팔로잉 요청을 받을 대상의 id
+     * @param user
+     * @return
+     */
+    @PostMapping("/user/following/send/{id}")
+    public SuccessResponse<?> sendFollowing(@PathVariable("id") Long id, @CurrentUser User user) {
 
+        followService.following(id, user.getId());
+
+        return SuccessResponse.of(true);
+    }
+
+    /**
+     * Unfollow
+     * @param id 팔로잉 하는 대상의 id
+     * @param user
+     * @return
+     */
     @DeleteMapping("/user/following/unfollow/{id}")
     public SuccessResponse<?> unfollow(@PathVariable Long id, @CurrentUser User user) {
 
@@ -43,6 +71,12 @@ public class FollowController {
         return SuccessResponse.of(true);
     }
 
+    /**
+     * 팔로워 삭제
+     * @param id 본인을 팔로잉 하고있는 대상의 id
+     * @param user
+     * @return
+     */
     @DeleteMapping("/user/follower/unfollow/{id}")
     public SuccessResponse<?> deleteFollower(@PathVariable Long id, @CurrentUser User user) {
 
