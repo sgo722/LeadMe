@@ -16,16 +16,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
@@ -60,15 +55,15 @@ public class WebOAuthSecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(mangement -> mangement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .oauth2Login(AbstractHttpConfigurer::disable)
                 // 헤더를 확인할 커스텀 필터 추가
-                .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                //.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
 
                 .authorizeRequests(auth -> auth
                         // 토큰 재발급 url은 인증없이 접근 가능하도록 설정 permitAll()? denyAll()?
-                        .requestMatchers(new AntPathRequestMatcher("/api/token/issue")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/v1/user/info/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/**")).permitAll()
                         // /api/~ 권한 요규
-                        .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
+                        //.requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
                         // 이외에는 모두 허가
                         .anyRequest().permitAll()
                 )
@@ -88,10 +83,6 @@ public class WebOAuthSecurityConfig {
 
                 )
 
-//                .logout(logout -> logout
-//                        .logoutSuccessUrl("/login")
-//                )
-
                 // /api로 시작하는 url인 경우 401 상태 코드를 반환하도록 예외 처리
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .defaultAuthenticationEntryPointFor(
@@ -110,7 +101,7 @@ public class WebOAuthSecurityConfig {
         };
     }
 
-    @Bean
+    //@Bean
     public OAuth2SuccessHandler oAuth2SuccessHandler() {
         return new OAuth2SuccessHandler(tokenProvider,
                 refreshTokenRepository,
@@ -120,7 +111,7 @@ public class WebOAuthSecurityConfig {
         );
     }
 
-    @Bean
+    //@Bean
     public TokenAuthenticationFilter tokenAuthenticationFilter() {
         return new TokenAuthenticationFilter(tokenProvider);
     }
