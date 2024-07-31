@@ -3,7 +3,7 @@ package com.ssafy.withme.service.userchellenge;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
+import com.google.api.client.util.Value;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeDeleteRequest;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeSaveRequest;
@@ -51,14 +51,11 @@ import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_USER_CHALLENGE_
 @Service
 public class UserChallengeService {
 
-    @Value("${python-server.temp-directory}")
-    String TEMP_DIRECTORY;
+    private final String TEMP_DIRECTORY = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\temporary";
 
-    @Value("${python-server.permanent-directory}")
-    String PERMANENT_DIRECTORY;
+    private final String PERMANENT_DIRECTORY = "C:\\Users\\SSAFY\\Desktop\\Jun\\2024\\S11P12C109\\leadme\\video\\user";
 
-    @Value("${python-server.url}")
-    String FAST_API_URL;
+    static final String FAST_API_URL = "http://localhost:8000/upload/userFile";
 
     private final UserChallengeRepository userChallengeRepository;
 
