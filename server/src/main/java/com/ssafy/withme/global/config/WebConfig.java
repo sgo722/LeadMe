@@ -36,18 +36,18 @@ public class WebConfig implements WebMvcConfigurer {
                 .maxAge(3600);
     }
 
-//    @Override
-//    public void addInterceptors(InterceptorRegistry registry) {
-//
-//        registry.addInterceptor(authenticationInterceptor)
-//                .addPathPatterns("/leadme/**")
-//                .excludePathPatterns("/leadme/user/**")
-//                .order(1);
-//
-//        registry.addInterceptor(adminAuthorizationInterceptor)
-//                .addPathPatterns("/admin/**")
-//                .order(2);
-//    }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+
+        registry.addInterceptor(authenticationInterceptor)
+                .addPathPatterns("/leadme/**")
+                .excludePathPatterns("/leadme/user/**")
+                .order(1);
+
+        registry.addInterceptor(adminAuthorizationInterceptor)
+                .addPathPatterns("/admin/**")
+                .order(2);
+    }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
