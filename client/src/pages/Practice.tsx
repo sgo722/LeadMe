@@ -176,6 +176,9 @@ export const Practice: React.FC = ({}) => {
   const handleBackButtonClick = () => {
     nav(-1);
   };
+  const handleChangeButtonClick = () => {
+    nav("/practice");
+  };
   return (
     <>
       <Header stickyOnly />
@@ -228,7 +231,7 @@ export const Practice: React.FC = ({}) => {
                     <FaExchangeAlt style={{ fontSize: "20px" }} />
                     좌우반전
                   </button>
-                  <button>영상변경</button>
+                  <button onClick={handleChangeButtonClick}>영상변경</button>
                 </Buttons>
               )}
             </VideoContainer>
