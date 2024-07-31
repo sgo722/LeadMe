@@ -40,6 +40,7 @@ const App: React.FC = () => {
         <Route path="/report" element={<Report />}></Route>
         <Route path="/chat/:userId" element={<Chat />}></Route>
         <Route path="/practice" element={<Practice />}></Route>
+        <Route path="/practice/:videoId" element={<Practice />}></Route>
         <Route path="/feed" element={<Feed />}></Route>
       </Routes>
     </ThemeProvider>

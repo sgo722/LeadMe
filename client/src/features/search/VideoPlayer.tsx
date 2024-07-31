@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-
+import { Navigate, useNavigate } from "react-router-dom";
 interface VideoPlayerProps {
   video: {
     videoId: string;
@@ -25,6 +25,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [canEmbed, setCanEmbed] = useState(true);
   const videoRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const nav = useNavigate();
 
   useEffect(() => {
     const currentVideoRef = videoRef.current;
@@ -71,6 +72,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const handlePracticeClick = () => {
     console.log("연습버튼 클릭!");
+    nav(`/practice/${video.videoId}`);
   };
 
   return (
