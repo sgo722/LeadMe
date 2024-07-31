@@ -9,6 +9,7 @@ import com.ssafy.withme.service.user.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +71,7 @@ public class TokenProvider {
                 .setExpiration(expiry) // 내용 exp : expiry 멤버 변수값
                 .setSubject(user.getEmail()) // 내용 sub : 유저의 이메일
                 .claim("id", user.getId()) // 클레임 id : 유저 id
+                .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8)) // 서명 추가
                 .compact();
     }
 
@@ -92,6 +94,7 @@ public class TokenProvider {
                 .setExpiration(expiry) // 내용 exp : expiry 멤버 변수값
                 .setSubject(user.getEmail()) // 내용 sub : 유저의 이메일
                 .claim("id", user.getId()) // 클레임 id : 유저 id
+                .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8)) // 서명 추가
                 .compact();
     }
 
@@ -99,7 +102,7 @@ public class TokenProvider {
     public boolean validToken(String token) {
         try {
             Jwts.parser()
-                    .setSigningKey(jwtProperties.getSecretKey()) // 명 검증
+                    .setSigningKey(jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8)) // 서명 검증
                     .parseClaimsJws(token); // 클레임이란 받아온 정보(토큰)를 jwt 페이로드에 넣는 것이다.
 
             log.info("secret key: {}",jwtProperties.getSecretKey());
@@ -145,7 +148,7 @@ public class TokenProvider {
     // 토큰을 분석하면서 claims을 빼낸다.
     public Claims getClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(jwtProperties.getSecretKey())
+                .setSigningKey(jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8)) // 서명 검증
                 .parseClaimsJws(token)
                 .getBody();
     }
