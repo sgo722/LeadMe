@@ -44,6 +44,7 @@ spring:
     redis:
       host: i11c109.p.ssafy.io
       port: 6380
+      password: leadmeredis109
 
   config:
     activate:
