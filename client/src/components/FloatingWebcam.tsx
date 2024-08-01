@@ -1,55 +1,55 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRecoilValue } from "recoil";
-import { IsWebcamVisibleAtom } from "stores/index";
+import { IsWebcamVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import styled from "styled-components";
 import { FaExpandAlt, FaCompressAlt } from "react-icons/fa";
+import YouTube from "react-youtube";
 
 type WebcamSize = "default" | "maximized";
 
 export const FloatingWebcam: React.FC = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const isWebcamVisible = useRecoilValue(IsWebcamVisibleAtom);
+  const youtubeId = useRecoilValue(CurrentYoutubeIdAtom);
   const [webcamSize, setWebcamSize] = useState<WebcamSize>("default");
 
   useEffect(() => {
-    const enableCam = async () => {
-      if (!isWebcamVisible) return;
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error("웹캠 활성화 실패:", error);
-      }
-    };
-
-    enableCam();
-
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach((track) => track.stop());
-      }
-      // 웹캠 닫힐 때 크기를 기본값으로 리셋
+    //이거 그냥 보였다안보였다 하는거라 언마운트될때 클린업함수에 써봤자 webcamSize 초기화 못함
+    // Recoil 상태에 따라 초기화 하는걸로
+    if (!isWebcamVisible) {
       setWebcamSize("default");
-    };
+    }
   }, [isWebcamVisible]);
 
-  if (!isWebcamVisible) return null;
-
-  // 웹캠 크기 토글 함수
   const toggleWebcamSize = () => {
-    setWebcamSize((prev) => (prev == "default" ? "maximized" : "default"));
+    setWebcamSize((prev) => (prev === "default" ? "maximized" : "default"));
   };
+
+  const videoDimensions = {
+    default: { width: "200px", height: "355px" },
+    maximized: { width: "330px", height: "586px" },
+  };
+
+  if (!isWebcamVisible) return null;
 
   return (
     <WebcamContainer $webcamSize={webcamSize}>
       <WebcamContent $webcamSize={webcamSize}>
-        <Video ref={videoRef} autoPlay playsInline />
-        <AnalyzingText>영상 준비중</AnalyzingText>
+        {youtubeId ? (
+          <YouTube
+            videoId={youtubeId}
+            opts={{
+              width: videoDimensions[webcamSize].width,
+              height: videoDimensions[webcamSize].height,
+              playerVars: {
+                autoplay: 1,
+                controls: 0,
+                modestbranding: 1,
+              },
+            }}
+          />
+        ) : (
+          <AnalyzingText>영상 준비중</AnalyzingText>
+        )}
         <SizeButton onClick={toggleWebcamSize}>
           {webcamSize === "default" ? <FaExpandAlt /> : <FaCompressAlt />}
         </SizeButton>
@@ -66,12 +66,13 @@ const WebcamContainer = styled.div<{ $webcamSize: WebcamSize }>`
   justify-content: center;
   pointer-events: none;
   z-index: 1000;
+  background-color: ${(props) =>
+    props.$webcamSize === "maximized" ? "rgba(0, 0, 0, 0.5)" : "transparent"};
+  transition: background-color 0.3s ease;
 `;
 
 const WebcamContent = styled.div<{ $webcamSize: WebcamSize }>`
   position: relative;
-  width: ${(props) => (props.$webcamSize === "maximized" ? "330px" : "200px")};
-  height: ${(props) => (props.$webcamSize === "maximized" ? "586px" : "355px")};
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
@@ -81,16 +82,9 @@ const WebcamContent = styled.div<{ $webcamSize: WebcamSize }>`
     props.$webcamSize === "default" &&
     `
     position: absolute;
-    bottom: 20px;
-    right: 20px;
+    bottom: 40px;
+    right: 40px;
   `}
-`;
-
-const Video = styled.video`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1);
 `;
 
 const AnalyzingText = styled.div`

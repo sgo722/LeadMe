@@ -13,11 +13,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { useSetRecoilState } from "recoil";
-import { IsWebcamVisibleAtom } from "stores/index";
+import { IsWebcamVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
 
+interface ChallengeData {
+  youtubeId: string;
+  url: string;
+}
+
 // 사용자가 입력한 유튜브id랑 url을 서버로 보내서 랜드마크를 따고 mongoDB에 저장
-const postChallenge = async (data: Record<string, unknown>) => {
+const postChallenge = async (data: ChallengeData): Promise<any> => {
   const res = await axiosInstance.post("/api/v1/challenge", data);
   return res.data;
 };
@@ -34,24 +39,28 @@ export const Practice: React.FC = () => {
   const [inputUrl, setInputUrl] = useState<string>("");
   const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
   const setIsWebcamVisible = useSetRecoilState(IsWebcamVisibleAtom);
+  const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);
 
   const mutation = useMutation({
     mutationFn: postChallenge,
-    onMutate: () => {
+    onMutate: (variables: ChallengeData) => {
       setIsCompletionAlertModalOpen(true);
       setIsWebcamVisible(true);
+      setCurrentYoutubeId(variables.youtubeId);
     },
     onSuccess: (data) => {
       console.log("MongoDB에 저장 성공");
       setIsWebcamVisible(false); // 성공 시 웹캠 비활성화
-
+      setCurrentYoutubeId("");
       nav(`/practice/${data.data.youtubeId}`);
     },
     onError: (error) => {
       console.error("에러", error);
       setIsWebcamVisible(false); // 에러 발생 시 웹캠 비활성화
+      setCurrentYoutubeId("");
+      nav("/home");
     },
   });
 
