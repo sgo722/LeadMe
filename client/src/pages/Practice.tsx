@@ -3,11 +3,7 @@ import styled from "styled-components";
 import YouTube from "react-youtube";
 import { FaChevronLeft } from "react-icons/fa6";
 import { FaExchangeAlt, FaPlayCircle } from "react-icons/fa";
-import {
-  PoseLandmarker,
-  FilesetResolver,
-  NormalizedLandmark,
-} from "@mediapipe/tasks-vision";
+import { PoseLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
@@ -30,7 +26,6 @@ const postChallenge = async (data: ChallengeData) => {
 export const Practice: React.FC = () => {
   const { videoId } = useParams<{ videoId?: string }>();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
     null
   );
@@ -114,96 +109,29 @@ export const Practice: React.FC = () => {
     }
   }, [poseLandmarker]);
 
-  const drawPose = (ctx: CanvasRenderingContext2D, pose: number[][]) => {
-    const canvasWidth = ctx.canvas.width;
-
-    // 캔버스 컨텍스트를 좌우 반전
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.translate(-canvasWidth, 0);
-
-    const connections = [
-      [11, 12], // 어깨
-      [11, 13],
-      [13, 15], // 왼팔
-      [12, 14],
-      [14, 16], // 오른팔
-      [11, 23],
-      [12, 24], // 몸통
-      [23, 24], // 엉덩이
-      [23, 25],
-      [25, 27],
-      [27, 29],
-      [29, 31], // 왼쪽 다리
-      [24, 26],
-      [26, 28],
-      [28, 30],
-      [30, 32], // 오른쪽 다리
-    ];
-
-    // 연결선 그리기
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
-    connections.forEach(([i, j]) => {
-      const [x1, y1] = pose[i];
-      const [x2, y2] = pose[j];
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    });
-
-    // 키포인트 그리기
-    ctx.fillStyle = "red";
-    pose.forEach(([x, y], i) => {
-      if (i > 10) {
-        // 얼굴 부분 제외
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fill();
-      }
-    });
-
-    // 캔버스 컨텍스트 복원
-    ctx.restore();
-  };
-
   const predictWebcam = useCallback(() => {
-    if (!poseLandmarker || !videoRef.current || !canvasRef.current) return;
+    if (!poseLandmarker || !videoRef.current) return;
 
-    const canvasCtx = canvasRef.current.getContext("2d");
-    if (!canvasCtx) return;
-
-    const detectAndDraw = async () => {
-      if (videoRef.current && canvasRef.current) {
+    const detectPose = async () => {
+      if (videoRef.current) {
         const results = await poseLandmarker.detectForVideo(
           videoRef.current,
           performance.now()
         );
-        canvasCtx.clearRect(
-          0,
-          0,
-          canvasRef.current!.width,
-          canvasRef.current!.height
-        );
 
         if (results.landmarks) {
-          results.landmarks.forEach((pose: NormalizedLandmark[]) => {
-            const scaledPose = pose.map(({ x, y }) => [
-              x * canvasRef.current!.width,
-              y * canvasRef.current!.height,
-            ]);
-            drawPose(canvasCtx, scaledPose);
-          });
+          // 여기서 감지된 포즈 데이터를 처리할 수 있음
+          // ex)서버로 전송하거나 상태로 저장
+          console.log("Detected pose:", results.landmarks);
         }
       }
 
       if (webcamRunning) {
-        requestAnimationFrame(detectAndDraw);
+        requestAnimationFrame(detectPose);
       }
     };
 
-    detectAndDraw();
+    detectPose();
   }, [poseLandmarker, webcamRunning]);
 
   useEffect(() => {
@@ -348,7 +276,6 @@ export const Practice: React.FC = () => {
               <WebcamWrapper>
                 <Webcam>
                   <Video ref={videoRef} autoPlay playsInline />
-                  <Canvas ref={canvasRef} width={309} height={550} />
                 </Webcam>
               </WebcamWrapper>
               <Buttons>
@@ -487,14 +414,6 @@ const Video = styled.video`
   height: 100%;
   transform: scaleX(-1);
   object-fit: cover;
-`;
-
-const Canvas = styled.canvas`
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
 `;
 
 // 영상 url 입력하는 경우 ui

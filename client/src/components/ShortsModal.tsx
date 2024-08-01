@@ -49,10 +49,6 @@ export const ShortsModal: React.FC = () => {
     setShortsSize("default");
   };
 
-  // const toggleShortsSize = () => {
-  //   setShortsSize((prev) => (prev === "default" ? "maximized" : "default"));
-  // };
-
   const videoDimensions = {
     default: { width: "200px", height: "355px" },
     maximized: { width: "330px", height: "586px" },
@@ -71,8 +67,8 @@ export const ShortsModal: React.FC = () => {
               height: videoDimensions[shortsSize].height,
               playerVars: {
                 autoplay: 1,
-                controls: 0,
                 modestbranding: 1,
+                mute: 1,
               },
             }}
           />
