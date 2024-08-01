@@ -12,7 +12,6 @@ import { axiosInstance } from "axiosInstance/apiClient";
 import VideoPlayer from "features/search/VideoPlayer";
 import Header from "components/Header";
 import { SearchBar } from "components/SearchBar";
-import { LoadingSpinner } from "components/LoadingSpinner";
 
 interface Video {
   videoId: string;
@@ -73,15 +72,6 @@ export const SearchResultDetail: React.FC = () => {
   const query = new URLSearchParams(location.search).get("q") || "";
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const handleMutationStart = useCallback(() => {
-    setIsLoading(true);
-  }, []);
-
-  const handleMutationEnd = useCallback(() => {
-    setIsLoading(false);
-  }, []);
 
   useEffect(() => {
     if (videoId) {
@@ -138,10 +128,6 @@ export const SearchResultDetail: React.FC = () => {
     ];
   }, [videos, videoId]);
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
   return (
     <PageLayout>
       <Header stickyOnly />
@@ -155,8 +141,6 @@ export const SearchResultDetail: React.FC = () => {
             video={video}
             isActive={video.videoId === activeVideoId}
             onIntersection={handleIntersection}
-            onMutationStart={handleMutationStart}
-            onMutationEnd={handleMutationEnd}
           />
         ))}
         {isFetchingNextPage && <div>Loading more...</div>}
