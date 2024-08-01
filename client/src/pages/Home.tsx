@@ -1,12 +1,18 @@
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSetRecoilState } from "recoil";
-import { accessTokenState } from "stores/authAtom";
+import {
+  accessTokenState,
+  accessTokenExpireTimeState,
+  refreshTokenState,
+  refreshTokenExpireTimeState,
+} from "stores/authAtom";
 import styled from "styled-components";
 import Header from "components/Header";
 import { SearchBar } from "components/SearchBar";
 import img1 from "assets/image/img1.png";
 import img2 from "assets/image/img2.png";
+import useAuth from "hooks/useAuth"; // useAuth 훅을 import
 
 interface ImageData {
   src: string;
@@ -24,6 +30,14 @@ const Home: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const setAccessToken = useSetRecoilState(accessTokenState);
+  const setAccessTokenExpireTime = useSetRecoilState(
+    accessTokenExpireTimeState
+  );
+  const setRefreshToken = useSetRecoilState(refreshTokenState);
+  const setRefreshTokenExpireTime = useSetRecoilState(
+    refreshTokenExpireTimeState
+  );
+  const { logout } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -46,6 +60,9 @@ const Home: React.FC = () => {
       );
 
       setAccessToken(accessToken);
+      setAccessTokenExpireTime(accessTokenExpireTime || "");
+      setRefreshToken(refreshToken || "");
+      setRefreshTokenExpireTime(refreshTokenExpireTime || "");
 
       params.delete("accessToken");
       params.delete("accessTokenExpireTime");
@@ -60,7 +77,14 @@ const Home: React.FC = () => {
         { replace: true }
       );
     }
-  }, [location, navigate, setAccessToken]);
+  }, [
+    location,
+    navigate,
+    setAccessToken,
+    setAccessTokenExpireTime,
+    setRefreshToken,
+    setRefreshTokenExpireTime,
+  ]);
 
   return (
     <>

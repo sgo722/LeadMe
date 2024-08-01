@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
-import { testUrl } from "axiosInstance/constants";
+import { useRecoilValue } from "recoil";
+import { baseUrl } from "axiosInstance/constants";
+import { accessTokenState } from "stores/authAtom";
 
 interface SendModalProps {
   isOpen: boolean;
@@ -11,8 +13,11 @@ interface SendModalProps {
 }
 
 interface ResponseData {
-  id: number;
-  name: string;
+  code: number;
+  message: string;
+  data: string[];
+  errors: object;
+  isSuccess: boolean;
 }
 
 const FindModal: React.FC<SendModalProps> = ({
@@ -21,16 +26,21 @@ const FindModal: React.FC<SendModalProps> = ({
   openChatModal,
 }) => {
   const [inputValue, setInputValue] = useState("");
-  const [searchResults, setSearchResults] = useState<ResponseData[]>([]);
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const accessToken = useRecoilValue(accessTokenState);
 
-  const mutation = useMutation<ResponseData[], Error, string>({
-    mutationFn: async (value: string): Promise<ResponseData[]> => {
-      const response = await axios.get<ResponseData[]>(`${testUrl}/user`, {
-        params: { nickname: value },
-      });
-      return response.data;
+  const mutation = useMutation<string[], Error, string>({
+    mutationFn: async (value: string): Promise<string[]> => {
+      const response = await axios.get<ResponseData>(
+        `${baseUrl}/api/v1/user/search`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          params: { nickname: value },
+        }
+      );
+      return response.data.data;
     },
-    onSuccess: (data: ResponseData[]) => {
+    onSuccess: (data: string[]) => {
       setSearchResults(data);
       console.log(data);
     },
@@ -46,15 +56,12 @@ const FindModal: React.FC<SendModalProps> = ({
     mutation.mutate(value);
   };
 
-  const handleResultItemClick = (name: string) => {
-    setInputValue(name);
+  const handleResultItemClick = (nickname: string) => {
+    setInputValue(nickname);
   };
 
   const handleStartClick = () => {
-    if (
-      inputValue.length > 0 &&
-      searchResults.some((result) => result.name === inputValue)
-    ) {
+    if (inputValue.length > 0 && searchResults.includes(inputValue)) {
       openChatModal(inputValue);
       handleClose();
     }
@@ -75,8 +82,7 @@ const FindModal: React.FC<SendModalProps> = ({
   };
 
   const isButtonDisabled =
-    inputValue.length === 0 ||
-    !searchResults.some((result) => result.name === inputValue);
+    inputValue.length === 0 || !searchResults.includes(inputValue);
 
   return (
     <Overlay onClick={handleOverlayClick}>
@@ -90,16 +96,16 @@ const FindModal: React.FC<SendModalProps> = ({
             value={inputValue}
             onChange={handleInputChange}
           />
-          {searchResults.length === 0 ? (
+          {searchResults.length === 0 || inputValue.length === 0 ? (
             <ResultNo>계정을 찾을 수 없습니다.</ResultNo>
           ) : (
             <ResultsList>
-              {searchResults.map((result) => (
+              {searchResults.map((nickname, index) => (
                 <ResultItem
-                  key={result.id}
-                  onClick={() => handleResultItemClick(result.name)}
+                  key={`${nickname}_${index}`}
+                  onClick={() => handleResultItemClick(nickname)}
                 >
-                  {result.name}
+                  {nickname}
                 </ResultItem>
               ))}
             </ResultsList>

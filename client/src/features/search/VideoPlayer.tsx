@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+import { axiosInstance } from "axiosInstance/apiClient";
+import { useMutation } from "@tanstack/react-query";
 
 interface VideoPlayerProps {
   video: {
@@ -14,17 +17,42 @@ interface VideoPlayerProps {
     };
   };
   isActive: boolean;
+  onMutationStart: () => void;
+  onMutationEnd: () => void;
   onIntersection: (videoId: string, isIntersecting: boolean) => void;
 }
+
+// 유튜브id를 서버로 보내서 랜드마크를 따서 mongoDB에 저장
+const fetchChallenge = async (data: Record<string, unknown>) => {
+  const res = await axiosInstance.post("/api/v1/challenge", data);
+  return res.data;
+};
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   video,
   isActive,
   onIntersection,
+  onMutationStart,
+  onMutationEnd,
 }) => {
   const [canEmbed, setCanEmbed] = useState(true);
   const videoRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const nav = useNavigate();
+
+  const mutation = useMutation({
+    mutationFn: fetchChallenge,
+    onMutate: () => {
+      onMutationStart();
+    },
+    onSuccess: () => {
+      onMutationEnd();
+      nav(`/practice/${video.videoId}`);
+    },
+    onError: (error) => {
+      console.error("에러", error);
+    },
+  });
 
   useEffect(() => {
     const currentVideoRef = videoRef.current;
@@ -70,7 +98,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const handlePracticeClick = () => {
-    console.log("연습버튼 클릭!");
+    const challengeData = {
+      youtubeId: video.videoId,
+      url: `https://www.youtube.com/shorts/${video.videoId}`,
+    };
+
+    mutation.mutate(challengeData);
   };
 
   return (

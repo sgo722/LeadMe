@@ -1,17 +1,26 @@
+import { useEffect, useState } from "react";
 import { useRecoilState } from "recoil";
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
 import {
   accessTokenState,
   accessTokenExpireTimeState,
   refreshTokenState,
   refreshTokenExpireTimeState,
 } from "../stores/authAtom";
-import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { baseUrl } from "axiosInstance/constants";
 
 interface RefreshTokenResponse {
-  access_token: string;
-  access_token_expire_time: string;
+  accessToken: string;
+  accessTokenExpireTime: string;
+}
+
+interface ResponseData {
+  code: number;
+  message: string;
+  data: RefreshTokenResponse;
+  errors: object;
+  isSuccess: boolean;
 }
 
 const useAuth = () => {
@@ -23,48 +32,10 @@ const useAuth = () => {
   const [refreshTokenExpireTime, setRefreshTokenExpireTime] = useRecoilState(
     refreshTokenExpireTimeState
   );
-  const navigate = useNavigate();
+  const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
-  // accessToken 유효성 검사
-  const isTokenExpired = (expireTime: string | null): boolean => {
-    if (!expireTime) return true;
-    return new Date().getTime() > new Date(expireTime).getTime();
-  };
-
-  const refreshAccessTokenMutation = useMutation<
-    RefreshTokenResponse,
-    Error,
-    void
-  >({
-    mutationFn: async (): Promise<RefreshTokenResponse> => {
-      const response = await fetch(`${baseUrl}/api/token/issue`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${refreshToken}`, // Header에 refresh token 추가
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to refresh access token");
-      }
-
-      return response.json();
-    },
-    onSuccess: (data: RefreshTokenResponse) => {
-      sessionStorage.setItem("access_token", data.access_token);
-      sessionStorage.setItem(
-        "access_token_expire_time",
-        data.access_token_expire_time
-      );
-      setAccessToken(data.access_token);
-      setAccessTokenExpireTime(data.access_token_expire_time);
-    },
-    onError: (error: Error) => {
-      console.error("Failed to refresh access token", error);
-    },
-  });
-
+  // 로그아웃
   const logout = () => {
     setAccessToken(null);
     setAccessTokenExpireTime(null);
@@ -74,31 +45,110 @@ const useAuth = () => {
     sessionStorage.removeItem("access_token_expire_time");
     sessionStorage.removeItem("refresh_token");
     sessionStorage.removeItem("refresh_token_expire_time");
-  };
-
-  const refreshAccessToken = async (): Promise<void> => {
-    if (isTokenExpired(refreshTokenExpireTime)) {
-      logout();
-      navigate("/home");
-      alert("로그인 세션이 만료되었습니다. 재로그인 해주세요.");
-      return;
+    sessionStorage.removeItem("timer_started");
+    if (timerId) {
+      clearTimeout(timerId);
+      setTimerId(null);
     }
-
-    try {
-      await refreshAccessTokenMutation.mutateAsync();
-    } catch (error) {
-      console.error("Failed to refresh access token", error);
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
     }
   };
 
-  const getAccessToken = async (): Promise<string | null> => {
-    if (isTokenExpired(accessTokenExpireTime)) {
-      await refreshAccessToken();
+  // refreshToken 유효성 체크
+  const isRefreshTokenValid = (): boolean => {
+    if (!refreshTokenExpireTime) {
+      return false;
     }
-    return accessToken;
+
+    const expireTimeInMs = new Date(refreshTokenExpireTime).getTime();
+    const currentTimeInMs = new Date().getTime();
+    return expireTimeInMs > currentTimeInMs;
   };
 
-  return { getAccessToken, logout };
+  // accessToken 재발급
+  const mutation = useMutation<RefreshTokenResponse, Error, void>({
+    mutationFn: async (): Promise<RefreshTokenResponse> => {
+      if (!isRefreshTokenValid()) {
+        alert("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+        logout();
+        throw new Error("Invalid refresh token");
+      }
+
+      const response = await axios.post<ResponseData>(
+        `${baseUrl}/api/token/issue`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${refreshToken}` },
+        }
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: RefreshTokenResponse) => {
+      setAccessToken(data.accessToken);
+      setAccessTokenExpireTime(data.accessTokenExpireTime);
+      sessionStorage.setItem("access_token", data.accessToken);
+      sessionStorage.setItem(
+        "access_token_expire_time",
+        data.accessTokenExpireTime
+      );
+
+      if (timerId) {
+        clearTimeout(timerId);
+        setTimerId(null);
+      }
+      if (intervalId) {
+        clearInterval(intervalId);
+        setIntervalId(null);
+      }
+
+      // 새로운 타이머 시작
+      startTokenExpiryTimer(data.accessTokenExpireTime);
+    },
+    onError: (error: Error) => {
+      console.error("Failed to refresh access token:", error);
+      if (error.message !== "Invalid refresh token") {
+        alert("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+        logout();
+      }
+    },
+  });
+
+  // 타이머
+  const startTokenExpiryTimer = (expireTime: string) => {
+    if (timerId) {
+      clearTimeout(timerId);
+    }
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+
+    const expireTimeInMs =
+      new Date(expireTime).getTime() - new Date().getTime();
+    const timer = setTimeout(() => {
+      mutation.mutate();
+    }, expireTimeInMs - 10 * 60 * 1000); // 만료 시간 10분 전 재발급
+    setTimerId(timer);
+
+    sessionStorage.setItem("timer_started", "true");
+  };
+
+  useEffect(() => {
+    if (accessTokenExpireTime && !sessionStorage.getItem("timer_started")) {
+      startTokenExpiryTimer(accessTokenExpireTime);
+    }
+    return () => {
+      if (timerId) {
+        clearTimeout(timerId);
+      }
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [accessTokenExpireTime]);
+
+  return { logout };
 };
 
 export default useAuth;
