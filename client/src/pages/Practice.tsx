@@ -12,8 +12,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
-import { LoadingSpinner } from "components/LoadingSpinner";
-import axios from "axios";
+import { useSetRecoilState } from "recoil";
+import { IsWebcamVisibleAtom } from "stores/index";
+import { CompletionAlertModal } from "components/CompletionAlertModal";
 
 // 사용자가 입력한 유튜브id랑 url을 서버로 보내서 랜드마크를 따고 mongoDB에 저장
 const postChallenge = async (data: Record<string, unknown>) => {
@@ -32,18 +33,25 @@ export const Practice: React.FC = () => {
   const nav = useNavigate();
   const [inputUrl, setInputUrl] = useState<string>("");
   const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
+  const setIsWebcamVisible = useSetRecoilState(IsWebcamVisibleAtom);
+  const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
+    useState<boolean>(false);
 
   const mutation = useMutation({
     mutationFn: postChallenge,
+    onMutate: () => {
+      setIsCompletionAlertModalOpen(true);
+      setIsWebcamVisible(true);
+    },
     onSuccess: (data) => {
       console.log("MongoDB에 저장 성공");
+      setIsWebcamVisible(false); // 성공 시 웹캠 비활성화
+
       nav(`/practice/${data.data.youtubeId}`);
     },
     onError: (error) => {
-      if (axios.isAxiosError(error)) {
-        console.error("api에러", error.response?.data);
-      }
       console.error("에러", error);
+      setIsWebcamVisible(false); // 에러 발생 시 웹캠 비활성화
     },
   });
 
@@ -251,10 +259,14 @@ export const Practice: React.FC = () => {
     return match ? match[1] : null;
   };
 
+  const handleCloseIsCompletionAlertModal = () => {
+    setIsCompletionAlertModalOpen(false);
+    nav("/home");
+  };
+
   return (
     <>
       <Header stickyOnly />
-      {mutation.isPending && <LoadingSpinner />}
       <Container>
         <BackButton onClick={handleBackButtonClick}>
           <FaChevronLeft />
@@ -345,6 +357,10 @@ export const Practice: React.FC = () => {
           </VideoWrapper>
         </Content>
       </Container>
+      <CompletionAlertModal
+        isOpen={isCompletionAlertModalOpen}
+        onClose={handleCloseIsCompletionAlertModal}
+      />
     </>
   );
 };

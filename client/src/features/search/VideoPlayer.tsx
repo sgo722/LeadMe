@@ -3,6 +3,9 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { useMutation } from "@tanstack/react-query";
+import { useSetRecoilState } from "recoil";
+import { IsWebcamVisibleAtom } from "stores/index";
+import { CompletionAlertModal } from "components/CompletionAlertModal";
 
 interface VideoPlayerProps {
   video: {
@@ -17,13 +20,11 @@ interface VideoPlayerProps {
     };
   };
   isActive: boolean;
-  onMutationStart: () => void;
-  onMutationEnd: () => void;
   onIntersection: (videoId: string, isIntersecting: boolean) => void;
 }
 
 // 유튜브id를 서버로 보내서 랜드마크를 따서 mongoDB에 저장
-const fetchChallenge = async (data: Record<string, unknown>) => {
+const postChallenge = async (data: Record<string, unknown>) => {
   const res = await axiosInstance.post("/api/v1/challenge", data);
   return res.data;
 };
@@ -32,25 +33,31 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   video,
   isActive,
   onIntersection,
-  onMutationStart,
-  onMutationEnd,
 }) => {
   const [canEmbed, setCanEmbed] = useState(true);
   const videoRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const nav = useNavigate();
+  const setIsWebcamVisible = useSetRecoilState(IsWebcamVisibleAtom);
+  const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
+    useState<boolean>(false);
 
   const mutation = useMutation({
-    mutationFn: fetchChallenge,
+    mutationFn: postChallenge,
     onMutate: () => {
-      onMutationStart();
+      setIsCompletionAlertModalOpen(true);
+      setIsWebcamVisible(true);
     },
     onSuccess: () => {
-      onMutationEnd();
+      console.log("MongoDB에 저장 성공");
+      setIsWebcamVisible(false);
       nav(`/practice/${video.videoId}`);
     },
     onError: (error) => {
       console.error("에러", error);
+      setIsWebcamVisible(false);
+      setIsCompletionAlertModalOpen(false);
+      nav("/home");
     },
   });
 
@@ -106,6 +113,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     mutation.mutate(challengeData);
   };
 
+  const handleCloseCompletionAlertModal = () => {
+    setIsCompletionAlertModalOpen(false);
+    nav("/home");
+  };
+
   return (
     <VideoPlayerWrapper ref={videoRef}>
       <ContentWrapper>
@@ -137,6 +149,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </ButtonText>
         </PracticeButton>
       </ContentWrapper>
+      <CompletionAlertModal
+        isOpen={isCompletionAlertModalOpen}
+        onClose={handleCloseCompletionAlertModal}
+      />
     </VideoPlayerWrapper>
   );
 };
