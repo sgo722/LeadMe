@@ -10,3 +10,8 @@ export const IsWebcamVisibleAtom = atom<boolean>({
   key: "IsWebcamVisibleAtom",
   default: false,
 });
+
+export const CurrentYoutubeIdAtom = atom({
+  key: "CurrentYoutubeIdAtom",
+  default: "",
+});
