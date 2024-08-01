@@ -1,5 +1,7 @@
+// ChatModal.tsx
 import styled from "styled-components";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import useWebSocket from "utils/WebSocketClient";
 
 interface ChatData {
   id: number;
@@ -20,22 +22,54 @@ interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   chat: ChatData | null;
+  currentUserId: string;
 }
 
 export const ChatModal: React.FC<ChatModalProps> = ({
   isOpen,
   onClose,
   chat,
+  currentUserId,
 }) => {
   const modalBodyRef = useRef<HTMLDivElement>(null);
+  const [newMessage, setNewMessage] = useState<string>("");
+
+  // 메시지 수신 시 실행될 콜백 함수
+  const onMessageReceived = (message: Message) => {
+    if (chat) {
+      chat.messages.push(message);
+    }
+  };
+
+  // 채널 이름 생성
+  const channel = chat ? [currentUserId, chat.userId].sort().join("_") : "";
+
+  // useWebSocket 훅을 사용하여 WebSocket 연결 설정
+  const { sendMessage } = useWebSocket(channel, onMessageReceived);
 
   useEffect(() => {
     if (modalBodyRef.current) {
       modalBodyRef.current.scrollTop = modalBodyRef.current.scrollHeight;
     }
-  }, [chat, isOpen]);
+  }, [chat]);
 
-  if (!isOpen || !chat) return null;
+  // 메시지 전송 함수
+  const handleSendMessage = () => {
+    if (chat && newMessage.trim() !== "") {
+      const message: Message = {
+        id: Date.now(),
+        senderId: currentUserId,
+        content: newMessage,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      // 메시지 전송
+      sendMessage(message);
+      chat.messages.push(message);
+      setNewMessage("");
+    }
+  };
+
+  if (!isOpen || !chat) return null; // isOpen과 chat이 모두 참일 때만 렌더링
 
   return (
     <ModalOverlay>
@@ -49,7 +83,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         </ModalHeader>
         <ModalBody ref={modalBodyRef}>
           {chat.messages.map((message) => {
-            const isMine = message.senderId === "me";
+            const isMine = message.senderId === currentUserId;
             return (
               <MessageContainer key={message.id} $isMine={isMine}>
                 <MessageContent $isMine={isMine}>
@@ -63,7 +97,16 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           })}
         </ModalBody>
         <MessageInputContainer>
-          <MessageInput placeholder="메시지를 입력하세요 (Enter로 전송)" />
+          <MessageInput
+            placeholder="메시지를 입력하세요 (Enter로 전송)"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                handleSendMessage();
+              }
+            }}
+          />
         </MessageInputContainer>
       </ModalContent>
     </ModalOverlay>
@@ -198,3 +241,5 @@ const MessageInput = styled.input`
     font-size: 12px;
   }
 `;
+
+export default ChatModal;

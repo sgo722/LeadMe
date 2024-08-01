@@ -5,3 +5,13 @@ export const IsEnteredAtom = atom<boolean>({
   key: "IsEnteredAtom",
   default: false,
 });
+
+export const IsShortsVisibleAtom = atom<boolean>({
+  key: "IsShortsVisibleAtom",
+  default: false,
+});
+
+export const CurrentYoutubeIdAtom = atom({
+  key: "CurrentYoutubeIdAtom",
+  default: "",
+});

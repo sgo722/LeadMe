@@ -6,17 +6,29 @@ import {
   accessTokenExpireTimeState,
   refreshTokenState,
   refreshTokenExpireTimeState,
+  userProfileState,
 } from "stores/authAtom";
 import styled from "styled-components";
 import Header from "components/Header";
 import { SearchBar } from "components/SearchBar";
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
+import { baseUrl } from "axiosInstance/constants";
 import img1 from "assets/image/img1.png";
 import img2 from "assets/image/img2.png";
-import useAuth from "hooks/useAuth"; // useAuth 훅을 import
+import { UserProfile } from "types"; // UserProfile 인터페이스 가져오기
 
 interface ImageData {
   src: string;
   alt: string;
+}
+
+interface ResponseData {
+  code: number;
+  message: string;
+  data: UserProfile;
+  errors: any[];
+  isSuccess: boolean;
 }
 
 const imageData: ImageData[] = [
@@ -37,7 +49,25 @@ const Home: React.FC = () => {
   const setRefreshTokenExpireTime = useSetRecoilState(
     refreshTokenExpireTimeState
   );
-  const { logout } = useAuth();
+  const setUserProfile = useSetRecoilState(userProfileState); // 유저 프로필을 저장할 상태 설정
+
+  const mutation = useMutation<UserProfile, Error, string>({
+    mutationFn: async (token: string): Promise<UserProfile> => {
+      const response = await axios.get<ResponseData>(
+        `${baseUrl}/api/v1/user/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: UserProfile) => {
+      setUserProfile(data); // 성공 시 유저 프로필 저장
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching data:", error);
+    },
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -76,6 +106,8 @@ const Home: React.FC = () => {
         },
         { replace: true }
       );
+
+      mutation.mutate(accessToken);
     }
   }, [
     location,

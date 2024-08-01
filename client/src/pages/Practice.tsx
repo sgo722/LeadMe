@@ -1,58 +1,104 @@
 import Header from "components/Header";
 import styled from "styled-components";
 import YouTube from "react-youtube";
-import { FaChevronLeft } from "react-icons/fa6";
-import { FaExchangeAlt, FaPlayCircle } from "react-icons/fa";
-import {
-  PoseLandmarker,
-  FilesetResolver,
-  NormalizedLandmark,
-} from "@mediapipe/tasks-vision";
+import { YouTubeEvent, YouTubePlayer } from "react-youtube";
+import { FaChevronLeft, FaExchangeAlt, FaPlayCircle } from "react-icons/fa";
+import { PoseLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
-import { LoadingSpinner } from "components/LoadingSpinner";
-import axios from "axios";
+import { useSetRecoilState } from "recoil";
+import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
+import { CompletionAlertModal } from "components/CompletionAlertModal";
 
-// 사용자가 입력한 유튜브id랑 url을 서버로 보내서 랜드마크를 따고 mongoDB에 저장
-const postChallenge = async (data: Record<string, unknown>) => {
+interface ChallengeData {
+  youtubeId: string;
+  url: string;
+}
+
+interface Landmark {
+  x: number;
+  y: number;
+  z: number;
+  visibility: number;
+}
+
+interface YoutubeBlazePoseData {
+  youtubeId: string;
+  landmarks: Landmark[][];
+}
+
+const postChallenge = async (data: ChallengeData) => {
   const res = await axiosInstance.post("/api/v1/challenge", data);
   return res.data;
 };
 
+const fetchYoutubeBlazePoseData = async (
+  videoId: string
+): Promise<YoutubeBlazePoseData> => {
+  const res = await axiosInstance.get(`/api/v1/challenge/${videoId}`);
+  return res.data.data;
+};
+
 export const Practice: React.FC = () => {
+  // URL 파라미터에서 videoId 추출
   const { videoId } = useParams<{ videoId?: string }>();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const nav = useNavigate();
+
+  // Recoil 상태 설정
+  const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
+  const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
+
+  // 로컬 상태 관리
+  const [inputUrl, setInputUrl] = useState<string>("");
+  const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
+  const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
+    useState<boolean>(false);
+  const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
+  const [webcamRunning, setWebcamRunning] = useState(false);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
     null
   );
-  const [webcamRunning, setWebcamRunning] = useState(false);
-  const nav = useNavigate();
-  const [inputUrl, setInputUrl] = useState<string>("");
-  const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
 
+  // Ref 설정
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const youtubeCanvasRef = useRef<HTMLCanvasElement>(null);
+  const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
+
+  // API 요청 관련 mutation
   const mutation = useMutation({
     mutationFn: postChallenge,
+    onMutate: (variables: ChallengeData) => {
+      setIsCompletionAlertModalOpen(true);
+      setIsWebcamVisible(true);
+      setCurrentYoutubeId(variables.youtubeId);
+    },
     onSuccess: (data) => {
-      console.log("MongoDB에 저장 성공");
+      setIsWebcamVisible(false);
+      setCurrentYoutubeId("");
       nav(`/practice/${data.data.youtubeId}`);
     },
-    onError: (error) => {
-      if (axios.isAxiosError(error)) {
-        console.error("api에러", error.response?.data);
-      }
-      console.error("에러", error);
+    onError: () => {
+      setIsWebcamVisible(false);
+      setCurrentYoutubeId("");
+      nav("/home");
     },
   });
 
+  // YouTube BlazePose 데이터 쿼리
+  const youtubeBlazePoseQuery = useQuery({
+    queryKey: ["youtubeBlazePoseData", videoId],
+    queryFn: () => fetchYoutubeBlazePoseData(videoId!),
+    enabled: !!videoId,
+  });
+
+  // PoseLandmarker 초기화
   useEffect(() => {
     const initializePoseLandmarker = async () => {
       const vision = await FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
       );
-
       const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task`,
@@ -63,17 +109,13 @@ export const Practice: React.FC = () => {
       });
       setPoseLandmarker(poseLandmarker);
     };
-
     initializePoseLandmarker();
   }, []);
 
+  // 웹캠 활성화
   useEffect(() => {
     const enableCam = async () => {
-      if (!poseLandmarker) {
-        console.log("poseLandmaker가 아직 생성되지 않음");
-        return;
-      }
-
+      if (!poseLandmarker) return;
       try {
         const constraints = {
           video: {
@@ -91,111 +133,153 @@ export const Practice: React.FC = () => {
         console.error("웹캠 활성화 실패:", error);
       }
     };
-
-    if (poseLandmarker) {
-      enableCam();
-    }
+    if (poseLandmarker) enableCam();
   }, [poseLandmarker]);
 
-  const drawPose = (ctx: CanvasRenderingContext2D, pose: number[][]) => {
-    const canvasWidth = ctx.canvas.width;
+  // YouTube BlazePose 데이터 그리기 함수
+  const drawYoutubeBlazePoseData = useCallback(
+    (frameIndex: number) => {
+      if (!youtubeCanvasRef.current || !youtubeBlazePoseQuery.data) return;
+      const ctx = youtubeCanvasRef.current.getContext("2d");
+      if (!ctx) return;
+      ctx.clearRect(
+        0,
+        0,
+        youtubeCanvasRef.current.width,
+        youtubeCanvasRef.current.height
+      );
+      const landmarks = youtubeBlazePoseQuery.data.landmarks[frameIndex];
+      if (!landmarks) return;
 
-    // 캔버스 컨텍스트를 좌우 반전
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.translate(-canvasWidth, 0);
+      const connections = [
+        [11, 12], // 어깨
+        [11, 13],
+        [13, 15], // 왼팔
+        [12, 14],
+        [14, 16], // 오른팔
+        [11, 23],
+        [12, 24], // 몸통
+        [23, 24], // 엉덩이
+        [23, 25],
+        [25, 27],
+        [27, 29],
+        [29, 31], // 왼쪽 다리
+        [24, 26],
+        [26, 28],
+        [28, 30],
+        [30, 32], // 오른쪽 다리
+      ];
 
-    const connections = [
-      [11, 12], // 어깨
-      [11, 13],
-      [13, 15], // 왼팔
-      [12, 14],
-      [14, 16], // 오른팔
-      [11, 23],
-      [12, 24], // 몸통
-      [23, 24], // 엉덩이
-      [23, 25],
-      [25, 27],
-      [27, 29],
-      [29, 31], // 왼쪽 다리
-      [24, 26],
-      [26, 28],
-      [28, 30],
-      [30, 32], // 오른쪽 다리
-    ];
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      connections.forEach(([i, j]) => {
+        const start = landmarks[i];
+        const end = landmarks[j];
+        if (start && end) {
+          ctx.beginPath();
+          ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
+          ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
+          ctx.stroke();
+        }
+      });
 
-    // 연결선 그리기
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
-    connections.forEach(([i, j]) => {
-      const [x1, y1] = pose[i];
-      const [x2, y2] = pose[j];
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    });
+      // 관절 그리기(얼굴 포함)
+      // landmarks.forEach((landmark) => {
+      //   ctx.beginPath();
+      //   ctx.arc(
+      //     landmark.x * youtubeCanvasRef.current!.width,
+      //     landmark.y * youtubeCanvasRef.current!.height,
+      //     5,
+      //     0,
+      //     2 * Math.PI
+      //   );
+      //   ctx.fillStyle = "red";
+      //   ctx.fill();
+      // });
 
-    // 키포인트 그리기
-    ctx.fillStyle = "red";
-    pose.forEach(([x, y], i) => {
-      if (i > 10) {
-        // 얼굴 부분 제외
+      // 관절 그리기 (얼굴 제외)
+      const bodyJoints = [
+        11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+      ];
+      bodyJoints.forEach((index) => {
+        const landmark = landmarks[index];
         ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.arc(
+          landmark.x * youtubeCanvasRef.current!.width,
+          landmark.y * youtubeCanvasRef.current!.height,
+          5,
+          0,
+          2 * Math.PI
+        );
+        ctx.fillStyle = "red";
         ctx.fill();
+      });
+    },
+    [youtubeBlazePoseQuery.data]
+  );
+
+  // YouTube 영상과 BlazePose 데이터 동기화
+  useEffect(() => {
+    let animationFrameId: number;
+    const fps = 20;
+    const frameInterval = 1000 / fps;
+    let lastTime = 0;
+
+    const animate = (currentTime: number) => {
+      if (
+        !youtubePlayerRef.current ||
+        !isYouTubePlaying ||
+        !youtubeBlazePoseQuery.data ||
+        !youtubeBlazePoseQuery.data.landmarks ||
+        youtubeBlazePoseQuery.data.landmarks.length === 0
+      ) {
+        animationFrameId = requestAnimationFrame(animate);
+        return;
       }
-    });
 
-    // 캔버스 컨텍스트 복원
-    ctx.restore();
-  };
+      if (currentTime - lastTime >= frameInterval) {
+        const currentVideoTime = youtubePlayerRef.current.getCurrentTime();
+        const frameIndex = Math.floor(currentVideoTime * fps);
+        drawYoutubeBlazePoseData(frameIndex);
+        lastTime = currentTime;
+      }
 
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isYouTubePlaying, youtubeBlazePoseQuery.data, drawYoutubeBlazePoseData]);
+
+  // YouTube 이벤트 핸들러
+  const handleYouTubeStateChange = (event: YouTubeEvent) =>
+    setIsYouTubePlaying(event.data === 1);
+  const handleYouTubeReady = (event: YouTubeEvent) =>
+    (youtubePlayerRef.current = event.target);
+
+  // 웹캠 포즈 감지
   const predictWebcam = useCallback(() => {
-    if (!poseLandmarker || !videoRef.current || !canvasRef.current) return;
-
-    const canvasCtx = canvasRef.current.getContext("2d");
-    if (!canvasCtx) return;
-
-    const detectAndDraw = async () => {
-      if (videoRef.current && canvasRef.current) {
+    if (!poseLandmarker || !videoRef.current) return;
+    const detectPose = async () => {
+      if (videoRef.current) {
         const results = await poseLandmarker.detectForVideo(
           videoRef.current,
           performance.now()
         );
-        canvasCtx.clearRect(
-          0,
-          0,
-          canvasRef.current!.width,
-          canvasRef.current!.height
-        );
-
         if (results.landmarks) {
-          results.landmarks.forEach((pose: NormalizedLandmark[]) => {
-            const scaledPose = pose.map(({ x, y }) => [
-              x * canvasRef.current!.width,
-              y * canvasRef.current!.height,
-            ]);
-            drawPose(canvasCtx, scaledPose);
-          });
+          // 여기서 감지된 포즈 데이터를 처리할 수 있음
         }
       }
-
-      if (webcamRunning) {
-        requestAnimationFrame(detectAndDraw);
-      }
+      if (webcamRunning) requestAnimationFrame(detectPose);
     };
-
-    detectAndDraw();
+    detectPose();
   }, [poseLandmarker, webcamRunning]);
 
   useEffect(() => {
     const videoElement = videoRef.current;
-
     if (webcamRunning && videoElement) {
       videoElement.addEventListener("loadeddata", predictWebcam);
     }
-
     return () => {
       if (videoElement) {
         videoElement.removeEventListener("loadeddata", predictWebcam);
@@ -203,58 +287,38 @@ export const Practice: React.FC = () => {
     };
   }, [webcamRunning, predictWebcam]);
 
-  // 목록 버튼 클릭 시 실행할 함수
-  const handleBackButtonClick = () => {
-    nav(-1);
-  };
-
-  // 영상변경 버튼 클릭 시 실행할 함수
-  const handleChangeButtonClick = () => {
-    nav("/practice");
-  };
-
-  // 영상검색하러 가기 버튼 클릭 시 실행할 함수
-  const handleSearchButtonClick = () => {
-    nav("/home");
-  };
-
-  // url 유효성 검사 함수
-  const validateUrl = (url: string) => {
-    return url.toLowerCase().includes("shorts");
-  };
-
-  // url input onChange 이벤트 핸들러
+  // UI 이벤트 핸들러
+  const handleBackButtonClick = () => nav(-1);
+  const handleChangeButtonClick = () => nav("/practice");
+  const handleSearchButtonClick = () => nav("/home");
+  const validateUrl = (url: string) => url.toLowerCase().includes("shorts");
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
-    setInputUrl(url);
-    setIsValidUrl(validateUrl(url));
+    setInputUrl(e.target.value);
+    setIsValidUrl(validateUrl(e.target.value));
   };
 
-  // 영상 불러오기 버튼 클릭 시 실행할 함수
   const handleLoadVideo = () => {
     const youtubeId = extractVideoId(inputUrl);
     if (youtubeId) {
-      const challengeData = {
-        youtubeId: youtubeId,
-        url: inputUrl,
-      };
-      mutation.mutate(challengeData);
+      mutation.mutate({ youtubeId, url: inputUrl });
       setInputUrl("");
     } else {
       console.error("올바른 Youtube Shorts URL이 아닙니다.");
     }
   };
 
-  // url에서 videoId 추출하는 함수
   const extractVideoId = (url: string): string | null => {
     const match = url.match(/shorts\/([^?]+)/);
     return match ? match[1] : null;
   };
 
+  const handleCloseIsCompletionAlertModal = () => {
+    setIsCompletionAlertModalOpen(false);
+    nav("/home");
+  };
   return (
     <>
       <Header stickyOnly />
-      {mutation.isPending && <LoadingSpinner />}
       <Container>
         <BackButton onClick={handleBackButtonClick}>
           <FaChevronLeft />
@@ -267,16 +331,12 @@ export const Practice: React.FC = () => {
                 {videoId ? (
                   <YouTube
                     videoId={videoId}
-                    onPlay={() => {
-                      console.log("유튜브 영상 재생");
-                    }}
+                    onStateChange={handleYouTubeStateChange}
+                    onReady={handleYouTubeReady}
                     opts={{
                       width: "309",
                       height: "550",
-                      playerVars: {
-                        autoplay: 0,
-                        rel: 0,
-                      },
+                      playerVars: { autoplay: 0, rel: 0 },
                     }}
                   />
                 ) : (
@@ -291,7 +351,6 @@ export const Practice: React.FC = () => {
                     <SubTitle>
                       <span>방법 2</span>
                     </SubTitle>
-
                     <SearchInput
                       placeholder="숏츠 영상 url을 입력하세요"
                       value={inputUrl}
@@ -327,7 +386,11 @@ export const Practice: React.FC = () => {
               <WebcamWrapper>
                 <Webcam>
                   <Video ref={videoRef} autoPlay playsInline />
-                  <Canvas ref={canvasRef} width={309} height={550} />
+                  <YoutubeCanvas
+                    ref={youtubeCanvasRef}
+                    width={309}
+                    height={550}
+                  />
                 </Webcam>
               </WebcamWrapper>
               <Buttons>
@@ -345,6 +408,10 @@ export const Practice: React.FC = () => {
           </VideoWrapper>
         </Content>
       </Container>
+      <CompletionAlertModal
+        isOpen={isCompletionAlertModalOpen}
+        onClose={handleCloseIsCompletionAlertModal}
+      />
     </>
   );
 };
@@ -464,10 +531,10 @@ const Video = styled.video`
   object-fit: cover;
 `;
 
-const Canvas = styled.canvas`
+const YoutubeCanvas = styled.canvas`
   position: absolute;
-  left: 0;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
 `;

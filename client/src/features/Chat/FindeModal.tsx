@@ -42,7 +42,6 @@ const FindModal: React.FC<SendModalProps> = ({
     },
     onSuccess: (data: string[]) => {
       setSearchResults(data);
-      console.log(data);
     },
     onError: (error: Error) => {
       console.error("Error fetching data:", error);
@@ -51,7 +50,6 @@ const FindModal: React.FC<SendModalProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    console.log(value);
     setInputValue(value);
     mutation.mutate(value);
   };
