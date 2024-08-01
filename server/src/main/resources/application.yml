@@ -69,6 +69,9 @@ python-server:
   temp-directory: host/python/video/temporary
   permanent-directory: host/python/video/user
 
+openvidu:
+  url: https://i11c109.p.ssafy.io:8443
+  secret: leadme
 
 ---
 spring:

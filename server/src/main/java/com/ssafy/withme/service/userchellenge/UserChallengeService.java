@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -71,17 +72,29 @@ public class UserChallengeService {
     private final RestTemplate restTemplate;
     private final LandmarkRepository landmarkRepository;
 
+    /**
+     * * 유저의 스켈레톤 데이터를 받아와서 알고리즘으로 분석률을 반환한다.
+     * @param request
+     * @param videoFile
+     * @return
+     * @throws EntityNotFoundException
+     * @throws IOException
+     */
     public UserChallengeAnalyzeResponse analyzeVideo(UserChallengeAnalyzeRequest request, MultipartFile videoFile) throws EntityNotFoundException, IOException {
+        // 챌린지 아이디
         Long challengeId = request.getChallengeId();
 
+        // 챌린지 아이디를 기반으로 저장되어 있는 챌린지 정보 조회
         Challenge challenge = challengeRepository.findById(challengeId).orElse(null);
 
+        // 조회한 챌린지가 없는 경우 예외처리
         if(challenge == null){
             throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
         }
+
+        String url = FAST_API_URL + "/upload/userFile";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
             @Override
@@ -89,21 +102,25 @@ public class UserChallengeService {
                 return videoFile.getOriginalFilename();
             }
         });
+
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-        String url = FAST_API_URL + "/upload/userFile";
         // Fast API 반환값
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-        System.out.println(response);
+
         String result = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(result);
         String uuid = rootNode.path("uuid").asText();
 
+        // 역직렬화한 유저 포즈 정보
         List<Frame> userFrames = deserialize(result);
-        System.out.println(challenge.getYoutubeId());
 
+        // 저장된 챌린지 포즈 정보
         Landmark landmark = landmarkRepository.findByYoutubeId(challenge.getYoutubeId());
+        log.info("youtubeID : {} 동영상 분석 준비" , challenge.getYoutubeId());
+
+        // 기존 챌린지 정보를 List<Frame> 형태로 캐스팅
         List<Frame> challengeFrames = landmark.getLandmarks().stream()
                 .map(keypoints -> keypoints.stream()
                         .map(p -> new Keypoint(p.getX(), p.getY(), p.getZ(), p.getVisibility()))
@@ -111,13 +128,13 @@ public class UserChallengeService {
                 .map(Frame::new)
                 .collect(Collectors.toList());
 
-        // 점수
-        double score = PoseComparison.calculatePoseScore(userFrames, challengeFrames);
-        System.out.println(score);
+        Map<String, Object> calculateResult = PoseComparison.calculatePoseScore(userFrames, challengeFrames);
+        log.info(" 반환 점수 : {}", calculateResult.get("score"));
 
         return UserChallengeAnalyzeResponse.builder()
                 .uuid(uuid)
-                .score(score)
+                .score((Double) calculateResult.get("socre"))
+                .scoreHistroy((double[]) calculateResult.get("scoreHistory"))
                 .build();
     }
 
