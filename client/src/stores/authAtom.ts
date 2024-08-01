@@ -1,25 +1,28 @@
+// src/stores/authAtom.ts
 import { atom } from "recoil";
+import { UserProfile } from "types"; // UserProfile 인터페이스 가져오기
 
-// accessToken
+export const userProfileState = atom<UserProfile | null>({
+  key: "userProfileState",
+  default: null,
+});
+
 export const accessTokenState = atom<string | null>({
   key: "accessTokenState",
-  default: sessionStorage.getItem("access_token"),
+  default: null,
 });
 
-// accessToken 만료 시간
 export const accessTokenExpireTimeState = atom<string | null>({
   key: "accessTokenExpireTimeState",
-  default: sessionStorage.getItem("access_token_expire_time"),
+  default: null,
 });
 
-// refreshToken
 export const refreshTokenState = atom<string | null>({
   key: "refreshTokenState",
-  default: sessionStorage.getItem("refresh_token"),
+  default: null,
 });
 
-// refreshToken 만료 시간
 export const refreshTokenExpireTimeState = atom<string | null>({
   key: "refreshTokenExpireTimeState",
-  default: sessionStorage.getItem("refresh_token_expire_time"),
+  default: null,
 });
