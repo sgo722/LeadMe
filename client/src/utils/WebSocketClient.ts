@@ -1,19 +1,24 @@
 import { useEffect, useRef, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
+import { useRecoilValue } from "recoil";
+import { accessTokenState } from "stores/authAtom";
 
-// 웹소켓 훅
 const useWebSocket = (
   channel: string,
   onMessageReceived: (message: any) => void
 ) => {
   const clientRef = useRef<Client | null>(null);
+  const accessToken = useRecoilValue(accessTokenState); // Recoil을 사용하여 토큰 가져오기
 
   useEffect(() => {
-    if (!channel) return;
+    if (!channel || !accessToken) return;
 
     // WebSocket 클라이언트 설정
     const client = new Client({
       brokerURL: "ws://localhost:8090/ws-stomp", // WebSocket 서버 URL 설정
+      connectHeaders: {
+        Authorization: `Bearer ${accessToken}`, // WebSocket 연결 시 토큰 포함
+      },
       onConnect: () => {
         console.log(`Connected to WebSocket server on channel: ${channel}`);
         // 백엔드에 맞는 경로로 설정
@@ -49,17 +54,23 @@ const useWebSocket = (
         clientRef.current.deactivate();
       }
     };
-  }, [channel, onMessageReceived]);
+  }, [channel, onMessageReceived, accessToken]);
 
   // 메시지 전송 함수
-  const sendMessage = useCallback((body: any) => {
-    if (clientRef.current && clientRef.current.connected) {
-      clientRef.current.publish({
-        destination: "/pub/chat/message", // 백엔드에 맞는 경로로 설정
-        body: JSON.stringify(body),
-      });
-    }
-  }, []);
+  const sendMessage = useCallback(
+    (body: any) => {
+      if (clientRef.current && clientRef.current.connected) {
+        clientRef.current.publish({
+          destination: "/pub/chat/message", // 백엔드에 맞는 경로로 설정
+          body: JSON.stringify(body),
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // 메시지 전송 시 토큰 포함
+          },
+        });
+      }
+    },
+    [accessToken]
+  );
 
   return { sendMessage };
 };
