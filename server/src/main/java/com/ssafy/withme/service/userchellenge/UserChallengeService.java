@@ -138,7 +138,7 @@ public class UserChallengeService {
                 .build();
     }
 
-    
+
     /**
      * 파이썬 서버에서 받아온 keypoints 값을 역직렬화 진행
      * @param jsonResponse
