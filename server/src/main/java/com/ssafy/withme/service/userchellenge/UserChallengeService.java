@@ -133,7 +133,7 @@ public class UserChallengeService {
 
         return UserChallengeAnalyzeResponse.builder()
                 .uuid(uuid)
-                .score((Double) calculateResult.get("socre"))
+                .score((Double) calculateResult.get("totalScore"))
                 .scoreHistroy((double[]) calculateResult.get("scoreHistory"))
                 .build();
     }
