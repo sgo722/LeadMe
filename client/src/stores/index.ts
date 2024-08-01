@@ -6,8 +6,8 @@ export const IsEnteredAtom = atom<boolean>({
   default: false,
 });
 
-export const IsWebcamVisibleAtom = atom<boolean>({
-  key: "IsWebcamVisibleAtom",
+export const IsShortsVisibleAtom = atom<boolean>({
+  key: "IsShortsVisibleAtom",
   default: false,
 });
 

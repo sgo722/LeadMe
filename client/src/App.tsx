@@ -8,7 +8,7 @@ import { Search } from "pages/Search";
 import { SearchResultDetail } from "pages/SearchResultDetail";
 import { Chat } from "pages/Chat";
 import { Practice } from "pages/Practice";
-import { FloatingWebcam } from "components/FloatingWebcam";
+import { ShortsModal } from "components/ShortsModal";
 import GlobalStyle from "./globalStyles";
 import styled from "styled-components";
 import Home from "pages/Home";
@@ -46,7 +46,7 @@ const App: React.FC = () => {
         <Route path="/feed" element={<Feed />}></Route>
         <Route path="/battle" element={<Battle />}></Route>
       </Routes>
-      <FloatingWebcam />
+      <ShortsModal />
     </ThemeProvider>
   );
 };

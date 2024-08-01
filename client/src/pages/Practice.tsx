@@ -13,7 +13,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { useSetRecoilState } from "recoil";
-import { IsWebcamVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
+import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
 
 interface ChallengeData {
@@ -22,7 +22,7 @@ interface ChallengeData {
 }
 
 // 사용자가 입력한 유튜브id랑 url을 서버로 보내서 랜드마크를 따고 mongoDB에 저장
-const postChallenge = async (data: ChallengeData): Promise<any> => {
+const postChallenge = async (data: ChallengeData) => {
   const res = await axiosInstance.post("/api/v1/challenge", data);
   return res.data;
 };
@@ -38,7 +38,7 @@ export const Practice: React.FC = () => {
   const nav = useNavigate();
   const [inputUrl, setInputUrl] = useState<string>("");
   const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
-  const setIsWebcamVisible = useSetRecoilState(IsWebcamVisibleAtom);
+  const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
   const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);

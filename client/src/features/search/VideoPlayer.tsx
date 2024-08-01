@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { useMutation } from "@tanstack/react-query";
 import { useSetRecoilState } from "recoil";
-import { IsWebcamVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
+import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
 
 interface VideoPlayerProps {
@@ -38,7 +38,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const videoRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const nav = useNavigate();
-  const setIsWebcamVisible = useSetRecoilState(IsWebcamVisibleAtom);
+  const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
   const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);
