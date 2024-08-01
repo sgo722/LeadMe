@@ -56,7 +56,7 @@ pipeline {
                         sh 'docker stop python-container || true'
                         sh 'docker rm -f python-container || true'
                         sh 'docker build -t python-app:latest .'
-                        sh 'docker run -d --name python-container -p 4567:8000 python-app:latest'
+                        sh 'docker run -d --name python-container -p 4567:4567 python-app:latest'
                     }
 
                 }
