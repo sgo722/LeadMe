@@ -10,6 +10,16 @@ import {
 } from "@mediapipe/tasks-vision";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { axiosInstance } from "axiosInstance/apiClient";
+import { LoadingSpinner } from "components/LoadingSpinner";
+import axios from "axios";
+
+// 사용자가 입력한 유튜브id랑 url을 서버로 보내서 랜드마크를 따고 mongoDB에 저장
+const postChallenge = async (data: Record<string, unknown>) => {
+  const res = await axiosInstance.post("/api/v1/challenge", data);
+  return res.data;
+};
 
 export const Practice: React.FC = () => {
   const { videoId } = useParams<{ videoId?: string }>();
@@ -22,6 +32,20 @@ export const Practice: React.FC = () => {
   const nav = useNavigate();
   const [inputUrl, setInputUrl] = useState<string>("");
   const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
+
+  const mutation = useMutation({
+    mutationFn: postChallenge,
+    onSuccess: (data) => {
+      console.log("MongoDB에 저장 성공");
+      nav(`/practice/${data.data.youtubeId}`);
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        console.error("api에러", error.response?.data);
+      }
+      console.error("에러", error);
+    },
+  });
 
   useEffect(() => {
     const initializePoseLandmarker = async () => {
@@ -189,7 +213,7 @@ export const Practice: React.FC = () => {
     nav("/practice");
   };
 
-  // url 입력 후 영상검색하러 가기 버튼 클릭 시 실행할 함수
+  // 영상검색하러 가기 버튼 클릭 시 실행할 함수
   const handleSearchButtonClick = () => {
     nav("/home");
   };
@@ -208,12 +232,29 @@ export const Practice: React.FC = () => {
 
   // 영상 불러오기 버튼 클릭 시 실행할 함수
   const handleLoadVideo = () => {
-    console.log("여기에 구현하셈");
+    const youtubeId = extractVideoId(inputUrl);
+    if (youtubeId) {
+      const challengeData = {
+        youtubeId: youtubeId,
+        url: inputUrl,
+      };
+      mutation.mutate(challengeData);
+      setInputUrl("");
+    } else {
+      console.error("올바른 Youtube Shorts URL이 아닙니다.");
+    }
+  };
+
+  // url에서 videoId 추출하는 함수
+  const extractVideoId = (url: string): string | null => {
+    const match = url.match(/shorts\/([^?]+)/);
+    return match ? match[1] : null;
   };
 
   return (
     <>
       <Header stickyOnly />
+      {mutation.isPending && <LoadingSpinner />}
       <Container>
         <BackButton onClick={handleBackButtonClick}>
           <FaChevronLeft />
@@ -226,6 +267,9 @@ export const Practice: React.FC = () => {
                 {videoId ? (
                   <YouTube
                     videoId={videoId}
+                    onPlay={() => {
+                      console.log("유튜브 영상 재생");
+                    }}
                     opts={{
                       width: "309",
                       height: "550",
