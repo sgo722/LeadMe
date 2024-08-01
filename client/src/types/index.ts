@@ -15,3 +15,17 @@ export interface Video {
   comments: Comment[];
   likes: number;
 }
+
+// 유저 프로필
+export interface UserProfile {
+  name: string;
+  nickname: string;
+  email: string;
+  gender: string | null;
+  age: number | null;
+  roleType: string;
+  profileImg: string;
+  profileComment: string | null;
+  loginDateTime: string | null;
+  userStatus: string;
+}
