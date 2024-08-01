@@ -4,7 +4,9 @@ import com.ssafy.withme.global.response.Frame;
 import com.ssafy.withme.global.response.Keypoint;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 유클리드 정규화 및 코사인 유사도 측정을 진행하는 클래스
@@ -58,15 +60,20 @@ public class PoseComparison {
     }
 
     // 평균 점수 게산
-    public static double calculatePoseScore(List<Frame> userVideoFrames, List<Frame> challengeFrames) {
+    public static Map<String, Object> calculatePoseScore(List<Frame> userVideoFrames, List<Frame> challengeFrames) {
+        Map<String, Object> response = new HashMap<String, Object>();
+
         double totalScore = 0.0;
+        double[] scoreHistroy;
+
         int totalFrameCount = challengeFrames.size();
         int userVideoFrameCount = userVideoFrames.size();
 
-        // 기존 로직 유저영상의 길이를 기준으로 챌린지도 함께 돌린다?
-
         // 유저 영상 프레임 수가 챌린지 프레임 수보다 적거나 같다면
         if(totalFrameCount >= userVideoFrameCount) {
+
+            scoreHistroy = new double[userVideoFrameCount];
+
             // 유저의 영상의 길이를 기준으로 한다.
             for(int i = 0; i < userVideoFrameCount; i++) {
 
@@ -80,13 +87,16 @@ public class PoseComparison {
                 List<Keypoint> userL2ChallengeKeypoints = l2Normalize(challengeFrame.getKeypoints());
 
                 // 코사인 유사도 측정 진행
-                totalScore += cosinSimilarity(userL2Keypoints, userL2ChallengeKeypoints);
+                scoreHistroy[i] = cosinSimilarity(userL2Keypoints, userL2ChallengeKeypoints);
+                totalScore +=  scoreHistroy[i];
 
             }
 
 
         } else { // 유저 영상 프레임 수가 챌린지 프레임 수보다 크다면
             // 챌린지 영상의 길이를 기준으로 한다.
+            scoreHistroy = new double[totalFrameCount];
+
             for(int i = 0; i < totalFrameCount; i++) {
                 Frame userFrame = userVideoFrames.get(i);
                 Frame challengeFrame = challengeFrames.get(i);
@@ -98,12 +108,16 @@ public class PoseComparison {
                 List<Keypoint> userL2ChallengeKeypoints = l2Normalize(challengeFrame.getKeypoints());
 
                 // 코사인 유사도 측정 진행
-                totalScore += cosinSimilarity(userL2Keypoints, userL2ChallengeKeypoints);
+                scoreHistroy[i] = cosinSimilarity(userL2Keypoints, userL2ChallengeKeypoints);
+                totalScore +=  scoreHistroy[i];
             }
         }
 
         // 원본 프레임 기준으로 평균을 나눔
         totalScore = totalScore / totalFrameCount;
-        return totalScore;
+        response.put("totalScore", totalScore);
+        response.put("scoreHistroy", scoreHistroy);
+
+        return response;
     }
 }

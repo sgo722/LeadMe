@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -127,12 +128,13 @@ public class UserChallengeService {
                 .map(Frame::new)
                 .collect(Collectors.toList());
 
-        double score = PoseComparison.calculatePoseScore(userFrames, challengeFrames);
-        log.info(" 반환 점수 : {}", score);
+        Map<String, Object> calculateResult = PoseComparison.calculatePoseScore(userFrames, challengeFrames);
+        log.info(" 반환 점수 : {}", calculateResult.get("score"));
 
         return UserChallengeAnalyzeResponse.builder()
                 .uuid(uuid)
-                .score(score)
+                .score((Double) calculateResult.get("socre"))
+                .scoreHistroy((double[]) calculateResult.get("scoreHistory"))
                 .build();
     }
 
