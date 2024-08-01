@@ -116,7 +116,7 @@ public class PoseComparison {
         // 원본 프레임 기준으로 평균을 나눔
         totalScore = totalScore / totalFrameCount;
         response.put("totalScore", totalScore);
-        response.put("scoreHistroy", scoreHistroy);
+        response.put("scoreHistory", scoreHistroy);
 
         return response;
     }
