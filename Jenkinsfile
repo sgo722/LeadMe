@@ -39,18 +39,26 @@ pipeline {
         stage('Build and Push Python Docker Image') {
             steps {
                 script {
+                    // dir('S11P12C109/leadme') {
+                    //     sh 'docker stop python-container || true'
+                    //     sh 'docker rm -f python-container || true'
+                        
+                    //     withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                    //         sh '''
+                    //         docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+                    //         docker build -t ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY} .
+                    //         docker push ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY}:latest
+                    //         '''
+                    //     }
+                    // }
+
                     dir('S11P12C109/leadme') {
                         sh 'docker stop python-container || true'
                         sh 'docker rm -f python-container || true'
-                        
-                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                            sh '''
-                            docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-                            docker build -t ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY} .
-                            docker push ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY}:latest
-                            '''
-                        }
+                        sh 'docker build -t python-app:latest .'
+                        sh 'docker run -d --name python-container -p 4567:8000 python-app:latest'
                     }
+
                 }
             }
         }
