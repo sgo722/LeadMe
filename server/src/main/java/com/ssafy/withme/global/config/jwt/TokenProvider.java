@@ -13,6 +13,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -25,6 +26,7 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -32,6 +34,8 @@ import java.util.Set;
 public class TokenProvider {
 
     private final JwtProperties jwtProperties;
+
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public TokenDetails generateToken(User user, Duration expiredAt, TokenType tokenType) {
         Date now = new Date();
@@ -101,6 +105,10 @@ public class TokenProvider {
     // JWT 토큰 유효성 검증메서드
     public boolean validToken(String token) {
         try {
+
+            if (isBlackListed(token))
+                return false;
+
             Jwts.parser()
                     .setSigningKey(jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8)) // 서명 검증
                     .parseClaimsJws(token); // 클레임이란 받아온 정보(토큰)를 jwt 페이로드에 넣는 것이다.
@@ -151,5 +159,19 @@ public class TokenProvider {
                 .setSigningKey(jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8)) // 서명 검증
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public Long addToBlackList(String token){
+
+        Long expiration = getClaims(token).getExpiration().getTime() - System.currentTimeMillis();
+
+        redisTemplate.opsForValue().set(token, "blackList", expiration, TimeUnit.MILLISECONDS);
+
+        return expiration;
+    }
+
+    public boolean isBlackListed(String token) {
+
+        return redisTemplate.hasKey(token);
     }
 }

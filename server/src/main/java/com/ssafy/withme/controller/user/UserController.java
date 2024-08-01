@@ -2,6 +2,7 @@ package com.ssafy.withme.controller.user;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.dto.UserInfoDto;
+import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +27,7 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService userService;
+    private final TokenProvider tokenProvider;
 
     @GetMapping("/user/me")
     public SuccessResponse<?> getInfo(HttpServletRequest request) {
@@ -67,5 +69,13 @@ public class UserController {
         return SuccessResponse.of(findList);
     }
 
+    @PostMapping("/user/logout")
+    public SuccessResponse<Long> logout(@RequestHeader("Authorization") String authorization) {
 
+        String accessToken = authorization.split(" ")[1];
+
+        Long expiration = tokenProvider.addToBlackList(accessToken);
+
+        return SuccessResponse.of(expiration);
+    }
 }
