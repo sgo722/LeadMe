@@ -10,3 +10,4 @@ certifi
 yt-dlp
 pymongo
 ray
+python-multipart
