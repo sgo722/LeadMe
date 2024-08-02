@@ -14,4 +14,6 @@ public class UserChallengeSaveRequest {
     private String uuid;
 
     private String fileName;
+
+    private String access;
 }

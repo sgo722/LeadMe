@@ -202,6 +202,7 @@ public class UserChallengeService {
 //                    .user(user)
                     .challenge(challenge)
                     .videoPath(PERMANENT_DIRECTORY+"/"+finalFileName)
+                    .access(request.getAccess())
                     .build();
             UserChallenge savedUserChallenge = userChallengeRepository.save(userChallenge);
             return UserChallengeSaveResponse.ofResponse(savedUserChallenge);

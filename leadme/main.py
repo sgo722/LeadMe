@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from pydantic import BaseModel
 import shutil
 import os
@@ -46,13 +46,13 @@ async def read_root():
 async def saveVideoData(video: Video):
     start_time = time.time()
     video_path = await asyncio.to_thread(download_video, video.url, 'downloaded_video.mp4')
-    
+
     # 비디오 처리 실행 및 결과 대기
     keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(video.youtubeId, video_path)))
-    
+
     total_time = time.time() - start_time
     logger.info(f"videoUrl API - YoutubeID: {video.youtubeId}, Total Time: {total_time:.4f} seconds")
-    
+
     return {"youtubeId": video.youtubeId, "keypoints": keypoints}
 
 @app.post("/upload/userFile")
