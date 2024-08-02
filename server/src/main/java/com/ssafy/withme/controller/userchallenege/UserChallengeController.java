@@ -3,10 +3,12 @@ package com.ssafy.withme.controller.userchallenege;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeDeleteRequest;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeSaveRequest;
+import com.ssafy.withme.domain.report.Report;
 import com.ssafy.withme.global.response.ApiResponse;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.userchellenge.UserChallengeService;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeAnalyzeResponse;
+import com.ssafy.withme.service.userchellenge.response.UserChallengeReportResponse;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeSaveResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,11 @@ import java.io.IOException;
 public class UserChallengeController {
 
     private final UserChallengeService userChallengeService;
+
+    @GetMapping("/api/v1/userChallenge/report/{uuid}")
+    public SuccessResponse<UserChallengeReportResponse> findReportByUuid(@PathVariable("uuid") String uuid){
+        return SuccessResponse.of(userChallengeService.findReportByUuid(uuid));
+    }
 
     /**
      ** 유저의 스켈레톤 데이터를 받아와서 알고리즘으로 분석률을 반환한다.
@@ -54,4 +61,5 @@ public class UserChallengeController {
         userChallengeService.deleteUserFile(request);
         return SuccessResponse.empty();
     }
+
 }

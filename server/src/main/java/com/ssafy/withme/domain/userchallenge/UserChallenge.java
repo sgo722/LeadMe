@@ -39,13 +39,17 @@ public class UserChallenge {
     @OneToMany(mappedBy = "userChallenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Comment> comments;
 
+    private String access;
+
     @Builder
-    public UserChallenge(String name, String videoPath, Integer likes, Challenge challenge, User user, List<Comment> comments) {
-        this.name = name;
-        this.videoPath = videoPath;
-        this.likes = likes;
-        this.challenge = challenge;
-        this.user = user;
+    public UserChallenge(String access, List<Comment> comments, User user, Challenge challenge, Integer likes, String videoPath, String name) {
+        this.access = access;
         this.comments = comments;
+        this.user = user;
+        this.challenge = challenge;
+        this.likes = likes;
+        this.videoPath = videoPath;
+        this.name = name;
     }
+
 }
