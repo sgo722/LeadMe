@@ -132,6 +132,7 @@ public class UserChallengeService {
         log.info(" 반환 점수 : {}", calculateResult.get("score"));
 
         return UserChallengeAnalyzeResponse.builder()
+                .challengeId(challengeId)
                 .uuid(uuid)
                 .score((Double) calculateResult.get("totalScore"))
                 .scoreHistroy((double[]) calculateResult.get("scoreHistory"))
