@@ -18,6 +18,7 @@ import { axiosInstance } from "axiosInstance/apiClient";
 import { useSetRecoilState } from "recoil";
 import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
+import { SubmitModal } from "features/practice/SubmitModal";
 
 interface ChallengeData {
   youtubeId: string;
@@ -71,6 +72,11 @@ export const Practice: React.FC = () => {
   const [showPlaybackRates, setShowPlaybackRates] = useState<boolean>(false); // 재생속도 조절 모달
   const playbackRates = [0.5, 0.75, 1, 1.25, 1.5]; // 재생 속도 리스트
   const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]); // 녹화영상 관리
+  const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false); // 제출 모달 상태
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -274,8 +280,17 @@ export const Practice: React.FC = () => {
   }, [isYouTubePlaying, youtubeBlazePoseQuery.data, drawYoutubeBlazePoseData]);
 
   // YouTube 이벤트 핸들러
-  const handleYouTubeStateChange = (event: YouTubeEvent) =>
-    setIsYouTubePlaying(event.data === 1);
+  // youtube 영상 종료 감지
+  const handleYouTubeStateChange = (event: YouTubeEvent) => {
+    setIsYouTubePlaying(event.data === 1); // 1은 재생 중 상태.
+    if (event.data === 0 && isRecording) {
+      // 0은 종료 상태
+      setIsRecording(false);
+      if (mediaRecorder) {
+        mediaRecorder.stop();
+      }
+    }
+  };
 
   const handleYouTubeReady = (event: YouTubeEvent) => {
     youtubePlayerRef.current = event.target;
@@ -381,15 +396,88 @@ export const Practice: React.FC = () => {
         // 유튜브 영상 재생
         youtubePlayerRef.current.playVideo();
       }
-    } else {
+      // 녹화 시작
+      startRecording();
+
       // 초기화
+    } else {
       setIsRecording(false);
       if (youtubePlayerRef.current) {
         // 영상 처음으로 이동
         youtubePlayerRef.current.seekTo(0);
         youtubePlayerRef.current.pauseVideo();
       }
+      if (mediaRecorder) {
+        // 녹화 중지
+        mediaRecorder.stop();
+      }
+      // 녹화 데이터 초기화
+      setRecordedChunks([]);
     }
+  };
+
+  // 웹캠 녹화 관련 로직
+  // 녹화 시작 함수
+  const startRecording = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          setRecordedChunks((prev) => [...prev, event.data]);
+        }
+      };
+
+      recorder.onstop = () => {
+        if (!isRecording) {
+          // 초기화 버튼으로 인한 정지가 아닌 경우
+          setShowSubmitModal(true);
+        }
+      };
+
+      setMediaRecorder(recorder);
+      recorder.start();
+    }
+  };
+
+  const submitVideoMutation = useMutation({
+    mutationFn: async (data: {
+      formData: FormData;
+      challengeId: number;
+      userId: number;
+    }) => {
+      const res = await axiosInstance.post(
+        "/api/v1/userChallenge/analyze",
+        data.formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          params: { challengeId: data.challengeId, userId: data.userId },
+        }
+      );
+      return res.data;
+    },
+    onSuccess: () => {
+      setShowSubmitModal(false);
+      setRecordedChunks([]);
+      console.log("제출 성공");
+    },
+    onError: (error) => {
+      console.error("제출 실패", error);
+    },
+  });
+
+  const handleSubmit = async () => {
+    if (recordedChunks.length === 0) return;
+    const blob = new Blob(recordedChunks, { type: "video/mp4" });
+    const formData = new FormData();
+    formData.append("video", blob, "recorded_video.mp4");
+
+    submitVideoMutation.mutate({
+      formData: formData,
+      challengeId: 1, // 바꿔야함
+      userId: 1, // 바꿔야함
+    });
   };
 
   return (
@@ -528,6 +616,15 @@ export const Practice: React.FC = () => {
       <CompletionAlertModal
         isOpen={isCompletionAlertModalOpen}
         onClose={handleCloseIsCompletionAlertModal}
+      />
+      <SubmitModal
+        isOpen={showSubmitModal}
+        onClose={() => {
+          setShowSubmitModal(false);
+          setRecordedChunks([]);
+        }}
+        onSubmit={handleSubmit}
+        isLoading={submitVideoMutation.isPending}
       />
     </>
   );
