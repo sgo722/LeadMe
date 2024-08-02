@@ -64,6 +64,8 @@ public class UserController {
 
         List<SearchUserDto> findList = userService.findListByNickname(nickname);
 
+        log.info("findList: {}", findList);
+
         if (nickname.equals(""))
             return SuccessResponse.of(new ArrayList());
 
