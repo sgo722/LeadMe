@@ -40,8 +40,8 @@ public class GoogleResponse implements OAuth2Response{
     }
 
     public String makeNickname() {
-        String name = getName();
-        return hashString(name);
+        String email = getEmail();
+        return hashString(email);
     }
 
     private String hashString(String input) {
