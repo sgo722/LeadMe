@@ -22,8 +22,7 @@ public class Report {
     private double[] scoreHistory;
 
     @Builder
-
-    public Report(String uuid, Double totalScore, double[] scoreHistory) {
+    private Report(String uuid, Double totalScore, double[] scoreHistory) {
         this.uuid = uuid;
         this.totalScore = totalScore;
         this.scoreHistory = scoreHistory;

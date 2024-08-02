@@ -23,6 +23,7 @@ import com.ssafy.withme.repository.report.ReportRepository;
 import com.ssafy.withme.repository.user.UserRepository;
 import com.ssafy.withme.repository.userchallenge.UserChallengeRepository;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeAnalyzeResponse;
+import com.ssafy.withme.service.userchellenge.response.UserChallengeReportResponse;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeSaveResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -140,7 +141,8 @@ public class UserChallengeService {
                 .scoreHistory((double[]) calculateResult.get("scoreHistory"))
                 .totalScore((Double) calculateResult.get("totalScore"))
                 .build();
-        reportRepository.save(report);
+        Report save = reportRepository.insert(report);
+        System.out.println(save);
 
         return UserChallengeAnalyzeResponse.builder()
                 .uuid(uuid)
@@ -244,5 +246,10 @@ public class UserChallengeService {
             e.printStackTrace();
         }
 
+    }
+
+    public UserChallengeReportResponse findReportByUuid(String uuid) {
+        Report report = reportRepository.findByUuid(uuid);
+        return UserChallengeReportResponse.ofResponse(report);
     }
 }
