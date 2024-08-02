@@ -1,6 +1,7 @@
 package com.ssafy.withme.controller.user;
 
 import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.dto.SearchUserDto;
 import com.ssafy.withme.dto.UserInfoDto;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.response.SuccessResponse;
@@ -61,7 +62,7 @@ public class UserController {
     @GetMapping("/user/search")
     public SuccessResponse<List> findByName(@RequestParam("nickname") String nickname) {
 
-        List<String> findList = userService.findListByNickname(nickname);
+        List<SearchUserDto> findList = userService.findListByNickname(nickname);
 
         if (nickname.equals(""))
             return SuccessResponse.of(new ArrayList());

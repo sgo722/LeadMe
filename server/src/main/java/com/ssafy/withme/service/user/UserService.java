@@ -2,6 +2,7 @@ package com.ssafy.withme.service.user;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.UserStatus;
+import com.ssafy.withme.dto.SearchUserDto;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
@@ -61,10 +62,10 @@ public class UserService {
         return findUserList;
     }
 
-    public List<String> findListByNickname(String nickname) {
+    public List<SearchUserDto> findListByNickname(String nickname) {
 
-        List<String> list = userRepository.findByNicknameContaining(nickname).stream()
-                .map(User::getNickname)
+        List<SearchUserDto> list = userRepository.findByNicknameContaining(nickname).stream()
+                .map(SearchUserDto::fromUser)
                 .toList();
 
         return list;
