@@ -220,12 +220,17 @@ export const Practice: React.FC = () => {
 
   // YouTube 영상과 BlazePose 데이터 동기화
   useEffect(() => {
+    // 애니메이션 프레임 ID를 저장할 변수
     let animationFrameId: number;
-    const fps = 20;
+    // 초당 프레임 수 설정
+    const fps = 30;
+    // 프레임 간 간격(밀리초)
     const frameInterval = 1000 / fps;
+    // 마지막으로 프레임을 그린 시간
     let lastTime = 0;
 
     const animate = (currentTime: number) => {
+      // 필요한 데이터나 상태가 없으면 애니메이션을 계속 하지만 아무것도 그리지 않음(완전히 중지하면 즉각적 반응이 불가능해서)
       if (
         !youtubePlayerRef.current ||
         !isYouTubePlaying ||
@@ -233,21 +238,27 @@ export const Practice: React.FC = () => {
         !youtubeBlazePoseQuery.data.landmarks ||
         youtubeBlazePoseQuery.data.landmarks.length === 0
       ) {
+        // 조건이 충족되지 않아도 계속해서 다음 프레임을 요청
         animationFrameId = requestAnimationFrame(animate);
         return;
       }
-
+      // 프레임 간격만큼 시간이 지났는지 확인(최적화를 위해)
       if (currentTime - lastTime >= frameInterval) {
+        // youtube 비이도의 현재 시간 가져오기
         const currentVideoTime = youtubePlayerRef.current.getCurrentTime();
+        // 현재 시간에 해당하는 프레임 인덱스 계산
         const frameIndex = Math.floor(currentVideoTime * fps);
+        // 계산된 프레임 인덱스로 blazepose 데이터 그리기
         drawYoutubeBlazePoseData(frameIndex);
+        // 마지막 그린 시간 업데이트
         lastTime = currentTime;
       }
-
+      // 다음 애니메이션 프레임 요청
       animationFrameId = requestAnimationFrame(animate);
     };
-
+    // 애니메이션 루프 시작
     animationFrameId = requestAnimationFrame(animate);
+    // 클린업
     return () => cancelAnimationFrame(animationFrameId);
   }, [isYouTubePlaying, youtubeBlazePoseQuery.data, drawYoutubeBlazePoseData]);
 
@@ -396,7 +407,7 @@ export const Practice: React.FC = () => {
               <Buttons>
                 <button>
                   <FaPlayCircle style={{ fontSize: "20px" }} />
-                  재생속도
+                  몰라
                 </button>
                 <button>
                   <FaExchangeAlt style={{ fontSize: "20px" }} />
