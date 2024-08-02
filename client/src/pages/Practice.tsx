@@ -280,21 +280,23 @@ export const Practice: React.FC = () => {
   }, [isYouTubePlaying, youtubeBlazePoseQuery.data, drawYoutubeBlazePoseData]);
 
   // YouTube 이벤트 핸들러
-  // youtube 영상 종료 감지
   const handleYouTubeStateChange = (event: YouTubeEvent) => {
-    setIsYouTubePlaying(event.data === 1); // 1은 재생 중 상태.
-    if (event.data === 0 && isRecording) {
-      // 0은 종료 상태
-      setIsRecording(false);
-      if (mediaRecorder) {
-        mediaRecorder.stop();
-      }
-    }
+    setIsYouTubePlaying(event.data === 1);
   };
 
   const handleYouTubeReady = (event: YouTubeEvent) => {
     youtubePlayerRef.current = event.target;
-    event.target.setPlaybackRate(playbackRate); // 초기 재생 속도 설정 1
+    event.target.setPlaybackRate(playbackRate);
+  };
+
+  const handleYouTubeEnd = () => {
+    if (isRecording) {
+      setIsRecording(false);
+      if (mediaRecorder) {
+        mediaRecorder.stop();
+      }
+      setShowSubmitModal(true);
+    }
   };
 
   // Youtube 재생 속도 조절
@@ -314,7 +316,6 @@ export const Practice: React.FC = () => {
       } else {
         youtubePlayerRef.current.playVideo();
       }
-      // youtube이벤트핸들러가 isYouTubePlaying 상태 업데이트 할거니까 여기서 안해줘도 됨
     }
   };
 
@@ -379,46 +380,13 @@ export const Practice: React.FC = () => {
     nav("/home");
   };
 
-  // 녹화 관련 로직
-  // 녹화/초기화 버튼 클릭시 실행할 함수
-  const toggleRecording = () => {
-    if (!isRecording) {
-      // 녹화 시작
-      setIsRecording(true);
-      if (youtubePlayerRef.current) {
-        // 재생 속도를 1로 초기화
-        setPlaybackRate(1);
-        youtubePlayerRef.current.setPlaybackRate(1);
-
-        //영상 처음장면으로 초기화
-        youtubePlayerRef.current.seekTo(0);
-
-        // 유튜브 영상 재생
-        youtubePlayerRef.current.playVideo();
-      }
-      // 녹화 시작
-      startRecording();
-
-      // 초기화
-    } else {
-      setIsRecording(false);
-      if (youtubePlayerRef.current) {
-        // 영상 처음으로 이동
-        youtubePlayerRef.current.seekTo(0);
-        youtubePlayerRef.current.pauseVideo();
-      }
-      if (mediaRecorder) {
-        // 녹화 중지
-        mediaRecorder.stop();
-      }
-      // 녹화 데이터 초기화
-      setRecordedChunks([]);
-    }
-  };
-
-  // 웹캠 녹화 관련 로직
-  // 녹화 시작 함수
   const startRecording = () => {
+    setIsRecording(true);
+    if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.seekTo(0);
+      youtubePlayerRef.current.playVideo();
+    }
+    // 웹캠 녹화 시작 로직
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
@@ -429,16 +397,22 @@ export const Practice: React.FC = () => {
         }
       };
 
-      recorder.onstop = () => {
-        if (!isRecording) {
-          // 초기화 버튼으로 인한 정지가 아닌 경우
-          setShowSubmitModal(true);
-        }
-      };
-
       setMediaRecorder(recorder);
       recorder.start();
     }
+  };
+
+  const resetRecording = () => {
+    setIsRecording(false);
+    if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.seekTo(0);
+      youtubePlayerRef.current.pauseVideo();
+    }
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+    }
+    setRecordedChunks([]);
+    setShowSubmitModal(false);
   };
 
   const submitVideoMutation = useMutation({
@@ -497,6 +471,7 @@ export const Practice: React.FC = () => {
                     videoId={videoId}
                     onStateChange={handleYouTubeStateChange}
                     onReady={handleYouTubeReady}
+                    onEnd={handleYouTubeEnd}
                     opts={{
                       width: "309",
                       height: "550",
@@ -538,46 +513,38 @@ export const Practice: React.FC = () => {
                   </SearchUrl>
                 )}
               </YouTubeWrapper>
-              {videoId && (
+              {videoId && !isRecording && (
                 <Buttons>
-                  {!isRecording ? (
-                    <>
-                      <ButtonWrapper>
-                        <Button
-                          onClick={() =>
-                            setShowPlaybackRates(!showPlaybackRates)
-                          }
-                        >
-                          <FaPlayCircle style={{ fontSize: "20px" }} />
-                          재생속도
-                        </Button>
-                        {showPlaybackRates && (
-                          <PlaybackRateOptions>
-                            {playbackRates.map((rate) => (
-                              <PlaybackRateButton
-                                key={rate}
-                                onClick={() => changePlaybackRate(rate)}
-                                $isActive={playbackRate === rate}
-                              >
-                                {rate}x
-                              </PlaybackRateButton>
-                            ))}
-                          </PlaybackRateOptions>
-                        )}
-                      </ButtonWrapper>
-                      <Button onClick={togglePlayPause}>
-                        {isYouTubePlaying ? (
-                          <FaPause style={{ fontSize: "20px" }} />
-                        ) : (
-                          <FaPlay style={{ fontSize: "20px" }} />
-                        )}
-                        {isYouTubePlaying ? "일시정지" : "재생"}
-                      </Button>
-                      <button onClick={handleChangeButtonClick}>
-                        영상변경
-                      </button>
-                    </>
-                  ) : null}
+                  <ButtonWrapper>
+                    <Button
+                      onClick={() => setShowPlaybackRates(!showPlaybackRates)}
+                    >
+                      <FaPlayCircle style={{ fontSize: "20px" }} />
+                      재생속도
+                    </Button>
+                    {showPlaybackRates && (
+                      <PlaybackRateOptions>
+                        {playbackRates.map((rate) => (
+                          <PlaybackRateButton
+                            key={rate}
+                            onClick={() => changePlaybackRate(rate)}
+                            $isActive={playbackRate === rate}
+                          >
+                            {rate}x
+                          </PlaybackRateButton>
+                        ))}
+                      </PlaybackRateOptions>
+                    )}
+                  </ButtonWrapper>
+                  <Button onClick={togglePlayPause}>
+                    {isYouTubePlaying ? (
+                      <FaPause style={{ fontSize: "20px" }} />
+                    ) : (
+                      <FaPlay style={{ fontSize: "20px" }} />
+                    )}
+                    {isYouTubePlaying ? "일시정지" : "재생"}
+                  </Button>
+                  <button onClick={handleChangeButtonClick}>영상변경</button>
                 </Buttons>
               )}
             </VideoContainer>
@@ -595,19 +562,17 @@ export const Practice: React.FC = () => {
                 </Webcam>
               </WebcamWrapper>
               <Buttons>
-                <Button onClick={toggleRecording}>
-                  {isRecording ? (
-                    <>
-                      <FaRedo style={{ fontSize: "20px" }} />
-                      초기화
-                    </>
-                  ) : (
-                    <>
-                      <BiVideoRecording style={{ fontSize: "20px" }} />
-                      녹화
-                    </>
-                  )}
-                </Button>
+                {!isRecording ? (
+                  <Button onClick={startRecording}>
+                    <BiVideoRecording style={{ fontSize: "20px" }} />
+                    녹화
+                  </Button>
+                ) : (
+                  <Button onClick={resetRecording}>
+                    <FaRedo style={{ fontSize: "20px" }} />
+                    초기화
+                  </Button>
+                )}
               </Buttons>
             </VideoContainer>
           </VideoWrapper>
@@ -629,6 +594,8 @@ export const Practice: React.FC = () => {
     </>
   );
 };
+
+// styled-components 코드는 여기에 있지만 요청에 따라 생략하였습니다.
 
 const Container = styled.div`
   min-width: 1080px;
