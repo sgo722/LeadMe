@@ -17,14 +17,17 @@ public class Report {
 
     private Long userChallengeId;
 
+    private Long challengeId;
+
     private Double totalScore;
 
     private double[] scoreHistory;
 
     @Builder
-    private Report(String uuid, Double totalScore, double[] scoreHistory) {
+    private Report(String uuid, Double totalScore, double[] scoreHistory,Long challengeId) {
         this.uuid = uuid;
         this.totalScore = totalScore;
         this.scoreHistory = scoreHistory;
+        this.challengeId = challengeId;
     }
 }

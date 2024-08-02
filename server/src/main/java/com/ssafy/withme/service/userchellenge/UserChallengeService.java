@@ -141,12 +141,12 @@ public class UserChallengeService {
                 .uuid(uuid)
                 .scoreHistory((double[]) calculateResult.get("scoreHistory"))
                 .totalScore((Double) calculateResult.get("totalScore"))
+                .challengeId(request.getChallengeId())
                 .build();
         Report save = reportRepository.insert(report);
         System.out.println(save);
 
         return UserChallengeAnalyzeResponse.builder()
-                .challengeId(challengeId)
                 .uuid(uuid)
                 .build();
     }
@@ -259,9 +259,10 @@ public class UserChallengeService {
 
     public UserChallengeReportResponse findReportByUuid(String uuid) {
         Report report = reportRepository.findByUuid(uuid);
-        UserChallenge userChallenge = userChallengeRepository.findByUuid(uuid);
-        Long challengeId = userChallenge.getChallenge().getId();
-        String youtubeId = userChallenge.getChallenge().getYoutubeId();
+//        UserChallenge userChallenge = userChallengeRepository.findByUuid(uuid);
+        Challenge challenge = challengeRepository.findById(report.getChallengeId()).get();
+        Long challengeId = challenge.getId();
+        String youtubeId = challenge.getYoutubeId();
         return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId);
     }
 

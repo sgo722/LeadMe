@@ -7,17 +7,11 @@ import lombok.Getter;
 @Getter
 public class UserChallengeAnalyzeResponse {
 
-    // 챌린지 id
-    private Long challengeId;
-    // 유사도 점수
-    private double score;
     // uuid
     private String uuid;
 
     @Builder
-    private UserChallengeAnalyzeResponse(Long challengeId, double score, String uuid, double[] scoreHistroy) {
-        this.challengeId = challengeId;
-        this.score = score;
+    private UserChallengeAnalyzeResponse(String uuid) {
         this.uuid = uuid;
     }
 }
