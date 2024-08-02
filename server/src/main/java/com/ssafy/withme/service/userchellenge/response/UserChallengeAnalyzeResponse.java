@@ -13,14 +13,11 @@ public class UserChallengeAnalyzeResponse {
     private double score;
     // uuid
     private String uuid;
-    // 프레임별 점수 기록
-    private double[] scoreHistroy;
 
     @Builder
     private UserChallengeAnalyzeResponse(Long challengeId, double score, String uuid, double[] scoreHistroy) {
         this.challengeId = challengeId;
         this.score = score;
         this.uuid = uuid;
-        this.scoreHistroy = scoreHistroy;
     }
 }

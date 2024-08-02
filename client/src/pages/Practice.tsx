@@ -4,11 +4,12 @@ import YouTube from "react-youtube";
 import { YouTubeEvent, YouTubePlayer } from "react-youtube";
 import {
   FaChevronLeft,
-  FaExchangeAlt,
+  FaRedo,
   FaPlayCircle,
   FaPlay,
   FaPause,
 } from "react-icons/fa";
+import { BiVideoRecording } from "react-icons/bi";
 import { PoseLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -69,6 +70,7 @@ export const Practice: React.FC = () => {
   const [playbackRate, setPlaybackRate] = useState<number>(1); // 재생속도
   const [showPlaybackRates, setShowPlaybackRates] = useState<boolean>(false); // 재생속도 조절 모달
   const playbackRates = [0.5, 0.75, 1, 1.25, 1.5]; // 재생 속도 리스트
+  const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -362,6 +364,34 @@ export const Practice: React.FC = () => {
     nav("/home");
   };
 
+  // 녹화 관련 로직
+  // 녹화/초기화 버튼 클릭시 실행할 함수
+  const toggleRecording = () => {
+    if (!isRecording) {
+      // 녹화 시작
+      setIsRecording(true);
+      if (youtubePlayerRef.current) {
+        // 재생 속도를 1로 초기화
+        setPlaybackRate(1);
+        youtubePlayerRef.current.setPlaybackRate(1);
+
+        //영상 처음장면으로 초기화
+        youtubePlayerRef.current.seekTo(0);
+
+        // 유튜브 영상 재생
+        youtubePlayerRef.current.playVideo();
+      }
+    } else {
+      // 초기화
+      setIsRecording(false);
+      if (youtubePlayerRef.current) {
+        // 영상 처음으로 이동
+        youtubePlayerRef.current.seekTo(0);
+        youtubePlayerRef.current.pauseVideo();
+      }
+    }
+  };
+
   return (
     <>
       <Header stickyOnly />
@@ -422,36 +452,44 @@ export const Practice: React.FC = () => {
               </YouTubeWrapper>
               {videoId && (
                 <Buttons>
-                  <ButtonWrapper>
-                    <Button
-                      onClick={() => setShowPlaybackRates(!showPlaybackRates)}
-                    >
-                      <FaPlayCircle style={{ fontSize: "20px" }} />
-                      재생속도
-                    </Button>
-                    {showPlaybackRates && (
-                      <PlaybackRateOptions>
-                        {playbackRates.map((rate) => (
-                          <PlaybackRateButton
-                            key={rate}
-                            onClick={() => changePlaybackRate(rate)}
-                            $isActive={playbackRate === rate}
-                          >
-                            {rate}x
-                          </PlaybackRateButton>
-                        ))}
-                      </PlaybackRateOptions>
-                    )}
-                  </ButtonWrapper>
-                  <Button onClick={togglePlayPause}>
-                    {isYouTubePlaying ? (
-                      <FaPause style={{ fontSize: "20px" }} />
-                    ) : (
-                      <FaPlay style={{ fontSize: "20px" }} />
-                    )}
-                    {isYouTubePlaying ? "일시정지" : "재생"}
-                  </Button>
-                  <button onClick={handleChangeButtonClick}>영상변경</button>
+                  {!isRecording ? (
+                    <>
+                      <ButtonWrapper>
+                        <Button
+                          onClick={() =>
+                            setShowPlaybackRates(!showPlaybackRates)
+                          }
+                        >
+                          <FaPlayCircle style={{ fontSize: "20px" }} />
+                          재생속도
+                        </Button>
+                        {showPlaybackRates && (
+                          <PlaybackRateOptions>
+                            {playbackRates.map((rate) => (
+                              <PlaybackRateButton
+                                key={rate}
+                                onClick={() => changePlaybackRate(rate)}
+                                $isActive={playbackRate === rate}
+                              >
+                                {rate}x
+                              </PlaybackRateButton>
+                            ))}
+                          </PlaybackRateOptions>
+                        )}
+                      </ButtonWrapper>
+                      <Button onClick={togglePlayPause}>
+                        {isYouTubePlaying ? (
+                          <FaPause style={{ fontSize: "20px" }} />
+                        ) : (
+                          <FaPlay style={{ fontSize: "20px" }} />
+                        )}
+                        {isYouTubePlaying ? "일시정지" : "재생"}
+                      </Button>
+                      <button onClick={handleChangeButtonClick}>
+                        영상변경
+                      </button>
+                    </>
+                  ) : null}
                 </Buttons>
               )}
             </VideoContainer>
@@ -469,15 +507,19 @@ export const Practice: React.FC = () => {
                 </Webcam>
               </WebcamWrapper>
               <Buttons>
-                <button>
-                  <FaPlayCircle style={{ fontSize: "20px" }} />
-                  임시
-                </button>
-                <button>
-                  <FaExchangeAlt style={{ fontSize: "20px" }} />
-                  임시
-                </button>
-                <button>임시</button>
+                <Button onClick={toggleRecording}>
+                  {isRecording ? (
+                    <>
+                      <FaRedo style={{ fontSize: "20px" }} />
+                      초기화
+                    </>
+                  ) : (
+                    <>
+                      <BiVideoRecording style={{ fontSize: "20px" }} />
+                      녹화
+                    </>
+                  )}
+                </Button>
               </Buttons>
             </VideoContainer>
           </VideoWrapper>

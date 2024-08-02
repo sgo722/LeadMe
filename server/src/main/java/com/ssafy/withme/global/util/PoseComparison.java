@@ -87,7 +87,12 @@ public class PoseComparison {
                 List<Keypoint> userL2ChallengeKeypoints = l2Normalize(challengeFrame.getKeypoints());
 
                 // 코사인 유사도 측정 진행
-                scoreHistroy[i] = cosinSimilarity(userL2Keypoints, userL2ChallengeKeypoints);
+                double value = cosinSimilarity(userL2Keypoints, userL2ChallengeKeypoints);
+                if(value >= 0){
+                    scoreHistroy[i] = value;
+                }else{
+                    scoreHistroy[i] = 0;
+                }
                 totalScore +=  scoreHistroy[i];
 
             }
