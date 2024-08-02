@@ -87,23 +87,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, [video.videoId, onIntersection]);
 
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (iframe && canEmbed) {
-      if (isActive) {
-        iframe.contentWindow?.postMessage(
-          '{"event":"command","func":"playVideo","args":""}',
-          "*"
-        );
-      } else {
-        iframe.contentWindow?.postMessage(
-          '{"event":"command","func":"pauseVideo","args":""}',
-          "*"
-        );
-      }
-    }
-  }, [isActive, canEmbed]);
-
   const handleIframeError = () => {
     setCanEmbed(false);
   };
