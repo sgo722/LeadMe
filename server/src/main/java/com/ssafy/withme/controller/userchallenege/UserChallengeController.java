@@ -46,12 +46,12 @@ public class UserChallengeController {
      * @param user
      * @return
      */
-    @GetMapping("/api/v1/userChallenge/reports")
-    public SuccessResponse<List<UserChallengeReportViewResponse>> findReports(
-            @PageableDefault(size = 10) Pageable pageable,
-            @CurrentUser User user){
-        return SuccessResponse.of(userChallengeService.findReportsByUserId(user.getId()));
-    }
+//    @GetMapping("/api/v1/userChallenge/reports")
+//    public SuccessResponse<List<UserChallengeReportViewResponse>> findReports(
+//            @PageableDefault(size = 10) Pageable pageable,
+//            @CurrentUser User user){
+//        return SuccessResponse.of(userChallengeService.findReportsByUserId(user.getId()));
+//    }
 
     /**
      ** 유저의 스켈레톤 데이터를 받아와서 알고리즘으로 분석률을 반환한다.
