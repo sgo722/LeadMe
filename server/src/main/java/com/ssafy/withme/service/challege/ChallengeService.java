@@ -8,6 +8,7 @@ import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -75,6 +76,7 @@ public class ChallengeService {
      * @param youtubeId
      * @return
      */
+    @Transactional
     public Landmark getLandMarkByYoutubeId(String youtubeId) throws EntityNotFoundException {
         Challenge challenge = challengeRepository.findByYoutubeId(youtubeId);
 
@@ -83,6 +85,8 @@ public class ChallengeService {
         }
 
         // youtubeId로 몽고디비로부터 스켈레톤 데이터를 조회합니다.
-        return landmarkRepository.findByYoutubeId(youtubeId);
+        Landmark findLandmarkByYoutubeId = landmarkRepository.findByYoutubeId(youtubeId);
+        findLandmarkByYoutubeId.setChallengeId(challenge.getId());
+        return findLandmarkByYoutubeId;
     }
 }
