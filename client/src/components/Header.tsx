@@ -29,6 +29,8 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
         return "Challenge";
       case "/rank":
         return "Rank";
+      case "/battle":
+        return "Battle";
       default:
         return "LeadMe";
     }
@@ -70,6 +72,7 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
           <StyledLink to="/home">home</StyledLink>
           <StyledLink to="/feed">feed</StyledLink>
           <StyledLink to="/practice">practice</StyledLink>
+          <StyledLink to="/battle">battle</StyledLink>
           <StyledLink to="/challenge">challenge</StyledLink>
           <StyledLink to="/rank">rank</StyledLink>
           {isLogin ? (
