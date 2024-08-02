@@ -62,25 +62,6 @@ pipeline {
                 }
             }
         }
-        
-        stage('Build and Push Python Docker Image') {
-            steps {
-                script {
-                    dir('S11P12C109/leadme') {
-                        sh 'docker stop python-container || true'
-                        sh 'docker rm -f python-container || true'
-                        
-                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                            sh '''
-                            docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-                            docker build -t $DOCKERHUB_USERNAME/${DOCKERHUB_REPOSITORY}:latest .
-                            docker push $DOCKERHUB_USERNAME/${DOCKERHUB_REPOSITORY}:latest
-                            '''
-                        }
-                    }
-                }
-            }
-        }
 
         stage('Docker Build and Push Java Docker Image') {
             steps {
