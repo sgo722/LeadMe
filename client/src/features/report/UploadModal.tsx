@@ -8,7 +8,7 @@ interface ModalProps {
   onClose: () => void;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
+const UpdateModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const [inputValue, setInputValue] = useState("");
   const [isDisabled, setIsDisabled] = useState(true);
 
@@ -165,4 +165,4 @@ const PrivateBtn = styled.div<{ disabled: boolean }>`
 
 const PuplicBtn = styled(PrivateBtn)``;
 
-export default Modal;
+export default UpdateModal;
