@@ -51,11 +51,6 @@ spring:
       port: 6380
       password: leadmeredis109
 
-  config:
-    activate:
-      on-profile: local
-    import: optional:application-secret.properties
-
 logging:
   level:
     org.hibernate.type: trace
