@@ -2,8 +2,11 @@ package com.ssafy.withme.controller.userchallenege;
 
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeDeleteRequest;
+import com.ssafy.withme.controller.userchallenege.request.UserChallengeReportViewResponse;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.report.Report;
+import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.ApiResponse;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.userchellenge.UserChallengeService;
@@ -11,10 +14,13 @@ import com.ssafy.withme.service.userchellenge.response.UserChallengeAnalyzeRespo
 import com.ssafy.withme.service.userchellenge.response.UserChallengeReportResponse;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeSaveResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -22,9 +28,29 @@ public class UserChallengeController {
 
     private final UserChallengeService userChallengeService;
 
+    /**
+     * 영상 분석 결과를 조회한다.
+     * 영상 고유 uuid를 받아서 영상 레포트 정보를 반환한다.
+     * @param uuid
+     * @return
+     */
+
     @GetMapping("/api/v1/userChallenge/report/{uuid}")
-    public SuccessResponse<UserChallengeReportResponse> findReportByUuid(@PathVariable("uuid") String uuid){
+    public SuccessResponse<UserChallengeReportResponse> findReportByUuid(@PathVariable("uuid") String uuid) {
         return SuccessResponse.of(userChallengeService.findReportByUuid(uuid));
+    }
+
+    /**
+     * 사용자가 찍은 영상들을 조회한다.
+     * @param pageable
+     * @param user
+     * @return
+     */
+    @GetMapping("/api/v1/userChallenge/reports")
+    public SuccessResponse<List<UserChallengeReportViewResponse>> findReports(
+            @PageableDefault(size = 10) Pageable pageable,
+            @CurrentUser User user){
+        return SuccessResponse.of(userChallengeService.findReportsByUserId(user.getId()));
     }
 
     /**

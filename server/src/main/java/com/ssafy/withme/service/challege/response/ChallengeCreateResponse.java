@@ -12,22 +12,22 @@ import java.util.List;
 @Getter
 public class ChallengeCreateResponse {
 
-    private Long id;
+    private Long challengeId;
 
     private String youtubeId;
 
     private String url;
 
     @Builder
-    private ChallengeCreateResponse(Long id, String youtubeId, String url) {
-        this.id = id;
+    private ChallengeCreateResponse(Long challengeId, String youtubeId, String url) {
+        this.challengeId = challengeId;
         this.youtubeId = youtubeId;
         this.url = url;
     }
 
     public static ChallengeCreateResponse toResponse(Challenge challenge){
         return ChallengeCreateResponse.builder()
-                .id(challenge.getId())
+                .challengeId(challenge.getId())
                 .url(challenge.getUrl())
                 .youtubeId(challenge.getYoutubeId())
                 .build();

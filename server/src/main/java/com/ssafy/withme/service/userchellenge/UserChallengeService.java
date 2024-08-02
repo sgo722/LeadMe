@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeDeleteRequest;
+import com.ssafy.withme.controller.userchallenege.request.UserChallengeReportViewResponse;
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.landmark.Landmark;
@@ -214,6 +215,7 @@ public class UserChallengeService {
                     .challenge(challenge)
                     .videoPath(PERMANENT_DIRECTORY+"/"+finalFileName)
                     .access(request.getAccess())
+                    .uuid(request.getUuid())
                     .build();
             UserChallenge savedUserChallenge = userChallengeRepository.save(userChallenge);
 
@@ -248,8 +250,27 @@ public class UserChallengeService {
 
     }
 
+    /**
+     * uuid를 기반으로 영상 분석데이터를 조회한다.
+     * @param uuid
+     * @return
+     */
+
     public UserChallengeReportResponse findReportByUuid(String uuid) {
         Report report = reportRepository.findByUuid(uuid);
-        return UserChallengeReportResponse.ofResponse(report);
+        UserChallenge userChallenge = userChallengeRepository.findByUuid(uuid);
+        Long challengeId = userChallenge.getChallenge().getId();
+        String youtubeId = userChallenge.getChallenge().getYoutubeId();
+        return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId);
     }
+
+//    /**
+//     * userId로 유저영상들을 페이징 조회한다.
+//     * @param userId
+//     * @return
+//     */
+//    public List<UserChallengeReportViewResponse> findReportsByUserId(Long userId) {
+//        List<UserChallenge> userChallenges = userChallengeRepository.findByUserId(userId);
+//        return null;
+//    }
 }

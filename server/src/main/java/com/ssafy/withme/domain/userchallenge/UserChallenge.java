@@ -41,8 +41,10 @@ public class UserChallenge {
 
     private String access;
 
+    private String uuid;
+
     @Builder
-    public UserChallenge(String access, List<Comment> comments, User user, Challenge challenge, Integer likes, String videoPath, String name) {
+    public UserChallenge(String access, List<Comment> comments, User user, Challenge challenge, Integer likes, String videoPath, String name, String uuid) {
         this.access = access;
         this.comments = comments;
         this.user = user;
@@ -50,6 +52,7 @@ public class UserChallenge {
         this.likes = likes;
         this.videoPath = videoPath;
         this.name = name;
+        this.uuid = uuid;
     }
 
 }
