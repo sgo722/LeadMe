@@ -7,6 +7,7 @@ import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
+import com.ssafy.withme.service.userchellenge.response.LandmarkResponse;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +78,7 @@ public class ChallengeService {
      * @return
      */
     @Transactional
-    public Landmark getLandMarkByYoutubeId(String youtubeId) throws EntityNotFoundException {
+    public LandmarkResponse getLandMarkByYoutubeId(String youtubeId) throws EntityNotFoundException {
         Challenge challenge = challengeRepository.findByYoutubeId(youtubeId);
 
         if(challenge == null) {
@@ -86,8 +87,6 @@ public class ChallengeService {
 
         // youtubeId로 몽고디비로부터 스켈레톤 데이터를 조회합니다.
         Landmark findLandmarkByYoutubeId = landmarkRepository.findByYoutubeId(youtubeId);
-        findLandmarkByYoutubeId.setChallengeId(challenge.getId());
-        Landmark savedLandMark = landmarkRepository.save(findLandmarkByYoutubeId);
-        return savedLandMark;
+        return LandmarkResponse.ofResponse(findLandmarkByYoutubeId, challenge.getId());
     }
 }
