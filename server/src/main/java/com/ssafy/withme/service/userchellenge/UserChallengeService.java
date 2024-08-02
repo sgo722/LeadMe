@@ -146,6 +146,7 @@ public class UserChallengeService {
         System.out.println(save);
 
         return UserChallengeAnalyzeResponse.builder()
+                .challengeId(challengeId)
                 .uuid(uuid)
                 .build();
     }
