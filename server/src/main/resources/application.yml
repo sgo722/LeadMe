@@ -8,6 +8,11 @@ server:
 ---
 spring:
 
+  config:
+    activate:
+      on-profile: local
+    import: optional:application-secret.properties
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -68,6 +73,10 @@ python-server:
   url: http://i11c109.p.ssafy.io:4567
   temp-directory: host/python/video/temporary
   permanent-directory: host/python/video/user
+
+#  url: http://localhost:8000
+#  temp-directory: C:/leadme/video/temporary
+#  permanent-directory: C:/leadme/video/user
 
 openvidu:
   url: https://i11c109.p.ssafy.io:8443
