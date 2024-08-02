@@ -87,6 +87,7 @@ public class ChallengeService {
         // youtubeId로 몽고디비로부터 스켈레톤 데이터를 조회합니다.
         Landmark findLandmarkByYoutubeId = landmarkRepository.findByYoutubeId(youtubeId);
         findLandmarkByYoutubeId.setChallengeId(challenge.getId());
-        return findLandmarkByYoutubeId;
+        Landmark savedLandMark = landmarkRepository.save(findLandmarkByYoutubeId);
+        return savedLandMark;
     }
 }
