@@ -8,6 +8,7 @@ import com.ssafy.withme.controller.userchallenege.request.UserChallengeDeleteReq
 import com.ssafy.withme.controller.userchallenege.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.landmark.Landmark;
+import com.ssafy.withme.domain.report.Report;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.userchallenge.UserChallenge;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
@@ -18,6 +19,7 @@ import com.ssafy.withme.global.util.PoseComparison;
 
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
+import com.ssafy.withme.repository.report.ReportRepository;
 import com.ssafy.withme.repository.user.UserRepository;
 import com.ssafy.withme.repository.userchallenge.UserChallengeRepository;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeAnalyzeResponse;
@@ -71,6 +73,8 @@ public class UserChallengeService {
 
     private final RestTemplate restTemplate;
     private final LandmarkRepository landmarkRepository;
+
+    private final ReportRepository reportRepository;
 
     /**
      * * 유저의 스켈레톤 데이터를 받아와서 알고리즘으로 분석률을 반환한다.
@@ -131,10 +135,15 @@ public class UserChallengeService {
         Map<String, Object> calculateResult = PoseComparison.calculatePoseScore(userFrames, challengeFrames);
         log.info(" 반환 점수 : {}", calculateResult.get("score"));
 
+        Report report = Report.builder()
+                .uuid(uuid)
+                .scoreHistory((double[]) calculateResult.get("scoreHistory"))
+                .totalScore((Double) calculateResult.get("totalScore"))
+                .build();
+        reportRepository.save(report);
+
         return UserChallengeAnalyzeResponse.builder()
                 .uuid(uuid)
-                .score((Double) calculateResult.get("totalScore"))
-                .scoreHistroy((double[]) calculateResult.get("scoreHistory"))
                 .build();
     }
 
@@ -205,6 +214,10 @@ public class UserChallengeService {
                     .access(request.getAccess())
                     .build();
             UserChallenge savedUserChallenge = userChallengeRepository.save(userChallenge);
+
+            Report findReportByUuid = reportRepository.findByUuid(request.getUuid());
+            findReportByUuid.setUserChallengeId(savedUserChallenge.getId());
+            reportRepository.save(findReportByUuid);
             return UserChallengeSaveResponse.ofResponse(savedUserChallenge);
         } catch(IOException e) {
             e.printStackTrace();
@@ -225,6 +238,8 @@ public class UserChallengeService {
         try {
             // 임시 파일 삭제
             Files.delete(tempVideoPath);
+            Report findReportByUuid = reportRepository.findByUuid(request.getUuid());
+            reportRepository.delete(findReportByUuid);
         } catch (IOException e) {
             e.printStackTrace();
         }
