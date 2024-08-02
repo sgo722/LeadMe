@@ -21,6 +21,8 @@ public class Landmark {
 
     private List<List<Point>> landmarks;
 
+    private Long challengeId;
+
 
     @Getter
     @Setter
