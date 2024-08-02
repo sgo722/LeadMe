@@ -2,7 +2,13 @@ import Header from "components/Header";
 import styled from "styled-components";
 import YouTube from "react-youtube";
 import { YouTubeEvent, YouTubePlayer } from "react-youtube";
-import { FaChevronLeft, FaExchangeAlt, FaPlayCircle } from "react-icons/fa";
+import {
+  FaChevronLeft,
+  FaExchangeAlt,
+  FaPlayCircle,
+  FaPlay,
+  FaPause,
+} from "react-icons/fa";
 import { PoseLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -56,10 +62,13 @@ export const Practice: React.FC = () => {
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
-  const [webcamRunning, setWebcamRunning] = useState(false);
+  const [webcamRunning, setWebcamRunning] = useState<boolean>(false);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
     null
   );
+  const [playbackRate, setPlaybackRate] = useState<number>(1); // 재생속도
+  const [showPlaybackRates, setShowPlaybackRates] = useState<boolean>(false); // 재생속도 조절 모달
+  const playbackRates = [0.5, 0.75, 1, 1.25, 1.5]; // 재생 속도 리스트
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -265,8 +274,32 @@ export const Practice: React.FC = () => {
   // YouTube 이벤트 핸들러
   const handleYouTubeStateChange = (event: YouTubeEvent) =>
     setIsYouTubePlaying(event.data === 1);
-  const handleYouTubeReady = (event: YouTubeEvent) =>
-    (youtubePlayerRef.current = event.target);
+
+  const handleYouTubeReady = (event: YouTubeEvent) => {
+    youtubePlayerRef.current = event.target;
+    event.target.setPlaybackRate(playbackRate); // 초기 재생 속도 설정 1
+  };
+
+  // Youtube 재생 속도 조절
+  const changePlaybackRate = (rate: number) => {
+    setPlaybackRate(rate);
+    if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.setPlaybackRate(rate);
+    }
+    setShowPlaybackRates(false);
+  };
+
+  // Youtube 재생/일시정지 토글 함수
+  const togglePlayPause = () => {
+    if (youtubePlayerRef.current) {
+      if (isYouTubePlaying) {
+        youtubePlayerRef.current.pauseVideo();
+      } else {
+        youtubePlayerRef.current.playVideo();
+      }
+      // youtube이벤트핸들러가 isYouTubePlaying 상태 업데이트 할거니까 여기서 안해줘도 됨
+    }
+  };
 
   // 웹캠 포즈 감지
   const predictWebcam = useCallback(() => {
@@ -323,10 +356,12 @@ export const Practice: React.FC = () => {
     return match ? match[1] : null;
   };
 
+  // 파이썬에서 영상 다운받는동안 대기시간에 홈으로 이동시켜줌
   const handleCloseIsCompletionAlertModal = () => {
     setIsCompletionAlertModalOpen(false);
     nav("/home");
   };
+
   return (
     <>
       <Header stickyOnly />
@@ -347,7 +382,15 @@ export const Practice: React.FC = () => {
                     opts={{
                       width: "309",
                       height: "550",
-                      playerVars: { autoplay: 0, rel: 0 },
+                      playerVars: {
+                        autoplay: 0,
+                        rel: 0,
+                        modestbranding: 1,
+                        controls: 1,
+                        fs: 0,
+                        playsinline: 1,
+                        origin: window.location.origin,
+                      },
                     }}
                   />
                 ) : (
@@ -379,14 +422,35 @@ export const Practice: React.FC = () => {
               </YouTubeWrapper>
               {videoId && (
                 <Buttons>
-                  <button>
-                    <FaPlayCircle style={{ fontSize: "20px" }} />
-                    재생속도
-                  </button>
-                  <button>
-                    <FaExchangeAlt style={{ fontSize: "20px" }} />
-                    좌우반전
-                  </button>
+                  <ButtonWrapper>
+                    <Button
+                      onClick={() => setShowPlaybackRates(!showPlaybackRates)}
+                    >
+                      <FaPlayCircle style={{ fontSize: "20px" }} />
+                      재생속도
+                    </Button>
+                    {showPlaybackRates && (
+                      <PlaybackRateOptions>
+                        {playbackRates.map((rate) => (
+                          <PlaybackRateButton
+                            key={rate}
+                            onClick={() => changePlaybackRate(rate)}
+                            $isActive={playbackRate === rate}
+                          >
+                            {rate}x
+                          </PlaybackRateButton>
+                        ))}
+                      </PlaybackRateOptions>
+                    )}
+                  </ButtonWrapper>
+                  <Button onClick={togglePlayPause}>
+                    {isYouTubePlaying ? (
+                      <FaPause style={{ fontSize: "20px" }} />
+                    ) : (
+                      <FaPlay style={{ fontSize: "20px" }} />
+                    )}
+                    {isYouTubePlaying ? "일시정지" : "재생"}
+                  </Button>
                   <button onClick={handleChangeButtonClick}>영상변경</button>
                 </Buttons>
               )}
@@ -407,13 +471,13 @@ export const Practice: React.FC = () => {
               <Buttons>
                 <button>
                   <FaPlayCircle style={{ fontSize: "20px" }} />
-                  몰라
+                  임시
                 </button>
                 <button>
                   <FaExchangeAlt style={{ fontSize: "20px" }} />
-                  좌우반전
+                  임시
                 </button>
-                <button>영상변경</button>
+                <button>임시</button>
               </Buttons>
             </VideoContainer>
           </VideoWrapper>
@@ -613,4 +677,56 @@ const SearchInput = styled.input`
   height: 44px;
   outline: none;
   padding-left: 15px;
+`;
+
+const ButtonWrapper = styled.div`
+  position: relative;
+`;
+
+const Button = styled.button`
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.1);
+  border: none;
+  width: 60px;
+  height: 60px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ee5050;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: 0.3s ease;
+
+  &:hover {
+    background-color: #eee;
+  }
+`;
+
+const PlaybackRateOptions = styled.div`
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+`;
+
+const PlaybackRateButton = styled.button<{ $isActive: boolean }>`
+  border: none;
+  background: ${(props) => (props.$isActive ? "#ee5050" : "white")};
+  color: ${(props) => (props.$isActive ? "white" : "#ee5050")};
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: 0.3s ease;
+
+  &:hover {
+    background: ${(props) => (props.$isActive ? "#ee5050" : "#f0f0f0")};
+  }
 `;
