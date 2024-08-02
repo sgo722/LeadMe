@@ -15,9 +15,6 @@ pipeline {
 
     stages {
         stage('Clone Repository') {
-            when {
-                branch 'master'
-            }
             steps {
                 script {
                     sh 'rm -rf S11P12C109'
@@ -28,9 +25,6 @@ pipeline {
         }
 
         stage('Build Project') {
-            when {
-                branch 'master'
-            }
             steps {
                 script {
                     dir('S11P12C109/server') {
@@ -43,9 +37,6 @@ pipeline {
         }
 
         stage('Build and Push Python Docker Image') {
-            when {
-                branch 'master'
-            }
             steps {
                 script {
                     // dir('S11P12C109/leadme') {
@@ -73,9 +64,6 @@ pipeline {
         }
 
         stage('Docker Build and Push Java Docker Image') {
-            when {
-                branch 'master'
-            }
             steps {
                 script {
                     // Docker build and push
@@ -93,9 +81,6 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
-            when {
-                branch 'master'
-            }
             steps {
                 script {
                     sshPublisher(
