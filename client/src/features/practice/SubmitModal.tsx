@@ -4,13 +4,13 @@ interface SubmitModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: () => void;
-  isLoading: boolean;
+  onDownload: () => void;
 }
 export const SubmitModal: React.FC<SubmitModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  isLoading,
+  onDownload,
 }) => {
   if (!isOpen) return null;
 
@@ -22,11 +22,10 @@ export const SubmitModal: React.FC<SubmitModalProps> = ({
           <br /> 영상을 제출하시겠습니까?
         </ModalTitle>
         <ButtonGroup>
-          <ModalButton onClick={onClose} disabled={isLoading}>
-            취소
-          </ModalButton>
-          <ModalButton onClick={onSubmit} $primary disabled={isLoading}>
-            {isLoading ? "제출 중..." : "제출"}
+          <ModalButton onClick={onClose}>취소</ModalButton>
+          <ModalButton onClick={onDownload}>다운로드</ModalButton>
+          <ModalButton onClick={onSubmit} $primary>
+            제출
           </ModalButton>
         </ButtonGroup>
       </ModalContent>
