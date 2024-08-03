@@ -36,6 +36,8 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
             Object principal = authentication.getPrincipal();
             String email;
 
+            log.info("find email: {}", email);
+
             if (principal instanceof UserDetails) {
                 email = ((UserDetails) principal).getUsername();
             } else if (principal instanceof String) {
@@ -43,8 +45,6 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
             } else {
                 return null;
             }
-
-            log.info("find email: {}", email);
 
             return userService.findByEmail(email);
         }
