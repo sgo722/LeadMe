@@ -11,3 +11,4 @@ yt-dlp
 pymongo
 ray
 python-multipart
+moviepy
