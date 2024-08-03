@@ -8,7 +8,7 @@ import ray
 import cv2
 import time
 import logging
-from pathlib import Path
+# from pathlib import Path
 import asyncio
 from moviepy.editor import VideoFileClip
 from video_processor import download_video, process_video, process_video_user
@@ -17,7 +17,7 @@ from video_processor import download_video, process_video, process_video_user
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-print(Path(__file__).resolve())
+# print(Path(__file__).resolve())
 
 app = FastAPI()
 
@@ -49,9 +49,10 @@ async def read_root():
 @app.post("/videoUrl")
 async def saveVideoData(video: Video):
     start_time = time.time()
-    video_path = await asyncio.to_thread(download_video, video.url, 'downloaded_video.mp4')
+    video_path = await asyncio.to_thread(download_video, video.url, video.youtubeId)
     
     # 비디오 처리 실행 및 결과 대기
+    
     keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(video.youtubeId, video_path)))
     
     total_time = time.time() - start_time

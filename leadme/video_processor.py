@@ -9,13 +9,17 @@ from pymongo import MongoClient
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
+
+PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
+
 # MongoDB 연결 설정
 client = MongoClient('mongodb://i11c109.p.ssafy.io:27017/')
 db = client['local']  # 'local' 데이터베이스 이름 설정
 collection = db['landmarks']  # 'landmarks' 컬렉션 이름 설정
 
 # 비디오 다운로드 함수
-def download_video(url, output_path='downloaded_video.mp4'):
+def download_video(url, youtube_id, output_dir=PERMANENT_DIRECTORY_CHALLENGE):
+    output_path = os.path.join(output_dir, f"{youtube_id}.mp4")
     # 기존 파일이 있다면 삭제
     if os.path.exists(output_path):
         os.remove(output_path)
