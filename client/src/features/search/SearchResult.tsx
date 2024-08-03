@@ -8,7 +8,7 @@ import playButton from "assets/icons/playButton.png";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { axiosInstance } from "axiosInstance/apiClient";
-
+import { LoadingSpinner } from "components/LoadingSpinner";
 interface FetchVideosParams {
   pageParam: string;
   query: string;
@@ -130,7 +130,7 @@ export const SearchResult: React.FC<SearchResultProps> = ({ platform }) => {
     nav(`/search/${videoId}?q=${encodeURIComponent(query)}`);
   };
 
-  if (isLoading) return <div>로딩중...</div>;
+  if (isLoading) return <LoadingSpinner />;
   if (isError) return <div>에러: {(error as Error).message}</div>;
 
   const videos = data?.pages.flatMap((page) => page.data) || [];
