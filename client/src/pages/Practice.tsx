@@ -2,13 +2,7 @@ import Header from "components/Header";
 import styled from "styled-components";
 import YouTube from "react-youtube";
 import { YouTubeEvent, YouTubePlayer } from "react-youtube";
-import {
-  FaChevronLeft,
-  FaRedo,
-  FaPlayCircle,
-  FaPlay,
-  FaPause,
-} from "react-icons/fa";
+import { FaChevronLeft, FaRedo, FaPlay, FaPause } from "react-icons/fa";
 import { BiVideoRecording } from "react-icons/bi";
 import { PoseLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -20,6 +14,7 @@ import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
 import { SubmitModal } from "features/practice/SubmitModal";
 import { TiMediaRecord } from "react-icons/ti";
+import { MdOutlineSpeed } from "react-icons/md";
 interface ChallengeData {
   youtubeId: string;
   url: string;
@@ -554,7 +549,7 @@ export const Practice: React.FC = () => {
                     <Button
                       onClick={() => setShowPlaybackRates(!showPlaybackRates)}
                     >
-                      <FaPlayCircle style={{ fontSize: "20px" }} />
+                      <MdOutlineSpeed style={{ fontSize: "25px" }} />
                       재생속도
                     </Button>
                     {showPlaybackRates && (
@@ -573,9 +568,13 @@ export const Practice: React.FC = () => {
                   </ButtonWrapper>
                   <Button onClick={togglePlayPause}>
                     {isYouTubePlaying ? (
-                      <FaPause style={{ fontSize: "20px" }} />
+                      <FaPause
+                        style={{ fontSize: "15px", marginBottom: "3px" }}
+                      />
                     ) : (
-                      <FaPlay style={{ fontSize: "20px" }} />
+                      <FaPlay
+                        style={{ fontSize: "15px", marginBottom: "3px" }}
+                      />
                     )}
                     {isYouTubePlaying ? "일시정지" : "재생"}
                   </Button>
@@ -609,17 +608,18 @@ export const Practice: React.FC = () => {
                 </Webcam>
               </WebcamWrapper>
               <Buttons>
-                {!isRecording ? (
-                  <Button onClick={startRecording}>
-                    <BiVideoRecording style={{ fontSize: "20px" }} />
-                    녹화
-                  </Button>
-                ) : (
-                  <Button onClick={resetRecording}>
-                    <FaRedo style={{ fontSize: "20px" }} />
-                    초기화
-                  </Button>
-                )}
+                {videoId &&
+                  (!isRecording ? (
+                    <Button onClick={startRecording}>
+                      <BiVideoRecording style={{ fontSize: "20px" }} />
+                      녹화
+                    </Button>
+                  ) : (
+                    <Button onClick={resetRecording}>
+                      <FaRedo style={{ fontSize: "20px" }} />
+                      초기화
+                    </Button>
+                  ))}
               </Buttons>
             </VideoContainer>
           </VideoWrapper>
@@ -886,7 +886,7 @@ const RecordingIndicator = styled.div`
   position: absolute;
   top: 10px;
   left: 10px;
-  color: black;
+  color: white;
   font-weight: bold;
   display: flex;
   align-items: center;
