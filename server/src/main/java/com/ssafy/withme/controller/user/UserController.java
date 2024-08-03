@@ -36,6 +36,9 @@ public class UserController {
     public SuccessResponse<?> getInfo(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
         User userInfo = null;
+
+        log.info("authorization: {}", authorization);
+
         if (authorization != null && authorization.startsWith("Bearer ")) {
 //            String token = authorization.substring("Bearer ".length());
             String accessToken = authorization.split(" ")[1];

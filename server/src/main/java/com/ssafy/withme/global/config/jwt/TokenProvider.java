@@ -109,6 +109,8 @@ public class TokenProvider {
             if (isBlackListed(token))
                 return false;
 
+            log.info("validate token password: {}", jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8));
+
             Jwts.parser()
                     .setSigningKey(jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8)) // 서명 검증
                     .parseClaimsJws(token); // 클레임이란 받아온 정보(토큰)를 jwt 페이로드에 넣는 것이다.
