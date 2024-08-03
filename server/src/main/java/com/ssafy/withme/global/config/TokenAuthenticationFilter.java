@@ -42,6 +42,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
             log.info("authenticated user: {}", authentication.getPrincipal());
         }
+
+        filterChain.doFilter(request, response);
     }
 
     public String getAccessToken(String authorzationHeader) {
