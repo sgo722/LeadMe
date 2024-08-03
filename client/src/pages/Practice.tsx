@@ -35,6 +35,7 @@ interface Landmark {
 interface YoutubeBlazePoseData {
   youtubeId: string;
   landmarks: Landmark[][];
+  challengeId: number;
 }
 
 const postChallenge = async (data: ChallengeData) => {
@@ -417,41 +418,57 @@ export const Practice: React.FC = () => {
 
   const submitVideoMutation = useMutation({
     mutationFn: async (data: {
-      formData: FormData;
-      challengeId: number;
+      videoFile: Blob;
       userId: number;
+      challengeId: number;
     }) => {
+      const formData = new FormData();
+      formData.append("videoFile", data.videoFile, "recorded_video.mp4");
+      formData.append(
+        "request",
+        JSON.stringify({
+          userId: data.userId,
+          challengeId: data.challengeId,
+        })
+      );
+
       const res = await axiosInstance.post(
         "/api/v1/userChallenge/analyze",
-        data.formData,
+        formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
-          params: { challengeId: data.challengeId, userId: data.userId },
         }
       );
       return res.data;
     },
+
     onSuccess: () => {
       setShowSubmitModal(false);
       setRecordedChunks([]);
       console.log("제출 성공");
     },
-    onError: (error) => {
+    onError: (error, variables) => {
       console.error("제출 실패", error);
+      console.log("전송 시도한 데이터:", {
+        videoFileSize: variables.videoFile.size,
+        userId: variables.userId,
+        challengeId: variables.challengeId,
+      });
     },
   });
 
   const handleSubmit = async () => {
     if (recordedChunks.length === 0) return;
     const blob = new Blob(recordedChunks, { type: "video/mp4" });
-    const formData = new FormData();
-    formData.append("video", blob, "recorded_video.mp4");
-
-    submitVideoMutation.mutate({
-      formData: formData,
-      challengeId: 1, // 바꿔야함
-      userId: 1, // 바꿔야함
-    });
+    if (youtubeBlazePoseQuery?.data?.challengeId) {
+      submitVideoMutation.mutate({
+        videoFile: blob,
+        userId: 1, // 향후 동적으로 변경 필요
+        challengeId: youtubeBlazePoseQuery.data.challengeId,
+      });
+    }
+    console.log(blob, youtubeBlazePoseQuery?.data?.challengeId);
+    console.log("전송완료!");
   };
 
   return (
@@ -559,6 +576,9 @@ export const Practice: React.FC = () => {
                     width={309}
                     height={550}
                   />
+                  {isRecording && (
+                    <RecordingIndicator>녹화 중</RecordingIndicator>
+                  )}
                 </Webcam>
               </WebcamWrapper>
               <Buttons>
@@ -835,4 +855,12 @@ const PlaybackRateButton = styled.button<{ $isActive: boolean }>`
   &:hover {
     background: ${(props) => (props.$isActive ? "#ee5050" : "#f0f0f0")};
   }
+`;
+
+const RecordingIndicator = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: red;
+  font-weight: bold;
 `;
