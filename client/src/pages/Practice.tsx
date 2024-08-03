@@ -384,6 +384,8 @@ export const Practice: React.FC = () => {
   const startRecording = () => {
     setIsRecording(true);
     if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.setPlaybackRate(1);
+      setPlaybackRate(1);
       youtubePlayerRef.current.seekTo(0);
       youtubePlayerRef.current.playVideo();
     }
@@ -397,7 +399,6 @@ export const Practice: React.FC = () => {
           setRecordedChunks((prev) => [...prev, event.data]);
         }
       };
-
       setMediaRecorder(recorder);
       recorder.start();
     }
@@ -457,9 +458,11 @@ export const Practice: React.FC = () => {
     },
   });
 
+  // 모달에서 제출 누르면  실핼할 함수
   const handleSubmit = async () => {
     if (recordedChunks.length === 0) return;
     const blob = new Blob(recordedChunks, { type: "video/mp4" });
+
     if (youtubeBlazePoseQuery?.data?.challengeId) {
       submitVideoMutation.mutate({
         videoFile: blob,
@@ -469,6 +472,21 @@ export const Practice: React.FC = () => {
     }
     console.log(blob, youtubeBlazePoseQuery?.data?.challengeId);
     console.log("전송완료!");
+  };
+
+  // 모달에서 다운로드 누르면 실행할 함수
+  const handleDownload = () => {
+    if (recordedChunks.length === 0) return;
+    const blob = new Blob(recordedChunks, { type: "video/mp4" });
+    // 다운로드 링크 생성
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "recorded_video.mp4";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -609,13 +627,11 @@ export const Practice: React.FC = () => {
           setRecordedChunks([]);
         }}
         onSubmit={handleSubmit}
-        isLoading={submitVideoMutation.isPending}
+        onDownload={handleDownload}
       />
     </>
   );
 };
-
-// styled-components 코드는 여기에 있지만 요청에 따라 생략하였습니다.
 
 const Container = styled.div`
   min-width: 1080px;
