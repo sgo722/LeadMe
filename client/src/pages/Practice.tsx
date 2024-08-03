@@ -19,7 +19,7 @@ import { useSetRecoilState } from "recoil";
 import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
 import { SubmitModal } from "features/practice/SubmitModal";
-
+import { TiMediaRecord } from "react-icons/ti";
 interface ChallengeData {
   youtubeId: string;
   url: string;
@@ -595,7 +595,16 @@ export const Practice: React.FC = () => {
                     height={550}
                   />
                   {isRecording && (
-                    <RecordingIndicator>녹화 중</RecordingIndicator>
+                    <RecordingIndicator>
+                      <TiMediaRecord
+                        style={{
+                          color: "red",
+                          fontSize: "25px",
+                          marginBottom: "3px",
+                        }}
+                      />
+                      <span>REC</span>
+                    </RecordingIndicator>
                   )}
                 </Webcam>
               </WebcamWrapper>
@@ -877,6 +886,11 @@ const RecordingIndicator = styled.div`
   position: absolute;
   top: 10px;
   left: 10px;
-  color: red;
+  color: black;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  & > span {
+    font-size: 18px;
+  }
 `;
