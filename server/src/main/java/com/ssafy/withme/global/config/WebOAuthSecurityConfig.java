@@ -64,7 +64,7 @@ public class WebOAuthSecurityConfig {
                         // 토큰 재발급 url은 인증없이 접근 가능하도록 설정 permitAll()? denyAll()?
 //                        .requestMatchers(new AntPathRequestMatcher("/api/**")).permitAll()
                         // /api/~ 권한 요규
-                        .requestMatchers(new AntPathRequestMatcher("/api/v1/user/**")).authenticated()
+//                        .requestMatchers(new AntPathRequestMatcher("/api/v1/user/**")).authenticated()
                         // 이외에는 모두 허가
                         .anyRequest().permitAll()
                 )
