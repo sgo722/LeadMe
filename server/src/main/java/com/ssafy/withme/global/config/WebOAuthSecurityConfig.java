@@ -20,6 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.List;
@@ -82,6 +83,8 @@ public class WebOAuthSecurityConfig {
                         .failureHandler(oAuth2FailureHandler()) // 인증 실패 시 실행할 핸들러
 
                 )
+                // SecurityContext 유지
+                .addFilterAfter(new SecurityContextPersistenceFilter(), SecurityContextPersistenceFilter.class)
 
                 // /api로 시작하는 url인 경우 401 상태 코드를 반환하도록 예외 처리
                 .exceptionHandling(exceptionHandling -> exceptionHandling
