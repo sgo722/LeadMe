@@ -9,6 +9,7 @@ import com.ssafy.withme.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
@@ -42,9 +43,9 @@ public class UserController {
         }
         UserInfoDto userDto = UserInfoDto.from(userInfo);
 
-        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        log.info("name: {}", name);
+        log.info("authentication: {}", authentication);
 
         return SuccessResponse.of(userDto);
     }
