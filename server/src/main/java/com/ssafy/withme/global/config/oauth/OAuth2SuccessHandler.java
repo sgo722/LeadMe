@@ -112,14 +112,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         log.info("targetUrl: {}" + targetUrl);
 
         log.info("accessToken: {}" + accessToken);
-
-        // OAuth2User를 사용하여 OAuth2AuthenticationToken을 생성하고 SecurityContext에 설정
-        Authentication auth = new OAuth2AuthenticationToken(
-                oAuth2User,
-                oAuth2User.getAuthorities(),
-                ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId() // 여기서 가져옴
-        );
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
 //

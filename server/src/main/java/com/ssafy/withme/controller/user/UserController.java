@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public class UserController {
         }
         UserInfoDto userDto = UserInfoDto.from(userInfo);
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        OAuth2User authentication = (OAuth2User) SecurityContextHolder.getContext().getAuthentication();
 
         log.info("authentication: {}", authentication);
 
