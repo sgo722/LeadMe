@@ -58,7 +58,7 @@ public class WebOAuthSecurityConfig {
                 .sessionManagement(mangement -> mangement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2Login(AbstractHttpConfigurer::disable)
                 // 헤더를 확인할 커스텀 필터 추가
-                //.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
 
                 .authorizeRequests(auth -> auth
                         // 토큰 재발급 url은 인증없이 접근 가능하도록 설정 permitAll()? denyAll()?
