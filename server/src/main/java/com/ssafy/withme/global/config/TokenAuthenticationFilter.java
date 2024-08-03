@@ -39,6 +39,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             Authentication authentication = tokenProvider.getAuthentication(token);
             // 인증 정보를 스프링시큐리티에 넣는다.
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            log.info("authenticated user: {}", authentication.getPrincipal());
         }
     }
 
