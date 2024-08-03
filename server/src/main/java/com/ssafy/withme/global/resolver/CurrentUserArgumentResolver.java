@@ -31,10 +31,16 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.getPrincipal() != null) {
+            Object principal = authentication.getPrincipal();
+            String email;
 
-            UserDetails principal = (UserDetails) authentication.getPrincipal();
-
-            String email = principal.getUsername();
+            if (principal instanceof UserDetails) {
+                email = ((UserDetails) principal).getUsername();
+            } else if (principal instanceof String) {
+                email = (String) principal;
+            } else {
+                return null;
+            }
 
             return userService.findByEmail(email);
         }
