@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -112,8 +113,12 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         log.info("accessToken: {}" + accessToken);
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-
+        // OAuth2User를 사용하여 OAuth2AuthenticationToken을 생성하고 SecurityContext에 설정
+        Authentication auth = new OAuth2AuthenticationToken(
+                oAuth2User,
+                oAuth2User.getAuthorities(),
+                ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId() // 여기서 가져옴
+        );
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
