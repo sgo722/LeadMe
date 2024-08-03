@@ -70,6 +70,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         System.out.println(authentication);
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+
+        log.info("oauth login user: {}", oAuth2User);
+        log.info("oauth login user name: {}", oAuth2User.getName());
+        log.info("oauth login user attributes: {}", oAuth2User.getAttributes());
+
         // *** 여기서 계속 틀렸음
         String email = ((CustomOAuth2User) oAuth2User).getUserDto().getEmail();
         System.out.println(email);
