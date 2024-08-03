@@ -47,7 +47,7 @@ public class UserController {
         }
         UserInfoDto userDto = UserInfoDto.from(userInfo);
 
-        OAuth2User authentication = (OAuth2User) SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         log.info("authentication: {}", authentication);
 
