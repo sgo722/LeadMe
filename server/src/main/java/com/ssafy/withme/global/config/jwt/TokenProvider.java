@@ -90,6 +90,8 @@ public class TokenProvider {
 //            throw new RuntimeException("Error encrypting user id", e);
 //        }
 
+        log.info("create token with sign: {}", jwtProperties.getSecretKey());
+
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE) // 헤더 타입은 JWT
                 .setHeaderParam(TokenType.REFRESH.name(), TokenType.REFRESH.name())
@@ -109,7 +111,7 @@ public class TokenProvider {
             if (isBlackListed(token))
                 return false;
 
-            log.info("validate token password: {}", jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8));
+            log.info("validate token password: {}", jwtProperties.getSecretKey());
 
             Jwts.parser()
                     .setSigningKey(jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8)) // 서명 검증
