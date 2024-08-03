@@ -3,6 +3,7 @@ package com.ssafy.withme.global.resolver;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.service.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +14,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolver {
@@ -41,6 +43,8 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
             } else {
                 return null;
             }
+
+            log.info("find email: {}", email);
 
             return userService.findByEmail(email);
         }
