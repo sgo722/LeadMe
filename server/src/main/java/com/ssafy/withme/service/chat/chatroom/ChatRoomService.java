@@ -32,7 +32,7 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final UserService userService;
 
-    public ChatRoomGetResponse getChatRoomInfo(Long userId, String roomId) {
+    public ChatRoomGetResponse getChatRoomInfo(Long userId, Long roomId) {
 //        return mainFeignClient.getChatRoomInfo(accessToken, roomId);
         ChatRoom findRoom = chatRoomRepository.findByUserIdAndRoomId(userId, roomId);
 
@@ -81,7 +81,7 @@ public class ChatRoomService {
     public void setListChatLastMessage(ChatRoomGetResponse chatRoomListGetResponse) {
 
         // 몽고 디비에서 마지막 메시지 가져와서 저장.
-        String chatRoomNumber = chatRoomListGetResponse.getChatRoomNumber();
+        Long chatRoomNumber = chatRoomListGetResponse.getChatRoomNumber();
         if (chatRoomRedisRepository.getLastMessage(chatRoomNumber) != null) {
             chatRoomListGetResponse.updateChatMessageDto(
                     chatRoomRedisRepository.getLastMessage(chatRoomNumber)
@@ -119,7 +119,7 @@ public class ChatRoomService {
      * 채팅방 삭제 로직
      * @param roomId
      */
-    public void deleteChatRoom(String roomId, Long userId) {
+    public void deleteChatRoom(Long roomId, Long userId) {
         log.info("=>> 채팅방 삭제 {} start ", roomId);
 
         // feign으로 전달하는 API의 로직을 하단에 다시 작성해야함

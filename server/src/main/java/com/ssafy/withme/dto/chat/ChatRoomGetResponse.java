@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 public class ChatRoomGetResponse {
 
-    private String chatRoomNumber;
+    private Long chatRoomNumber;
 
     private Long userId;
 
@@ -30,7 +30,7 @@ public class ChatRoomGetResponse {
     public static ChatRoomGetResponse from(ChatRoom chatRoom) {
 
         return ChatRoomGetResponse.builder()
-                .chatRoomNumber(chatRoom.getRoomId())
+                .chatRoomNumber(chatRoom.getId())
                 .userNickname(chatRoom.getUser().getNickname())
                 .userId(chatRoom.getUser().getId())
                 .partnerNickname(chatRoom.getPartner().getNickname())

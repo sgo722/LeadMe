@@ -50,10 +50,10 @@ spring:
 #    mongodb:
 #      uri: mong                            odb://localhost:27017/local
 
-    redis:
-      host: i11c109.p.ssafy.io
-      port: 6380
-      password: leadmeredis109
+#    redis:
+#      host: i11c109.p.ssafy.io
+#      port: 6380
+#      password: leadmeredis109
 
 logging:
   level:

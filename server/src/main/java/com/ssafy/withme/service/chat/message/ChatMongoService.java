@@ -72,7 +72,7 @@ public class ChatMongoService {
     }
 
     // 특정 채팅방에서 가장 최근에 저장된 메시지를 조회
-    public ChatMessage findLatestMessageByRoomId(String roomId) {
+    public ChatMessage findLatestMessageByRoomId(Long roomId) {
         try {
             Query query = new Query(Criteria.where("roomId").is(roomId))
                     .with(Sort.by(Sort.Order.desc("_id")))

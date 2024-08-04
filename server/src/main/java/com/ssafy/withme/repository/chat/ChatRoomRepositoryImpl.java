@@ -26,10 +26,10 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
     }
 
     @Override
-    public ChatRoom findByUserIdAndRoomId(Long userId, String roomId) {
+    public ChatRoom findByUserIdAndRoomId(Long userId, Long roomId) {
 
         return qf.selectFrom(chatRoom)
-                .where(chatRoom.user.id.eq(userId), chatRoom.roomId.eq(roomId))
+                .where(chatRoom.user.id.eq(userId), chatRoom.id.eq(roomId))
                 .fetch().get(0);
     }
 }

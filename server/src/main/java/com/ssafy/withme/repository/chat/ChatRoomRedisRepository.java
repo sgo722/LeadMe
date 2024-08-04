@@ -52,19 +52,19 @@ public class ChatRoomRedisRepository {
         }
     }
 
-    public void setChatRoom(Long userId, String roomId, ChatRoomGetResponse response) {
-        opsHashChatRoom.put(getChatRoomKey(userId), roomId, response);
+    public void setChatRoom(Long userId, Long roomId, ChatRoomGetResponse response) {
+        opsHashChatRoom.put(getChatRoomKey(userId), String.valueOf(roomId), response);
     }
 
-    public boolean existChatRoom(Long userId, String roomId) {
+    public boolean existChatRoom(Long userId, Long roomId) {
         return opsHashChatRoom.hasKey(getChatRoomKey(userId), roomId);
     }
 
-    public void deleteChatRoom(Long userId, String roomId) {
+    public void deleteChatRoom(Long userId, Long roomId) {
         opsHashChatRoom.delete(getChatRoomKey(userId), roomId);
     }
 
-    public ChatRoomGetResponse getChatRoom(Long userId, String roomId) {
+    public ChatRoomGetResponse getChatRoom(Long userId, Long roomId) {
         return objectMapper.convertValue(opsHashChatRoom.get(getChatRoomKey(userId), roomId), ChatRoomGetResponse.class);
     }
 
@@ -73,13 +73,13 @@ public class ChatRoomRedisRepository {
     }
 
 
-    public void setLastChatMessage(String roomId, ChatMessageDto chatMessageDto) {
+    public void setLastChatMessage(Long roomId, ChatMessageDto chatMessageDto) {
         log.info("Set last chat message: {}", chatMessageDto);
         log.info("roomId: {}", roomId);
-        opsHashLastChatMessage.put(CHAT_ROOM, roomId, chatMessageDto);
+        opsHashLastChatMessage.put(CHAT_ROOM, String.valueOf(roomId), chatMessageDto);
     }
 
-    public ChatMessageDto getLastMessage(String roomId) {
+    public ChatMessageDto getLastMessage(Long roomId) {
         return objectMapper.convertValue(opsHashLastChatMessage.get(CHAT_ROOM, roomId), ChatMessageDto.class);
     }
 
