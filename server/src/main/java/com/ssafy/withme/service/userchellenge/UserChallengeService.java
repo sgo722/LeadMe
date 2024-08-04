@@ -98,7 +98,7 @@ public class UserChallengeService {
             throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
         }
 
-        String url = "http://127.0.0.1:8000/upload/userFile";
+        String url = FAST_API_URL + "/upload/userFile";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
