@@ -63,6 +63,7 @@ const Home: React.FC = () => {
     },
     onSuccess: (data: UserProfile) => {
       setUserProfile(data); // 성공 시 유저 프로필 저장
+      sessionStorage.setItem("user_profile", JSON.stringify(data)); // 세션 스토리지에 유저 프로필 저장
     },
     onError: (error: Error) => {
       console.error("Error fetching data:", error);
