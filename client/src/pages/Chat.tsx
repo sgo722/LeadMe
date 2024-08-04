@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "components/Header";
 import styled from "styled-components";
 import { ChatModal } from "features/Chat/ChatModal";
 import { IoIosSend } from "react-icons/io";
 import FindModal from "features/Chat/FindeModal";
 import { userProfileState } from "stores/authAtom";
-import { useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 
 interface ChatData {
   id: number;
@@ -28,10 +28,19 @@ const chatList: ChatData[] = [];
 export const Chat: React.FC = () => {
   const [selectedChat, setSelectedChat] = useState<ChatData | null>(null);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
-  const userProfile = useRecoilValue(userProfileState);
+  const [userProfile, setUserProfile] = useRecoilState(userProfileState);
   const currentUserId = userProfile?.id || 0; // 로그인한 유저의 userId
   const currentNickname = userProfile?.nickname || "defaultUser"; // 로그인한 유저의 닉네임
   const [selectedNickname, setSelectedNickname] = useState<string>("");
+
+  // 세션 스토리지에서 유저 프로필 데이터를 불러와 Recoil 상태 초기화
+  useEffect(() => {
+    const savedUserProfile = sessionStorage.getItem("user_profile");
+
+    if (savedUserProfile) {
+      setUserProfile(JSON.parse(savedUserProfile));
+    }
+  }, [setUserProfile]);
 
   const openModal = (chat: ChatData) => {
     setSelectedChat(chat);
@@ -77,8 +86,8 @@ export const Chat: React.FC = () => {
               chatList.map((chat) => (
                 <ChatListItem key={chat.id} onClick={() => openModal(chat)}>
                   <UserProfileImage
-                  // src={chat.profileImg}
-                  // alt={`${chat.userId}'s profile`}
+                    src={chat.profileImg}
+                    alt={`${chat.userId}'s profile`}
                   />
                   <ChatPreviewInfo>
                     <ChatUserName>{chat.userNickname}</ChatUserName>
@@ -179,7 +188,7 @@ const ChatListItem = styled.div`
   }
 `;
 
-const UserProfileImage = styled.div`
+const UserProfileImage = styled.img`
   width: 50px;
   height: 50px;
   border-radius: 50%;
