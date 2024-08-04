@@ -1,16 +1,15 @@
-import styled from "styled-components";
-
+import styled, { keyframes } from "styled-components";
 interface SubmitModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: () => void;
-  onDownload: () => void;
+  isPending: boolean;
 }
 export const SubmitModal: React.FC<SubmitModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  onDownload,
+  isPending,
 }) => {
   if (!isOpen) return null;
 
@@ -21,13 +20,19 @@ export const SubmitModal: React.FC<SubmitModalProps> = ({
           녹화가 완료되었습니다.
           <br /> 영상을 제출하시겠습니까?
         </ModalTitle>
-        <ButtonGroup>
-          <ModalButton onClick={onClose}>취소</ModalButton>
-          <ModalButton onClick={onDownload}>다운로드</ModalButton>
-          <ModalButton onClick={onSubmit} $primary>
-            제출
-          </ModalButton>
-        </ButtonGroup>
+        {isPending ? (
+          <SpinnerWrapper>
+            <Spinner />
+            제출중
+          </SpinnerWrapper>
+        ) : (
+          <ButtonGroup>
+            <ModalButton onClick={onClose}>취소</ModalButton>
+            <ModalButton onClick={onSubmit} $primary>
+              제출
+            </ModalButton>
+          </ButtonGroup>
+        )}
       </ModalContent>
     </ModalOverlay>
   );
@@ -59,7 +64,7 @@ const ModalTitle = styled.h2`
 
 const ButtonGroup = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   margin-top: 20px;
 `;
 
@@ -79,4 +84,26 @@ const ModalButton = styled.button<{ $primary?: boolean }>`
     opacity: 0.5;
     cursor: not-allowed;
   }
+`;
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const Spinner = styled.div`
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ee5050;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: ${spin} 1s linear infinite;
+`;
+
+const SpinnerWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
 `;
