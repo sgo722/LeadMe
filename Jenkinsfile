@@ -56,15 +56,8 @@ pipeline {
             steps {
                 script {
                     dir('S11P12C109/leadme') {
-                        def containerExists = sh(script: 'docker ps -q -f name=python-container', returnStatus: true)
-                        
-                        if (containerExists == 0) {
-                            sh 'docker stop python-container'
-                            sh 'docker rm python-container'
-                        } else {
-                            // 컨테이너가 존재하지 않을 경우 메시지 출력
-                            echo 'python-container does not exist, skipping stop and remove.'
-                        }
+                        sh 'docker stop python-container || true'
+                        sh 'docker rm python-container || true'
 
                         withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
                             sh '''
