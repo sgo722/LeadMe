@@ -36,45 +36,41 @@ pipeline {
             }
         }
 
-        stage('Build and Push Python Docker Image') {
+        stage('Docker Build and Push Java Docker Image') {
             steps {
                 script {
-                    // dir('S11P12C109/leadme') {
-                    //     sh 'docker stop python-container || true'
-                    //     sh 'docker rm -f python-container || true'
-                        
-                    //     withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    //         sh '''
-                    //         docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-                    //         docker build -t ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY} .
-                    //         docker push ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY}:latest
-                    //         '''
-                    //     }
-                    // }
-
-                    dir('S11P12C109/leadme') {
-                        sh 'docker stop python-container || true'
-                        sh 'docker rm -f python-container || true'
-                        sh 'docker build -t python-app:latest .'
-                        sh 'docker run -d --name python-container -p 4567:4567 python-app:latest'
+                    dir('S11P12C109/server') {
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                            sh '''
+                            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+                            docker build -t ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest .
+                            docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
+                            '''
+                        }
                     }
-
                 }
             }
         }
 
-        stage('Docker Build and Push Java Docker Image') {
+        stage('Build and Push Python Docker Image') {
             steps {
                 script {
-                    // Docker build and push
-                    dir('S11P12C109/server'){
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                        sh '''
-                        docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-                        '''
-                    }
-                        sh "docker build -t ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY} ."
-                        sh "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest"
+                    dir('S11P12C109/leadme') {
+                        if (sh(script: 'docker ps -q -f name=python-container', returnStatus: true) == 0) {
+                            sh 'docker stop python-container'
+                            sh 'docker rm python-container'
+                        }
+                        
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                            sh '''
+                            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+                            docker build -t ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY}:latest .
+                            docker push ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY}:latest
+                            '''
+                        }
+
+                        sh 'docker build -t python-app:latest .'
+                        sh 'docker run -d --name python-container -p 4567:4567 python-app:latest'
                     }
                 }
             }
