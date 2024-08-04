@@ -12,3 +12,4 @@ pymongo
 ray
 python-multipart
 moviepy
+ffmpeg-python
