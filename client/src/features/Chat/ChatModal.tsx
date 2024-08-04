@@ -88,7 +88,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         <ModalHeader>
           <Opponent>
             <div></div>
-            <div>{nickname}</div> {/* 닉네임을 화면에 표시 */}
+            <div>{nickname}</div>
           </Opponent>
           <CloseButton onClick={onClose}>&times;</CloseButton>
         </ModalHeader>
