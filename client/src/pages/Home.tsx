@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSetRecoilState } from "recoil";
 import {
@@ -16,7 +16,7 @@ import { useMutation } from "@tanstack/react-query";
 import { baseUrl } from "axiosInstance/constants";
 import img1 from "assets/image/img1.png";
 import img2 from "assets/image/img2.png";
-import { UserProfile } from "types"; // UserProfile 인터페이스 가져오기
+import { UserProfile } from "types";
 
 interface ImageData {
   src: string;
@@ -49,7 +49,7 @@ const Home: React.FC = () => {
   const setRefreshTokenExpireTime = useSetRecoilState(
     refreshTokenExpireTimeState
   );
-  const setUserProfile = useSetRecoilState(userProfileState); // 유저 프로필을 저장할 상태 설정
+  const setUserProfile = useSetRecoilState(userProfileState);
 
   const mutation = useMutation<UserProfile, Error, string>({
     mutationFn: async (token: string): Promise<UserProfile> => {
@@ -69,7 +69,11 @@ const Home: React.FC = () => {
     },
   });
 
+  const initialFetchRef = useRef(false);
+
   useEffect(() => {
+    if (initialFetchRef.current) return;
+
     const params = new URLSearchParams(location.search);
     const accessToken = params.get("accessToken");
     const accessTokenExpireTime = params.get("accessTokenExpireTime");
@@ -77,7 +81,7 @@ const Home: React.FC = () => {
     const refreshTokenExpireTime = params.get("refreshTokenExpireTime");
 
     if (accessToken) {
-      // URL에서 accessToken, accessTokenExpireTime, refreshToken, refreshTokenExpireTime 추출 후 세션 스토리지에 저장
+      // URL에서 토큰 관련 데이터 추출 후 세션 스토리지에 저장
       sessionStorage.setItem("access_token", accessToken);
       sessionStorage.setItem(
         "access_token_expire_time",
@@ -108,6 +112,7 @@ const Home: React.FC = () => {
       );
 
       mutation.mutate(accessToken);
+      initialFetchRef.current = true; // 중복 실행 방지용
     }
   }, [
     location,

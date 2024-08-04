@@ -60,6 +60,7 @@ const Report = ({
   const navigate = useNavigate();
   const [reportData, setReportData] = useState<scoreData | null>(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false); // 데이터 로딩 상태 추가
+  const [isModalOpen, setModalOpen] = useState(false); // 모달 열림 상태 추가
   const reportIdRef = useRef<string | null>(null); // 이전 요청 ID 저장
 
   const mutation = useMutation<scoreData, Error, string>({
@@ -163,8 +164,6 @@ const Report = ({
     2000
   );
 
-  const [isModalOpen, setModalOpen] = useState(false);
-
   const openModal = () => setModalOpen(true);
   const closeModal = () => setModalOpen(false);
 
@@ -221,7 +220,11 @@ const Report = ({
           </ReportContainer>
         </MainSection>
       </Container>
-      <UpdateModal isOpen={isModalOpen} onClose={closeModal} />
+      <UpdateModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        reportData={reportData}
+      />
     </>
   );
 };
