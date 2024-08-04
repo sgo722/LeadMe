@@ -23,6 +23,6 @@ public class MongoConfig {
     @Bean
     public MongoTemplate mongoTemplate() {
 //        return new MongoTemplate(mongoClient(), mongoProperties.getDatabase());
-        return new MongoTemplate(mongoClient(), "test");
+        return new MongoTemplate(mongoClient(), "local");
     }
 }
