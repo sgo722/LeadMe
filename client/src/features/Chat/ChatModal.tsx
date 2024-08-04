@@ -46,10 +46,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         .post(
           `${baseUrl}/api/v1/chat/room/create`,
           {
-            ChatRoomCreateRequest: {
-              userId: currentUserId,
-              partnerId: partnerId,
-            },
+            userId: currentUserId,
+            partnerId: partnerId,
           },
           {
             headers: {
