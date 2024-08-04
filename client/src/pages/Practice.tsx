@@ -419,29 +419,38 @@ export const Practice: React.FC = () => {
       challengeId: number;
     }) => {
       const formData = new FormData();
-      formData.append("videoFile", data.videoFile, "recorded_video.mp4");
-      formData.append(
-        "request",
-        JSON.stringify({
-          userId: data.userId,
-          challengeId: data.challengeId,
-        })
+      const blob = new Blob(
+        [
+          JSON.stringify({
+            userId: data.userId,
+            challengeId: data.challengeId,
+          }),
+        ],
+        {
+          type: "application/json",
+        }
       );
+      formData.append("videoFile", data.videoFile);
+      formData.append("request", blob);
 
       const res = await axiosInstance.post(
         "/api/v1/userChallenge/analyze",
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
+
       return res.data;
     },
 
-    onSuccess: () => {
+    onSuccess: (data) => {
       setShowSubmitModal(false);
       setRecordedChunks([]);
-      console.log("제출 성공");
+      // 이제 레포트페이지로 이동
+      nav(`/report/${data.data.uuid}`);
     },
     onError: (error, variables) => {
       console.error("제출 실패", error);
@@ -465,23 +474,11 @@ export const Practice: React.FC = () => {
         challengeId: youtubeBlazePoseQuery.data.challengeId,
       });
     }
-    console.log(blob, youtubeBlazePoseQuery?.data?.challengeId);
-    console.log("전송완료!");
-  };
-
-  // 모달에서 다운로드 누르면 실행할 함수
-  const handleDownload = () => {
-    if (recordedChunks.length === 0) return;
-    const blob = new Blob(recordedChunks, { type: "video/mp4" });
-    // 다운로드 링크 생성
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "recorded_video.mp4";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    console.log(
+      "전송 할 데이터들",
+      blob,
+      youtubeBlazePoseQuery?.data?.challengeId
+    );
   };
 
   return (
@@ -636,7 +633,7 @@ export const Practice: React.FC = () => {
           setRecordedChunks([]);
         }}
         onSubmit={handleSubmit}
-        onDownload={handleDownload}
+        isPending={submitVideoMutation.isPending}
       />
     </>
   );
