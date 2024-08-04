@@ -15,6 +15,8 @@ import { CompletionAlertModal } from "components/CompletionAlertModal";
 import { SubmitModal } from "features/practice/SubmitModal";
 import { TiMediaRecord } from "react-icons/ti";
 import { MdOutlineSpeed } from "react-icons/md";
+import countdownSound from "assets/audio/countdown.mp3";
+
 interface ChallengeData {
   youtubeId: string;
   url: string;
@@ -73,11 +75,13 @@ export const Practice: React.FC = () => {
   );
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]); // 녹화영상 관리
   const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false); // 제출 모달 상태
+  const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
   const youtubeCanvasRef = useRef<HTMLCanvasElement>(null);
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
+  const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오
 
   // API 요청 관련 mutation
   const mutation = useMutation({
@@ -377,6 +381,20 @@ export const Practice: React.FC = () => {
   };
 
   const startRecording = () => {
+    setCountdown(3);
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === 1) {
+          clearInterval(countdownInterval);
+          startActualRecording();
+          return null;
+        }
+        return prev! - 1;
+      });
+    }, 1000);
+  };
+
+  const startActualRecording = () => {
     setIsRecording(true);
     if (youtubePlayerRef.current) {
       youtubePlayerRef.current.setPlaybackRate(1);
@@ -481,6 +499,16 @@ export const Practice: React.FC = () => {
     );
   };
 
+  useEffect(() => {
+    countdownAudio.current = new Audio(countdownSound);
+  }, []);
+
+  useEffect(() => {
+    if (countdown !== null && countdown > 0) {
+      countdownAudio.current?.play();
+    }
+  }, [countdown]);
+
   return (
     <>
       <Header stickyOnly />
@@ -584,6 +612,11 @@ export const Practice: React.FC = () => {
             <VideoContainer>
               <WebcamWrapper>
                 <Webcam>
+                  {countdown !== null && (
+                    <CountdownOverlay>
+                      <CountdownNumber>{countdown}</CountdownNumber>
+                    </CountdownOverlay>
+                  )}
                   <Video ref={videoRef} autoPlay playsInline />
                   <YoutubeCanvas
                     ref={youtubeCanvasRef}
@@ -890,4 +923,23 @@ const RecordingIndicator = styled.div`
   & > span {
     font-size: 18px;
   }
+`;
+
+const CountdownOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+`;
+
+const CountdownNumber = styled.div`
+  font-size: 120px;
+  color: white;
+  font-weight: bold;
 `;
