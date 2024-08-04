@@ -1,86 +1,113 @@
 import styled from "styled-components";
 import { useEffect, useRef, useState } from "react";
-import useWebSocket from "utils/useWebSocket";
+import axios from "axios";
+import useWebSocket from "utils/useWebSocket"; // WebSocket 훅 임포트
+import { baseUrl } from "axiosInstance/constants";
 
-interface ChatData {
-  id: number;
+interface ChatMessageDto {
+  type: string;
+  roomId: string;
   userId: number;
-  userNickname: string;
-  lastMessage: string;
-  profileImg: string;
-  messages: Message[];
-}
-
-interface Message {
-  id: number;
-  senderId: number;
-  content: string;
-  timestamp: string;
+  nickname: string;
+  message: string;
+  time: string;
+  status: string;
 }
 
 interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
-  chat: ChatData | null;
-  currentUserId: number; // 로그인한 유저의 userId
-  currentNickname: string; // 로그인한 유저의 닉네임
-  nickname: string; // 대화 상대의 닉네임
+  chatId: string | null;
+  currentUserId: number;
+  currentNickname: string;
+  partnerNickname: string | null;
+  partnerId: number | null;
 }
 
 export const ChatModal: React.FC<ChatModalProps> = ({
   isOpen,
   onClose,
-  chat,
+  chatId,
   currentUserId,
   currentNickname,
-  nickname,
+  partnerNickname,
+  partnerId,
 }) => {
   const modalBodyRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<ChatMessageDto[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
 
-  // 메시지 수신 시 실행될 콜백 함수
-  const onMessageReceived = (message: Message) => {
-    if (chat) {
-      chat.messages.push(message);
-    }
-  };
-
-  // 채널 이름 생성
-  const channel = chat ? [currentUserId, chat.userId].sort().join("_") : "";
-
-  // useWebSocket 훅을 사용하여 WebSocket 연결 설정
-  const { sendMessage } = useWebSocket(channel, onMessageReceived);
+  const { sendMessage } = useWebSocket();
 
   useEffect(() => {
-    if (modalBodyRef.current) {
-      modalBodyRef.current.scrollTop = modalBodyRef.current.scrollHeight;
+    if (isOpen && chatId && partnerId) {
+      // 채팅방을 생성한다. - room1
+      axios
+        .post(
+          `${baseUrl}/api/v1/chat/room/create`,
+          {
+            ChatRoomCreateRequest: {
+              userId: currentUserId,
+              partnerId: partnerId,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
+            },
+          }
+        )
+        .then((response) => {
+          console.log("Chat room created:", response.data);
+        })
+        .catch((error) => {
+          console.error("Failed to create chat room", error);
+        });
     }
-    // 모달이 열릴 때 유저 정보 콘솔에 출력
-    if (isOpen && chat) {
-      console.log(
-        `현재 로그인한 사용자: 닉네임: ${currentNickname}, ID: ${currentUserId}`
-      );
-      console.log(`현재 대화 상대: 닉네임: ${nickname}, ID: ${chat.userId}`);
-    }
-  }, [chat, isOpen]);
+  }, [isOpen, chatId, currentUserId, partnerId]);
 
-  // 메시지 전송 함수
+  useEffect(() => {
+    if (isOpen && chatId) {
+      // 해당 채팅방을 조회한다. - room2
+      axios
+        .get(`${baseUrl}/api/v1/chat/room/message/list`, {
+          params: {
+            roomId: chatId,
+            page: 0,
+          },
+        })
+        .then((response) => {
+          console.log(response.data.data);
+          setMessages(response.data.data);
+          if (modalBodyRef.current) {
+            modalBodyRef.current.scrollTop = modalBodyRef.current.scrollHeight;
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch chat messages", error);
+        });
+    }
+  }, [isOpen, chatId]);
+
   const handleSendMessage = () => {
-    if (chat && newMessage.trim() !== "") {
-      const message: Message = {
-        id: Date.now(),
-        senderId: currentUserId,
-        content: newMessage,
-        timestamp: new Date().toLocaleTimeString(),
+    if (chatId && newMessage.trim() !== "") {
+      const message: ChatMessageDto = {
+        type: "TALK",
+        roomId: chatId,
+        userId: currentUserId,
+        nickname: currentNickname,
+        message: newMessage,
+        time: new Date().toLocaleTimeString(),
+        status: "UNREAD",
       };
-      // 메시지 전송
-      sendMessage(message);
-      chat.messages.push(message);
+      // 메시지 전송 - room3
+      sendMessage(`/pub/chat/message/${chatId}`, message);
+      setMessages([...messages, message]);
       setNewMessage("");
     }
   };
 
-  if (!isOpen || !chat) return null;
+  if (!isOpen || !chatId) return null;
 
   return (
     <ModalOverlay>
@@ -88,20 +115,20 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         <ModalHeader>
           <Opponent>
             <div></div>
-            <div>{nickname}</div>
+            <div>Chat with {partnerNickname}</div>
           </Opponent>
           <CloseButton onClick={onClose}>&times;</CloseButton>
         </ModalHeader>
         <ModalBody ref={modalBodyRef}>
-          {chat.messages.map((message) => {
-            const isMine = message.senderId === currentUserId;
+          {messages.map((message, index) => {
+            const isMine = message.userId === currentUserId;
             return (
-              <MessageContainer key={message.id} $isMine={isMine}>
+              <MessageContainer key={index} $isMine={isMine}>
                 <MessageContent $isMine={isMine}>
                   <MessageBubble $isMine={isMine}>
-                    {message.content}
+                    {message.message}
                   </MessageBubble>
-                  <MessageTime>{message.timestamp}</MessageTime>
+                  <MessageTime>{message.time}</MessageTime>
                 </MessageContent>
               </MessageContainer>
             );
