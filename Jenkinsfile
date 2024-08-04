@@ -73,10 +73,18 @@ pipeline {
                         // 컨테이너 실행
                         sh '''
                         docker run -d --name python-container -p 4567:4567 \
+<<<<<<< HEAD
                                 -v /home/ubuntu/python/video/temporary:/app/video/temporary \
                                 -v /home/ubuntu/python/video/user:/app/video/user \
                                 -v /home/ubuntu/python/video/challenge:/app/video/challenge \
                                 -v /home/ubuntu/python/video/challenge/audio:/app/video/challenge/audio \
+=======
+                                -v /home/ubuntu/python/video/temporary:/home/ubuntu/python/video/temporary \
+                                -v /home/ubuntu/python/video/user:/home/ubuntu/python/video/user \
+                                -v /home/ubuntu/python/video/challenge:/home/ubuntu/python/video/challenge \
+                                -v /home/ubuntu/python/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
+                                -v /home/ubuntu/python/video/temporary/thumnail:/home/ubuntu/python/video/temporary/thumnail \
+>>>>>>> 2f70c825102b07788b08444f8d3caae36c720e31
                                 ${DOCKERHUB_USERNAME}/python-image:latest
                         '''
                     }
