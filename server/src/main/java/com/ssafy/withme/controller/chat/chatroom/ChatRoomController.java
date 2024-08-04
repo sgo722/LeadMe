@@ -70,13 +70,13 @@ public class ChatRoomController {
     }
 
     @PostMapping("/create")
-    public SuccessResponse<Void> createChatRoom(
+    public SuccessResponse<Long> createChatRoom(
             @RequestHeader("Authorization") String accessToken,
             @RequestBody ChatRoomCreateRequest chatRoomCreateRequest
     ) {
         ChatRoom chatRoom = chatRoomService.createChatRoom(chatRoomCreateRequest);
 
-        return SuccessResponse.of(null);
+        return SuccessResponse.of(chatRoom.getId());
     }
 
 
