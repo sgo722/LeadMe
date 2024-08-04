@@ -1,11 +1,11 @@
-// ChatModal.tsx
 import styled from "styled-components";
 import { useEffect, useRef, useState } from "react";
-import useWebSocket from "utils/WebSocketClient";
+import useWebSocket from "utils/useWebSocket";
 
 interface ChatData {
   id: number;
-  userId: string;
+  userId: number;
+  userNickname: string;
   lastMessage: string;
   profileImg: string;
   messages: Message[];
@@ -13,7 +13,7 @@ interface ChatData {
 
 interface Message {
   id: number;
-  senderId: string;
+  senderId: number;
   content: string;
   timestamp: string;
 }
@@ -22,7 +22,9 @@ interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   chat: ChatData | null;
-  currentUserId: string;
+  currentUserId: number; // 로그인한 유저의 userId
+  currentNickname: string; // 로그인한 유저의 닉네임
+  nickname: string; // 대화 상대의 닉네임
 }
 
 export const ChatModal: React.FC<ChatModalProps> = ({
@@ -30,6 +32,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   onClose,
   chat,
   currentUserId,
+  currentNickname,
+  nickname,
 }) => {
   const modalBodyRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState<string>("");
@@ -51,7 +55,14 @@ export const ChatModal: React.FC<ChatModalProps> = ({
     if (modalBodyRef.current) {
       modalBodyRef.current.scrollTop = modalBodyRef.current.scrollHeight;
     }
-  }, [chat]);
+    // 모달이 열릴 때 유저 정보 콘솔에 출력
+    if (isOpen && chat) {
+      console.log(
+        `현재 로그인한 사용자: 닉네임: ${currentNickname}, ID: ${currentUserId}`
+      );
+      console.log(`현재 대화 상대: 닉네임: ${nickname}, ID: ${chat.userId}`);
+    }
+  }, [chat, isOpen]);
 
   // 메시지 전송 함수
   const handleSendMessage = () => {
@@ -69,7 +80,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
     }
   };
 
-  if (!isOpen || !chat) return null; // isOpen과 chat이 모두 참일 때만 렌더링
+  if (!isOpen || !chat) return null;
 
   return (
     <ModalOverlay>
@@ -77,7 +88,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         <ModalHeader>
           <Opponent>
             <div></div>
-            <div>{chat.userId}</div>
+            <div>{nickname}</div> {/* 닉네임을 화면에 표시 */}
           </Opponent>
           <CloseButton onClick={onClose}>&times;</CloseButton>
         </ModalHeader>

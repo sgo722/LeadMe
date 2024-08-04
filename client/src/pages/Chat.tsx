@@ -9,7 +9,8 @@ import { useRecoilValue } from "recoil";
 
 interface ChatData {
   id: number;
-  userId: string;
+  userId: number;
+  userNickname: string;
   lastMessage: string;
   profileImg: string;
   messages: Message[];
@@ -17,80 +18,20 @@ interface ChatData {
 
 interface Message {
   id: number;
-  senderId: string;
+  senderId: number;
   content: string;
   timestamp: string;
 }
 
-const chatList: ChatData[] = [
-  // {
-  //   id: 1,
-  //   userId: "user1",
-  //   lastMessage: "안녕하세요!",
-  //   profileImg: "https://via.placeholder.com/40",
-  //   messages: [
-  //     { id: 1, senderId: "user1", content: "안녕하세요!", timestamp: "10:00" },
-  //     { id: 2, senderId: "me", content: "네, 안녕하세요!", timestamp: "10:01" },
-  //     {
-  //       id: 3,
-  //       senderId: "user1",
-  //       content: "오늘 날씨가 좋네요.",
-  //       timestamp: "10:02",
-  //     },
-  //     { id: 4, senderId: "me", content: "어쩌라구요", timestamp: "10:03" },
-  //     {
-  //       id: 5,
-  //       senderId: "user1",
-  //       content: "긴 메시지 테스트",
-  //       timestamp: "10:03",
-  //     },
-  //     { id: 6, senderId: "me", content: "?????", timestamp: "10:03" },
-  //     {
-  //       id: 7,
-  //       senderId: "user1",
-  //       content: "긴 메시지 테스트2",
-  //       timestamp: "10:03",
-  //     },
-  //     { id: 8, senderId: "me", content: "?????", timestamp: "10:03" },
-  //   ],
-  // },
-  // {
-  //   id: 2,
-  //   userId: "카리나",
-  //   lastMessage: "안녕하세요!",
-  //   profileImg: "https://via.placeholder.com/40",
-  //   messages: [
-  //     { id: 1, senderId: "user1", content: "안녕하세요!", timestamp: "10:00" },
-  //     {
-  //       id: 2,
-  //       senderId: "me",
-  //       content: "오 카리나님 무슨일이에요?",
-  //       timestamp: "10:01",
-  //     },
-  //     {
-  //       id: 3,
-  //       senderId: "user1",
-  //       content: "그냥 해봤어요",
-  //       timestamp: "10:02",
-  //     },
-  //     { id: 4, senderId: "me", content: "어쩌라구요", timestamp: "10:03" },
-  //     { id: 5, senderId: "user1", content: "ㅂㅂㅂ", timestamp: "10:03" },
-  //   ],
-  // },
-  // {
-  //   id: 3,
-  //   userId: "dnlsdj",
-  //   lastMessage: "안녕하세요 안녕하세요 안녕하세요x 안녕하세요 안녕하세요!",
-  //   profileImg: "https://via.placeholder.com/40",
-  //   messages: [],
-  // },
-];
+const chatList: ChatData[] = [];
 
 export const Chat: React.FC = () => {
   const [selectedChat, setSelectedChat] = useState<ChatData | null>(null);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const userProfile = useRecoilValue(userProfileState);
-  const currentUserId = userProfile?.nickname || "defaultUser";
+  const currentUserId = userProfile?.id || 0; // 로그인한 유저의 userId
+  const currentNickname = userProfile?.nickname || "defaultUser"; // 로그인한 유저의 닉네임
+  const [selectedNickname, setSelectedNickname] = useState<string>("");
 
   const openModal = (chat: ChatData) => {
     setSelectedChat(chat);
@@ -108,16 +49,18 @@ export const Chat: React.FC = () => {
     setIsSendModalOpen(false);
   };
 
-  const openChatModal = (userId: string) => {
+  const openChatModal = (userId: number, nickname: string) => {
     const newChat: ChatData = {
       id: chatList.length + 1,
       userId,
+      userNickname: nickname,
       lastMessage: "",
       profileImg: "https://via.placeholder.com/40",
       messages: [],
     };
     chatList.push(newChat);
     setSelectedChat(newChat);
+    setSelectedNickname(nickname);
     setIsSendModalOpen(false);
   };
 
@@ -138,7 +81,7 @@ export const Chat: React.FC = () => {
                   // alt={`${chat.userId}'s profile`}
                   />
                   <ChatPreviewInfo>
-                    <ChatUserName>{chat.userId}</ChatUserName>
+                    <ChatUserName>{chat.userNickname}</ChatUserName>
                     <ChatPreviewMessage>{chat.lastMessage}</ChatPreviewMessage>
                   </ChatPreviewInfo>
                 </ChatListItem>
@@ -159,7 +102,9 @@ export const Chat: React.FC = () => {
           isOpen={selectedChat !== null}
           onClose={closeModal}
           chat={selectedChat}
-          currentUserId={currentUserId} // currentUserId prop 추가
+          currentUserId={currentUserId}
+          currentNickname={currentNickname} // currentNickname prop 추가
+          nickname={selectedNickname}
         />
       </Container>
       <FindModal
@@ -275,7 +220,6 @@ const NoChatsMessage = styled.div`
 const FindContainer = styled.div`
   width: 700px;
   height: 564px;
-
   display: flex;
   flex-direction: column;
   align-items: center;

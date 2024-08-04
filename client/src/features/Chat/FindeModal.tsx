@@ -9,13 +9,13 @@ import { accessTokenState } from "stores/authAtom";
 interface SendModalProps {
   isOpen: boolean;
   onClose: () => void;
-  openChatModal: (userId: string) => void;
+  openChatModal: (userId: number, nickname: string) => void; // userId 타입을 number로 변경
 }
 
 interface ResponseData {
   code: number;
   message: string;
-  data: string[];
+  data: { id: number; nickname: string }[];
   errors: object;
   isSuccess: boolean;
 }
@@ -26,11 +26,19 @@ const FindModal: React.FC<SendModalProps> = ({
   openChatModal,
 }) => {
   const [inputValue, setInputValue] = useState("");
-  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<
+    { id: number; nickname: string }[]
+  >([]);
   const accessToken = useRecoilValue(accessTokenState);
 
-  const mutation = useMutation<string[], Error, string>({
-    mutationFn: async (value: string): Promise<string[]> => {
+  const mutation = useMutation<
+    { id: number; nickname: string }[],
+    Error,
+    string
+  >({
+    mutationFn: async (
+      value: string
+    ): Promise<{ id: number; nickname: string }[]> => {
       const response = await axios.get<ResponseData>(
         `${baseUrl}/api/v1/user/search`,
         {
@@ -40,7 +48,7 @@ const FindModal: React.FC<SendModalProps> = ({
       );
       return response.data.data;
     },
-    onSuccess: (data: string[]) => {
+    onSuccess: (data: { id: number; nickname: string }[]) => {
       setSearchResults(data);
     },
     onError: (error: Error) => {
@@ -59,8 +67,11 @@ const FindModal: React.FC<SendModalProps> = ({
   };
 
   const handleStartClick = () => {
-    if (inputValue.length > 0 && searchResults.includes(inputValue)) {
-      openChatModal(inputValue);
+    const selectedUser = searchResults.find(
+      (user) => user.nickname === inputValue
+    );
+    if (inputValue.length > 0 && selectedUser) {
+      openChatModal(selectedUser.id, selectedUser.nickname); // userId를 number로 전달
       handleClose();
     }
   };
@@ -80,7 +91,8 @@ const FindModal: React.FC<SendModalProps> = ({
   };
 
   const isButtonDisabled =
-    inputValue.length === 0 || !searchResults.includes(inputValue);
+    inputValue.length === 0 ||
+    !searchResults.some((user) => user.nickname === inputValue);
 
   return (
     <Overlay onClick={handleOverlayClick}>
@@ -98,12 +110,12 @@ const FindModal: React.FC<SendModalProps> = ({
             <ResultNo>계정을 찾을 수 없습니다.</ResultNo>
           ) : (
             <ResultsList>
-              {searchResults.map((nickname, index) => (
+              {searchResults.map((user) => (
                 <ResultItem
-                  key={`${nickname}_${index}`}
-                  onClick={() => handleResultItemClick(nickname)}
+                  key={user.id}
+                  onClick={() => handleResultItemClick(user.nickname)}
                 >
-                  {nickname}
+                  {user.nickname}
                 </ResultItem>
               ))}
             </ResultsList>
