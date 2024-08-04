@@ -71,11 +71,18 @@ pipeline {
                         }
 
                         // 컨테이너 실행
-                        sh 'docker run -d --name python-container -p 4567:4567 ${DOCKERHUB_USERNAME}/python-image:latest'
+                        sh '''
+                        docker run -d --name python-container -p 4567:4567 \
+                                -v /home/ubuntu/python/video/temporary:/home/ubuntu/python/video/temporary \
+                                -v /home/ubuntu/python/video/user:/home/ubuntu/python/video/user \
+                                -v /home/ubuntu/python/video/challenge:/home/ubuntu/python/video/challenge \
+                                ${DOCKERHUB_USERNAME}/python-image:latest
+                        '''
                     }
                 }
             }
         }
+
 
 
 
