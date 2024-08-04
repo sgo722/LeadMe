@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-import { accessTokenState } from "./../stores/authAtom";
+import { useRecoilValue } from "recoil";
+import { accessTokenState } from "stores/authAtom";
 import styled from "styled-components";
 import { FaTiktok } from "react-icons/fa6";
 import { FaYoutube } from "react-icons/fa";
-import { LoginModal } from "./LoginModal";
+import { LoginModal } from "components/LoginModal";
+import useAuth from "hooks/useAuth";
 
 interface HeaderProps {
   stickyOnly?: boolean;
@@ -16,8 +17,9 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
   const [loginModal, setLoginModal] = useState<boolean>(false);
 
   const accessToken = useRecoilValue(accessTokenState);
-  const setAccessToken = useSetRecoilState(accessTokenState);
-  const isLogin = !!accessToken; // 로그인 상태를 accessToken 여부로 확인
+  const isLogin = !!accessToken;
+
+  const { logout } = useAuth();
 
   const getPageTitle = (path: string): string => {
     switch (path) {
@@ -27,6 +29,8 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
         return "Challenge";
       case "/rank":
         return "Rank";
+      case "/battle":
+        return "Battle";
       default:
         return "LeadMe";
     }
@@ -34,12 +38,6 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
 
   const handleCloseModal = () => {
     setLoginModal(false);
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem("access_token");
-    setAccessToken(null);
-    window.location.reload();
   };
 
   return (
@@ -74,6 +72,7 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
           <StyledLink to="/home">home</StyledLink>
           <StyledLink to="/feed">feed</StyledLink>
           <StyledLink to="/practice">practice</StyledLink>
+          <StyledLink to="/battle">battle</StyledLink>
           <StyledLink to="/challenge">challenge</StyledLink>
           <StyledLink to="/rank">rank</StyledLink>
           {isLogin ? (
@@ -84,19 +83,11 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
                   <LeftHoverBox>
                     <HoverLink to="/mypage">마이페이지</HoverLink>
                     <Hr />
-                    <HoverLink to="/report">분석 결과</HoverLink>
-                    <Hr />
                     <HoverLink to="/chat/test">메세지 목록</HoverLink>
                   </LeftHoverBox>
                 </Fake>
               </Mypage>
-              <LeftBtn
-                onClick={() => {
-                  handleLogout();
-                }}
-              >
-                logout
-              </LeftBtn>
+              <LeftBtn onClick={logout}>logout</LeftBtn>
             </LeftContainer>
           ) : (
             <LeftContainer>

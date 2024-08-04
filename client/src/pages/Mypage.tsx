@@ -1,17 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
+import Header from "components/Header";
 import styled from "styled-components";
-import img1 from "../assets/image/img1.png";
-import img2 from "../assets/image/img2.png";
-import ProfileModal from "../components/ProfileModal";
-import FollowModal from "../components/FollowModal"; // FollowModal import
+import img1 from "assets/image/img1.png";
+import img2 from "assets/image/img2.png";
+import ProfileModal from "components/ProfileModal";
+import FollowModal from "components/FollowModal"; // FollowModal import
 
-interface User {
-  id: string;
-  one_liner: string;
-  follower: number;
-  following: number;
+// 유저 프로필
+export interface UserProfile {
+  id: number;
+  name: string;
+  nickname: string;
+  email: string;
+  gender: string | null;
+  age: number | null;
+  roleType: string;
+  profileImg: string;
+  profileComment: string | null;
+  loginDateTime: string | null;
+  userStatus: string;
 }
 
 interface ImageData {
@@ -39,19 +47,23 @@ const imageData: ImageData[] = [
 ];
 
 const Mypage: React.FC = () => {
-  const user: User = {
-    id: "rain-bow",
-    one_liner: "안녕하세요. 반갑습니다.",
-    follower: 456,
-    following: 123,
-  };
-
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
   const [followModalType, setFollowModalType] = useState<
     "follower" | "following" | null
   >(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedUserProfile = sessionStorage.getItem("user_profile");
+
+    if (savedUserProfile) {
+      setUser(JSON.parse(savedUserProfile));
+    }
+
+    console.log(user);
+  }, []);
 
   const handleOpenProfileModal = () => {
     setIsProfileModalOpen(true);
@@ -71,8 +83,14 @@ const Mypage: React.FC = () => {
   };
 
   const handleMessagesClick = () => {
-    navigate(`/chat/${user.id}`);
+    if (user) {
+      navigate(`/chat/${user.id}`);
+    }
   };
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
@@ -82,24 +100,24 @@ const Mypage: React.FC = () => {
           <ProfileTitle>Profile</ProfileTitle>
           <ProfileContainer>
             <Flex>
-              <ProfileImg />
+              <ProfileImg src={user.profileImg} alt="프로필 이미지" />
               <table>
                 <tbody>
                   <Tr>
                     <Th>아이디</Th>
-                    <Td first>{user.id}</Td>
+                    <Td first>{user.nickname}</Td>
                   </Tr>
                   <Tr>
                     <Th>한 줄 소개</Th>
-                    <Td>{user.one_liner}</Td>
+                    <Td>{user.profileComment}</Td>
                   </Tr>
                   <Tr onClick={() => handleOpenFollowModal("follower")}>
                     <Th>팔로워</Th>
-                    <Td>{user.follower}</Td>
+                    <Td>{}</Td>
                   </Tr>
                   <Tr onClick={() => handleOpenFollowModal("following")}>
                     <Th>팔로잉</Th>
-                    <Td>{user.following}</Td>
+                    <Td>{}</Td>
                   </Tr>
                 </tbody>
               </table>
@@ -184,7 +202,7 @@ const Flex = styled.div`
   margin-top: -6px;
 `;
 
-const ProfileImg = styled.div`
+const ProfileImg = styled.img`
   width: 90px;
   height: 90px;
   background-color: white;

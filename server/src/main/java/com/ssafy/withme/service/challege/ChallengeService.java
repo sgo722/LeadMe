@@ -6,7 +6,15 @@ import com.ssafy.withme.domain.landmark.Landmark;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
+
+import com.ssafy.withme.service.userchellenge.response.LandmarkResponse;
+import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
+
+import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,11 +25,14 @@ import java.util.HashMap;
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
 
+
 @RequiredArgsConstructor
 @Service
 public class ChallengeService {
 
-    static final String FAST_API_URL = "http://localhost:8000/videoUrl";
+    @Value("${python-server.url}")
+    String FAST_API_URL;
+
     private final ChallengeRepository challengeRepository;
 
     private final LandmarkRepository landmarkRepository;
@@ -33,10 +44,16 @@ public class ChallengeService {
      * 클라이언트가 youtubeURL로 요청하면 영상을 저장하고, 몽고디비에 스켈레톤 데이터를 저장한다.
      * @param request
      */
-    public void createChallenge(ChallengeCreateRequest request){
+    public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request){
+        String youtubeId = request.getYoutubeId();
+        Challenge challengeByYoutubeId = challengeRepository.findByYoutubeId(youtubeId);
+        if(challengeByYoutubeId != null){
+            return ChallengeCreateResponse.toResponse(challengeByYoutubeId);
+        }
         Challenge challenge = request.toEntity();
-        challengeRepository.save(challenge);
-
+        System.out.println(challenge);
+        Challenge savedChallenge = challengeRepository.save(challenge);
+        System.out.println(savedChallenge);
         // 헤더 설정
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -49,7 +66,10 @@ public class ChallengeService {
 
 
         HttpEntity<HashMap<String, String>> CreateLandMarkDataRequest = new HttpEntity<>(requestBody, httpHeaders);
-        restTemplate.postForEntity(FAST_API_URL, CreateLandMarkDataRequest, String.class);
+        String url = FAST_API_URL + "/videoUrl";
+        restTemplate.postForEntity(url, CreateLandMarkDataRequest, String.class);
+        
+        return ChallengeCreateResponse.toResponse(savedChallenge);
     }
 
     /**
@@ -57,7 +77,8 @@ public class ChallengeService {
      * @param youtubeId
      * @return
      */
-    public Landmark getLandMarkByYoutubeId(String youtubeId) throws EntityNotFoundException {
+    @Transactional
+    public LandmarkResponse getLandMarkByYoutubeId(String youtubeId) throws EntityNotFoundException {
         Challenge challenge = challengeRepository.findByYoutubeId(youtubeId);
 
         if(challenge == null) {
@@ -65,6 +86,7 @@ public class ChallengeService {
         }
 
         // youtubeId로 몽고디비로부터 스켈레톤 데이터를 조회합니다.
-        return landmarkRepository.findByYoutubeId(youtubeId);
+        Landmark findLandmarkByYoutubeId = landmarkRepository.findByYoutubeId(youtubeId);
+        return LandmarkResponse.ofResponse(findLandmarkByYoutubeId, challenge.getId());
     }
 }

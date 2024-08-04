@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { Comment } from "../../types";
+import { Comment } from "types/index";
 
 interface CommentSectionProps {
   show: boolean;

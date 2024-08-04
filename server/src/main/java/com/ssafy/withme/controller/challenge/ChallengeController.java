@@ -3,7 +3,10 @@ package com.ssafy.withme.controller.challenge;
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.BaseEntity;
 import com.ssafy.withme.domain.landmark.Landmark;
+import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.challege.ChallengeService;
+import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
+import com.ssafy.withme.service.userchellenge.response.LandmarkResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +22,8 @@ public class ChallengeController extends BaseEntity {
      * @param request
      */
     @PostMapping("/api/v1/challenge")
-    public void createChallenge(@RequestBody ChallengeCreateRequest request){
-        challengeService.createChallenge(request);
+    public SuccessResponse<ChallengeCreateResponse> createChallenge(@RequestBody ChallengeCreateRequest request){
+        return SuccessResponse.of(challengeService.createChallenge(request));
     }
 
 
@@ -30,8 +33,8 @@ public class ChallengeController extends BaseEntity {
      * @return
      */
     @GetMapping("/api/v1/challenge/{youtubeId}")
-    public Landmark findLandMarkByVideoName(@PathVariable String youtubeId) throws Exception {
-        return challengeService.getLandMarkByYoutubeId(youtubeId);
+    public SuccessResponse<LandmarkResponse> findLandMarkByVideoName(@PathVariable String youtubeId) throws Exception {
+        return SuccessResponse.of(challengeService.getLandMarkByYoutubeId(youtubeId));
     }
 
 

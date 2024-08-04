@@ -9,8 +9,8 @@ import {
 } from "@react-three/drei";
 import { useEffect, useRef, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
-import { IsEnteredAtom } from "../stores";
-import { Loader } from "./Loader";
+import { IsEnteredAtom } from "stores/index";
+import { Loader } from "components/Loader";
 import { useFrame, useThree } from "@react-three/fiber";
 import gsap from "gsap";
 import * as THREE from "three";

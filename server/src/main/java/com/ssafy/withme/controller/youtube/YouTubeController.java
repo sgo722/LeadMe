@@ -24,9 +24,7 @@ public class YouTubeController {
     @PostMapping("/api/v1/youtube")
     public ApiResponse<?> searchYouTube(@RequestBody YouTubeSearchRequest youTubeSearchRequest) throws Exception {
 
-        List<YouTubeSearchResponse> responses = youTubeService.searchYouTube(youTubeSearchRequest);
-
-        return new SuccessResponse<>(responses);
+        return new SuccessResponse<>(youTubeService.searchYouTube(youTubeSearchRequest));
     }
 
 }

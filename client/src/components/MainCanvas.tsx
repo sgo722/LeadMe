@@ -1,12 +1,12 @@
 import { ScrollControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { Dancer } from "./Dancer";
+import { Dancer } from "components/Dancer";
 import * as THREE from "three";
 import { Suspense } from "react";
-import { Loader } from "./Loader";
+import { Loader } from "components/Loader";
 import { MovingDOM } from "./dom/MovingDOM";
 import { useRecoilValue } from "recoil";
-import { IsEnteredAtom } from "../stores";
+import { IsEnteredAtom } from "stores/index";
 export const MainCanvas = () => {
   const isEntered = useRecoilValue(IsEnteredAtom);
   const aspectRatio = window.innerWidth / window.innerHeight;

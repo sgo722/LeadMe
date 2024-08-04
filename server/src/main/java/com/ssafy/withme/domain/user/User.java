@@ -5,19 +5,21 @@ import com.ssafy.withme.domain.chat.ChatRoom;
 import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity(name = "users")
-public class User extends BaseEntity {
+@NoArgsConstructor
+public class User extends BaseEntity implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +27,9 @@ public class User extends BaseEntity {
 
     private String name;
 
+    private String password;
+
+    @Column(name = "nickname", unique = true)
     private String nickname;
 
     private String email;
@@ -51,19 +56,50 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "fromUser", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Follow> fromFollowList = new ArrayList<>();
 
-    @Builder
-    public User(String email, String name) {
-        this.email = email;
-        this.name  = name;
-    }
-
     public User update(String name) {
         this.name = name;
         return this;
     }
 
-    public void updateStatus(UserStatus status) {
+//    @Builder
+//    public User(String name, String email, UserStatus userStatus) {
+//        this.name = name;
+//        this.email = email;
+//        this.userStatus = userStatus;
+//    }
 
-        this.userStatus = status;
+    @Builder
+    public User(String name, String password, String nickname, String email, String gender, String age, RoleType roleType, String profileImg, String profileComment, UserStatus userStatus) {
+        this.name = name;
+        this.password = password;
+        this.nickname = nickname;
+        this.email = email;
+        this.gender = gender;
+        this.age = age;
+        this.roleType = roleType;
+        this.profileImg = profileImg;
+        this.profileComment = profileComment;
+        this.userStatus = userStatus;
+    }
+
+    public void updateLoginTime() {
+
+        this.loginDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+    }
+
+    public void updateStatus(UserStatus userStatus) {
+
+        this.userStatus = userStatus;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+
+        return List.of(new SimpleGrantedAuthority(roleType.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return this.name;
     }
 }

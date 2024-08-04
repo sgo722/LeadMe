@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { baseUrl } from "./constants";
+import { baseUrl } from "axiosInstance/constants";
 
 // getJWTHeader 함수 : jwt 토큰을 받아 Authorization 헤더 객체를 생성
 // 파라미터 : jwt토큰 넣어줘야함

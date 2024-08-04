@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -13,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 // OncePerRequestFilter 한 요청에 대해서 한번만 진행하는 필터
+@Slf4j
 @RequiredArgsConstructor
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
@@ -29,13 +31,19 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         // 가져온 값에서 Bearer 접두사 제거
         String token = getAccessToken(authorizationHeader);
 
+        log.info("token dto: {}", token);
+
         // 가져온 토큰이 유효한지 확인
         if(tokenProvider.validToken(token)) {
             // 유효한 경우에는 토큰 공급자를 통해서 인증 정보를 가져온다.
             Authentication authentication = tokenProvider.getAuthentication(token);
             // 인증 정보를 스프링시큐리티에 넣는다.
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            log.info("authenticated user: {}", authentication.getPrincipal());
         }
+
+        filterChain.doFilter(request, response);
     }
 
     public String getAccessToken(String authorzationHeader) {

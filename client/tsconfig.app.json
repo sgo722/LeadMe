@@ -21,7 +21,21 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* 절대 경로 설정*/
+    "baseUrl": "src",
+    "paths": {
+      "components/*": ["components/*"],
+      "pages/*": ["pages/*"],
+      "assets/*": ["assets/*"],
+      "axiosInstance/*": ["axiosInstance/*"],
+      "features/*": ["features/*"],
+      "hooks/*": ["hooks/*"],
+      "stores/*": ["stores/*"],
+      "types/*": ["types/*"],
+      "utils/*": ["utils/*"]
+    }
   },
   "include": ["src"]
 }

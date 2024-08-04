@@ -4,11 +4,13 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.internal.SerializationUtil;
 import org.springframework.util.SerializationUtils;
 
 import java.util.Base64;
 
+@Slf4j
 public class CookieUtil {
 
     // 요청값(이름, 값, 만료 기간)을 바탕으로 쿠키 추가
