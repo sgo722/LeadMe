@@ -22,7 +22,7 @@ public class UserChallenge {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String fileName;
 
     private String videoPath;
 
@@ -44,14 +44,14 @@ public class UserChallenge {
     private String uuid;
 
     @Builder
-    public UserChallenge(String access, List<Comment> comments, User user, Challenge challenge, Integer likes, String videoPath, String name, String uuid) {
+    public UserChallenge(String access, List<Comment> comments, User user, Challenge challenge, Integer likes, String videoPath, String fileName, String uuid) {
         this.access = access;
         this.comments = comments;
         this.user = user;
         this.challenge = challenge;
         this.likes = likes;
         this.videoPath = videoPath;
-        this.name = name;
+        this.fileName = fileName;
         this.uuid = uuid;
     }
 

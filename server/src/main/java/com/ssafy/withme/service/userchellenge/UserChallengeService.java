@@ -98,7 +98,7 @@ public class UserChallengeService {
             throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
         }
 
-        String url = FAST_API_URL + "/upload/userFile";
+        String url = "http://127.0.0.1:8000/upload/userFile";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -108,6 +108,7 @@ public class UserChallengeService {
                 return videoFile.getOriginalFilename();
             }
         });
+        body.add("youtubeId", challenge.getYoutubeId());
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
@@ -211,7 +212,7 @@ public class UserChallengeService {
             Files.move(tempVideoPath, permanentVideoPath);
 
             UserChallenge userChallenge = UserChallenge.builder()
-                    .name(request.getFileName())
+                    .fileName(request.getFileName())
 //                    .user(user)
                     .challenge(challenge)
                     .videoPath(PERMANENT_DIRECTORY+"/"+finalFileName)

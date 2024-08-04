@@ -6,29 +6,32 @@ import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.userchallenge.UserChallenge;
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
 
 import java.util.List;
 
 import static jakarta.persistence.FetchType.LAZY;
 
+@Getter
 public class UserChallengeSaveResponse {
 
-    private Long id;
+    private Long userChallengeId;
 
-    private String name;
+    private String fileName;
 
     private Long challengeId;
 
     @Builder
-    private UserChallengeSaveResponse(Long id, String name, Long challengeId) {
-        this.id = id;
-        this.name = name;
+    private UserChallengeSaveResponse(Long userChallengeId, String fileName, Long challengeId) {
+        this.userChallengeId = userChallengeId;
+        this.fileName = fileName;
         this.challengeId = challengeId;
     }
 
     public static UserChallengeSaveResponse ofResponse(UserChallenge userChallenge) {
         return UserChallengeSaveResponse.builder()
-                .name(userChallenge.getName())
+                .userChallengeId(userChallenge.getId())
+                .fileName(userChallenge.getFileName())
                 .challengeId(userChallenge.getChallenge().getId())
                 .build();
     }
