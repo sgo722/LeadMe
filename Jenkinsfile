@@ -59,6 +59,8 @@ pipeline {
                         if (sh(script: 'docker ps -q -f name=python-container', returnStatus: true) == 0) {
                             sh 'docker stop python-container'
                             sh 'docker rm python-container'
+                        }else {
+                            echo 'python-container does not exist, skipping stop and remove.'
                         }
                         
                         withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
