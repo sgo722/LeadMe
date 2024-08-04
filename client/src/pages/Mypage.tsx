@@ -61,8 +61,6 @@ const Mypage: React.FC = () => {
     if (savedUserProfile) {
       setUser(JSON.parse(savedUserProfile));
     }
-
-    console.log(user);
   }, []);
 
   const handleOpenProfileModal = () => {

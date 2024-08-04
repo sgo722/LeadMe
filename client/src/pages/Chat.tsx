@@ -6,32 +6,47 @@ import { IoIosSend } from "react-icons/io";
 import FindModal from "features/Chat/FindeModal";
 import { userProfileState } from "stores/authAtom";
 import { useRecoilState } from "recoil";
+import axios from "axios";
+import useWebSocket from "utils/useWebSocket";
+import { baseUrl } from "axiosInstance/constants";
 
-interface ChatData {
-  id: number;
-  userId: number;
+interface ChatRoomGetResponse {
+  chatRoomNumber: number;
   userNickname: string;
-  lastMessage: string;
-  profileImg: string;
-  messages: Message[];
+  partnerNickname: string;
+  lastChatMessage: ChatMessageDto;
 }
 
-interface Message {
-  id: number;
-  senderId: number;
-  content: string;
-  timestamp: string;
+interface ChatMessageDto {
+  type: string;
+  roomId: string;
+  userId: number;
+  nickname: string;
+  message: string;
+  time: string;
+  status: string;
 }
 
-const chatList: ChatData[] = [];
+interface ResponseData<T> {
+  code: number;
+  message: string;
+  data: T;
+  errors: object;
+  isSuccess: boolean;
+}
 
 export const Chat: React.FC = () => {
-  const [selectedChat, setSelectedChat] = useState<ChatData | null>(null);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [selectedNickname, setSelectedNickname] = useState<string | null>(null);
+  const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
+    null
+  );
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+  const [chatList, setChatList] = useState<ChatRoomGetResponse[]>([]);
   const [userProfile, setUserProfile] = useRecoilState(userProfileState);
   const currentUserId = userProfile?.id || 0; // 로그인한 유저의 userId
   const currentNickname = userProfile?.nickname || "defaultUser"; // 로그인한 유저의 닉네임
-  const [selectedNickname, setSelectedNickname] = useState<string>("");
+  const { connectWebSocket, subscribeToChannel } = useWebSocket();
 
   // 세션 스토리지에서 유저 프로필 데이터를 불러와 Recoil 상태 초기화
   useEffect(() => {
@@ -42,12 +57,56 @@ export const Chat: React.FC = () => {
     }
   }, [setUserProfile]);
 
-  const openModal = (chat: ChatData) => {
-    setSelectedChat(chat);
+  useEffect(() => {
+    if (currentUserId) {
+      // 웹소켓 연결 요청 - 1
+      connectWebSocket();
+
+      // 채팅 목록 조회 - 2
+      axios
+        .get<ResponseData<ChatRoomGetResponse[]>>(
+          `${baseUrl}/api/v1/chat/room/list`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
+            },
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+          const chatRooms = response.data.data;
+          if (Array.isArray(chatRooms)) {
+            setChatList(chatRooms);
+
+            // 각 채팅에 대해 소켓 구독 요청 - 3
+            chatRooms.forEach((chatRoom) => {
+              subscribeToChannel(
+                `/sub/chat/message/${chatRoom.chatRoomNumber}`,
+                (message) => {
+                  console.log("New message received: ", message);
+                }
+              );
+            });
+          } else {
+            console.error("Unexpected response data format:", response.data);
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch chat list", error);
+        });
+    }
+  }, [currentUserId, connectWebSocket, subscribeToChannel]);
+
+  const openModal = (chatId: string, nickname: string, partnerId: number) => {
+    setSelectedChatId(chatId);
+    setSelectedNickname(nickname);
+    setSelectedPartnerId(partnerId);
   };
 
   const closeModal = () => {
-    setSelectedChat(null);
+    setSelectedChatId(null);
+    setSelectedNickname(null);
+    setSelectedPartnerId(null);
   };
 
   const openSendModal = () => {
@@ -59,18 +118,8 @@ export const Chat: React.FC = () => {
   };
 
   const openChatModal = (userId: number, nickname: string) => {
-    const newChat: ChatData = {
-      id: chatList.length + 1,
-      userId,
-      userNickname: nickname,
-      lastMessage: "",
-      profileImg: "https://via.placeholder.com/40",
-      messages: [],
-    };
-    chatList.push(newChat);
-    setSelectedChat(newChat);
-    setSelectedNickname(nickname);
-    setIsSendModalOpen(false);
+    const chatId = userId.toString();
+    openModal(chatId, nickname, userId);
   };
 
   return (
@@ -84,14 +133,25 @@ export const Chat: React.FC = () => {
               <NoChatsMessage>아직 대화한 상대가 없습니다.</NoChatsMessage>
             ) : (
               chatList.map((chat) => (
-                <ChatListItem key={chat.id} onClick={() => openModal(chat)}>
+                <ChatListItem
+                  key={chat.chatRoomNumber}
+                  onClick={() =>
+                    openModal(
+                      String(chat.chatRoomNumber),
+                      chat.partnerNickname,
+                      chat.chatRoomNumber
+                    )
+                  }
+                >
                   <UserProfileImage
-                    src={chat.profileImg}
-                    alt={`${chat.userId}'s profile`}
+                    src="https://via.placeholder.com/40"
+                    alt={`${chat.userNickname}'s profile`}
                   />
                   <ChatPreviewInfo>
                     <ChatUserName>{chat.userNickname}</ChatUserName>
-                    <ChatPreviewMessage>{chat.lastMessage}</ChatPreviewMessage>
+                    <ChatPreviewMessage>
+                      {chat.lastChatMessage.message}
+                    </ChatPreviewMessage>
                   </ChatPreviewInfo>
                 </ChatListItem>
               ))
@@ -100,7 +160,7 @@ export const Chat: React.FC = () => {
         </ChatListContainer>
         <FindContainer>
           <div>대화 상대를 찾고 메세지를 보내보세요</div>
-          {!selectedChat && (
+          {!selectedChatId && (
             <MessageButton onClick={openSendModal}>
               <StyledIoIosSend />
               send
@@ -108,12 +168,13 @@ export const Chat: React.FC = () => {
           )}
         </FindContainer>
         <ChatModal
-          isOpen={selectedChat !== null}
+          isOpen={selectedChatId !== null}
           onClose={closeModal}
-          chat={selectedChat}
+          chatId={selectedChatId}
           currentUserId={currentUserId}
-          currentNickname={currentNickname} // currentNickname prop 추가
-          nickname={selectedNickname}
+          currentNickname={currentNickname}
+          partnerNickname={selectedNickname}
+          partnerId={selectedPartnerId}
         />
       </Container>
       <FindModal
