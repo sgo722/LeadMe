@@ -1,6 +1,6 @@
 spring:
   profiles:
-    default : local
+    default: local
 
 server:
   port: 8090
@@ -41,6 +41,10 @@ spring:
   data:
     mongodb:
       uri: mongodb://i11c109.p.ssafy.io:27017/local
+    redis:
+      host: i11c109.p.ssafy.io
+      port: 6380
+      password: leadmeredis109
 
 #  data:
 #    mongodb:

@@ -1,6 +1,7 @@
 package com.ssafy.withme.domain.user;
 
 import com.ssafy.withme.domain.BaseEntity;
+import com.ssafy.withme.domain.chat.ChatRoom;
 import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
 import jakarta.persistence.*;

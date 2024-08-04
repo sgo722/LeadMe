@@ -3,6 +3,7 @@ package com.ssafy.withme.global.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.Gson;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 import java.util.ArrayList;
@@ -26,8 +27,6 @@ public abstract class ApiResponse<T> {
         this.data = null;
         this.errors = new ArrayList<>();
     }
-
-
 
     public String toJson() {
         return new Gson().toJson(this);
