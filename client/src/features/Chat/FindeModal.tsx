@@ -9,7 +9,7 @@ import { accessTokenState } from "stores/authAtom";
 interface SendModalProps {
   isOpen: boolean;
   onClose: () => void;
-  openChatModal: (userId: number, nickname: string) => void; // userId 타입을 number로 변경
+  openChatModal: (userId: number, nickname: string) => void;
 }
 
 interface ResponseData {
@@ -71,7 +71,7 @@ const FindModal: React.FC<SendModalProps> = ({
       (user) => user.nickname === inputValue
     );
     if (inputValue.length > 0 && selectedUser) {
-      openChatModal(selectedUser.id, selectedUser.nickname); // userId를 number로 전달
+      openChatModal(selectedUser.id, selectedUser.nickname);
       handleClose();
     }
   };

@@ -1,5 +1,3 @@
-// 일단 때려박고 나중에 리팩토링 ㄱㄱ
-
 // VideoDetail
 export interface Comment {
   id: number;
@@ -14,6 +12,15 @@ export interface Video {
   title: string;
   comments: Comment[];
   likes: number;
+}
+
+// response 데이터 타입
+export interface ResponseData<T> {
+  code: number;
+  message: string;
+  data: T;
+  errors: object;
+  isSuccess: boolean;
 }
 
 // 유저 프로필

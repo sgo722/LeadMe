@@ -3,15 +3,16 @@ import { Client } from "@stomp/stompjs";
 import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
 
+// 커스텀 훅 정의
 const useWebSocket = (
-  channel: string,
-  onMessageReceived: (message: any) => void
+  channel: string, // 구독할 채널
+  onMessageReceived: (message: any) => void // 메시지 수신 시 호출되는 콜백 함수
 ) => {
-  const clientRef = useRef<Client | null>(null);
-  const accessToken = useRecoilValue(accessTokenState); // Recoil을 사용하여 토큰 가져오기
+  const clientRef = useRef<Client | null>(null); // Client 객체를 저장할 ref
+  const accessToken = useRecoilValue(accessTokenState); // Recoil을 사용하여 액세스 토큰 가져오기
 
   useEffect(() => {
-    if (!channel || !accessToken) return;
+    if (!channel || !accessToken) return; // 채널 또는 액세스 토큰이 없으면 실행하지 않음
 
     // WebSocket 클라이언트 설정
     const client = new Client({
@@ -21,9 +22,9 @@ const useWebSocket = (
       },
       onConnect: () => {
         console.log(`Connected to WebSocket server on channel: ${channel}`);
-        // 백엔드에 맞는 경로로 설정
+        // 채널 구독
         client.subscribe(`/sub/chat/room/${channel}`, (message) => {
-          onMessageReceived(JSON.parse(message.body));
+          onMessageReceived(JSON.parse(message.body)); // 메시지 수신 시 콜백 함수 호출
         });
       },
       onDisconnect: () => {
@@ -61,8 +62,8 @@ const useWebSocket = (
     (body: any) => {
       if (clientRef.current && clientRef.current.connected) {
         clientRef.current.publish({
-          destination: "/pub/chat/message", // 백엔드에 맞는 경로로 설정
-          body: JSON.stringify(body),
+          destination: "/pub/chat/message", // 메시지 전송 경로 설정
+          body: JSON.stringify(body), // 전송할 메시지
           headers: {
             Authorization: `Bearer ${accessToken}`, // 메시지 전송 시 토큰 포함
           },
@@ -72,7 +73,7 @@ const useWebSocket = (
     [accessToken]
   );
 
-  return { sendMessage };
+  return { sendMessage }; // sendMessage 함수 반환
 };
 
 export default useWebSocket;
