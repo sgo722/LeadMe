@@ -16,7 +16,7 @@ public class OAuth2AuthorizationRequestBasedOnCookieRepository implements Author
     public final static String OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME = "oauth2_authorization_request";
     private final static int COOKIE_EXPIRE = 60 * 60 * 5; // 쿠키 만료 시간 5시간
 
-    // 쿠키에서 인가 요청을 로드한다
+//     쿠키에서 인가 요청을 로드한다
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);

@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="725e38f7-ec48-4ce6-a807-2a8dfd882a91" name="변경" comment="" />
+    <list default="true" id="725e38f7-ec48-4ce6-a807-2a8dfd882a91" name="변경" comment="">
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/ssafy/withme/controller/userchallenege/request/UserChallengeDeleteRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/ssafy/withme/controller/userchallenege/request/UserChallengeSaveRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/ssafy/withme/global/exception/FileNotFoundException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/leadme/video/temporary/46def926-1531-4131-8094-2f98bd0fc295.mp4" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/ssafy/withme/controller/userchallenege/UserChallengeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/ssafy/withme/controller/userchallenege/UserChallengeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/ssafy/withme/global/error/ErrorCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/ssafy/withme/global/error/ErrorCode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/ssafy/withme/service/userchellenge/UserChallengeService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/ssafy/withme/service/userchellenge/UserChallengeService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/resources/application.yml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -14,15 +27,15 @@
   <component name="ProjectViewState">
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "/Users/yangjun-yeong/Desktop/School/2024/S11P12C109",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/yangjun-yeong/Desktop/School/2024/S11P12C109&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="애플리케이션 수준" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="디폴트 작업">
@@ -34,5 +47,16 @@
       <workItem from="1721298801171" duration="6000" />
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

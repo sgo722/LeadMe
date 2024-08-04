@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { BsFillCaretRightFill } from "react-icons/bs";
-import youtubeButton from "../../assets/icons/youtubeButton.png";
-import tiktokButton from "../../assets/icons/tiktokButton.png";
-import instaButton from "../../assets/icons/instaButton.png";
-import playButton from "../../assets/icons/playButton.png";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import youtubeButton from "assets/icons/youtubeButton.png";
+import tiktokButton from "assets/icons/tiktokButton.png";
+import instaButton from "assets/icons/instaButton.png";
+import playButton from "assets/icons/playButton.png";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import { axiosInstance } from "../../axiosInstance/apiClient";
-
+import { axiosInstance } from "axiosInstance/apiClient";
+import { LoadingSpinner } from "components/LoadingSpinner";
 interface FetchVideosParams {
   pageParam: string;
   query: string;
@@ -63,11 +63,11 @@ const fetchVideos = async ({
 };
 
 export const SearchResult: React.FC<SearchResultProps> = ({ platform }) => {
-  const queryClient = useQueryClient();
   const [currentIndex, setCurrentIndex] = useState(0);
   const location = useLocation();
   const nav = useNavigate();
   const query = new URLSearchParams(location.search).get("q") || "";
+  const [currentPage, setCurrentPage] = useState(0);
 
   const {
     data,
@@ -99,32 +99,28 @@ export const SearchResult: React.FC<SearchResultProps> = ({ platform }) => {
 
   const prefetchNextPage = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
-      const lastPage = data?.pages[data.pages.length - 1];
-      const nextPageToken = lastPage?.data[0]?.nextPageToken;
-
-      if (nextPageToken) {
-        queryClient.prefetchQuery({
-          queryKey: ["videos", query, nextPageToken],
-          queryFn: () => fetchVideos({ pageParam: nextPageToken, query }),
-        });
+      const nextPageIndex = currentPage + 1;
+      const nextPageData = data?.pages[nextPageIndex];
+      if (!nextPageData) {
+        fetchNextPage();
       }
     }
-  }, [data, hasNextPage, isFetchingNextPage, query, queryClient]);
+  }, [currentPage, data, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
-    const totalVideos = data?.pages.flatMap((page) => page.data).length || 0;
-    if (currentIndex + ITEMS_PER_PAGE >= totalVideos - ITEMS_PER_PAGE) {
-      prefetchNextPage();
-    }
-  }, [currentIndex, data, prefetchNextPage]);
+    prefetchNextPage();
+  }, [prefetchNextPage]);
 
   const handleNext = useCallback(() => {
     const totalVideos = data?.pages.flatMap((page) => page.data).length || 0;
-    if (currentIndex + ITEMS_PER_PAGE >= totalVideos && hasNextPage) {
-      fetchNextPage();
-    }
-    setCurrentIndex((prev) => Math.min(prev + ITEMS_PER_PAGE, totalVideos));
-  }, [currentIndex, data, fetchNextPage, hasNextPage]);
+    const nextIndex = Math.min(
+      currentIndex + ITEMS_PER_PAGE,
+      totalVideos - ITEMS_PER_PAGE
+    );
+    setCurrentIndex(nextIndex);
+    setCurrentPage(Math.floor(nextIndex / ITEMS_PER_PAGE));
+    prefetchNextPage();
+  }, [currentIndex, data, prefetchNextPage]);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => Math.max(prev - ITEMS_PER_PAGE, 0));
@@ -134,16 +130,10 @@ export const SearchResult: React.FC<SearchResultProps> = ({ platform }) => {
     nav(`/search/${videoId}?q=${encodeURIComponent(query)}`);
   };
 
-  if (isLoading) return <div>로딩중...</div>;
+  if (isLoading) return <LoadingSpinner />;
   if (isError) return <div>에러: {(error as Error).message}</div>;
 
-  const videos = Array.from(
-    new Map(
-      data?.pages
-        .flatMap((page) => page.data)
-        .map((item) => [item.videoId, item])
-    )
-  ).map(([, item]) => item as VideoItem);
+  const videos = data?.pages.flatMap((page) => page.data) || [];
   if (videos.length === 0) return <div>검색 결과가 없습니다.</div>;
   return (
     <Container>
@@ -163,9 +153,9 @@ export const SearchResult: React.FC<SearchResultProps> = ({ platform }) => {
         )}
         <SliderWrapper>
           <Slider $translateValue={-currentIndex * SLIDE_WIDTH}>
-            {videos.map((video: VideoItem) => (
+            {videos.map((video: VideoItem, index) => (
               <ContentSection
-                key={video.videoId}
+                key={`${video.videoId}-${index}`}
                 onClick={() => handleThumbnailClick(video.videoId)}
               >
                 <FeedImage src={video.snippet.thumbnails.high.url} />

@@ -1,21 +1,23 @@
 import React from "react";
 import theme from "./theme";
 import { Routes, Route } from "react-router-dom";
-import { MainCanvas } from "./components/MainCanvas";
-import { FixedDOM } from "./components/dom/FixedDOM";
+import { MainCanvas } from "components/MainCanvas";
+import { FixedDOM } from "components/dom/FixedDOM";
 import { ThemeProvider } from "styled-components";
-import { Search } from "./pages/Search";
-import { SearchResultDetail } from "./pages/SearchResultDetail";
-import { Chat } from "./pages/Chat";
+import { Search } from "pages/Search";
+import { SearchResultDetail } from "pages/SearchResultDetail";
+import { Chat } from "pages/Chat";
+import { Practice } from "pages/Practice";
+import { ShortsModal } from "components/ShortsModal";
 import GlobalStyle from "./globalStyles";
 import styled from "styled-components";
-import Home from "./pages/Home";
-import Rank from "./pages/Rank";
-import Report from "./pages/Report";
-import Challenge from "./pages/Challenge";
-import Mypage from "./pages/Mypage";
-import Practice from "./pages/Practice";
-import Feed from "./pages/Feed";
+import Home from "pages/Home";
+import Rank from "pages/Rank";
+import Report from "pages/Report";
+import Challenge from "pages/Challenge";
+import Mypage from "pages/Mypage";
+import Feed from "pages/Feed";
+import Battle from "pages/Battle";
 
 const App: React.FC = () => {
   return (
@@ -37,11 +39,14 @@ const App: React.FC = () => {
         <Route path="/search/:videoId" element={<SearchResultDetail />} />
         <Route path="/challenge" element={<Challenge />}></Route>
         <Route path="/mypage" element={<Mypage />}></Route>
-        <Route path="/report" element={<Report />}></Route>
+        <Route path="/report/:uuid" element={<Report />}></Route>
         <Route path="/chat/:userId" element={<Chat />}></Route>
         <Route path="/practice" element={<Practice />}></Route>
+        <Route path="/practice/:videoId" element={<Practice />}></Route>
         <Route path="/feed" element={<Feed />}></Route>
+        <Route path="/battle" element={<Battle />}></Route>
       </Routes>
+      <ShortsModal />
     </ThemeProvider>
   );
 };

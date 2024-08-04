@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { SiNaver } from "react-icons/si";
 import { FcGoogle } from "react-icons/fc";
 import { RiKakaoTalkFill } from "react-icons/ri";
-
+import { baseUrl } from "axiosInstance/constants";
 interface LoginModalProps {
   onClose: () => void;
 }
@@ -13,43 +13,35 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
       <Container onClick={(e) => e.stopPropagation()}>
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>Login</Title>
-        <SNSBox $bgColor="#FFF039" $hoverColor="#FFEC00">
-          <IconWrapper>
-            <RiKakaoTalkFill style={{ color: "#533030" }} />
-          </IconWrapper>
-          <span>
-            <a href="http://localhost:8080/oauth2/authorization/kakao">
-              Kakao 로그인
-            </a>
-          </span>
-        </SNSBox>
 
-        <SNSBox $bgColor="#03CF5D" $hoverColor="#0ec25c">
-          <IconWrapper>
-            <SiNaver
-              style={{ color: "#ffffff", width: "17px", height: "17px" }}
-            />
-          </IconWrapper>
-          <span>
-            <a
-              style={{ color: "#ffffff" }}
-              href="http://localhost:8080/oauth2/authorization/naver"
-            >
-              Naver 로그인
-            </a>
-          </span>
-        </SNSBox>
+        <SNSLink href={`${baseUrl}/oauth2/authorization/kakao`}>
+          <SNSBox $bgColor="#FFF039" $hoverColor="#FFEC00">
+            <IconWrapper>
+              <RiKakaoTalkFill style={{ color: "#533030" }} />
+            </IconWrapper>
+            <span>Kakao 로그인</span>
+          </SNSBox>
+        </SNSLink>
 
-        <SNSBox $bgColor="#ffffff" $hoverColor="#f3f3f3">
-          <IconWrapper>
-            <FcGoogle />
-          </IconWrapper>
-          <span>
-            <a href="http://localhost:8080/oauth2/authorization/google">
-              Google 로그인
-            </a>
-          </span>
-        </SNSBox>
+        <SNSLink href={`${baseUrl}/oauth2/authorization/naver`}>
+          <SNSBox $bgColor="#03CF5D" $hoverColor="#0ec25c">
+            <IconWrapper>
+              <SiNaver
+                style={{ color: "#ffffff", width: "17px", height: "17px" }}
+              />
+            </IconWrapper>
+            <span style={{ color: "#ffffff" }}>Naver 로그인</span>
+          </SNSBox>
+        </SNSLink>
+
+        <SNSLink href={`${baseUrl}/oauth2/authorization/google`}>
+          <SNSBox $bgColor="#ffffff" $hoverColor="#f3f3f3">
+            <IconWrapper>
+              <FcGoogle />
+            </IconWrapper>
+            <span>Google 로그인</span>
+          </SNSBox>
+        </SNSLink>
       </Container>
     </Overlay>
   );
@@ -111,6 +103,12 @@ interface BgProps {
   $hoverColor: string;
 }
 
+const SNSLink = styled.a`
+  display: block;
+  width: 100%;
+  text-decoration: none;
+`;
+
 const SNSBox = styled.div<BgProps>`
   width: 100%;
   height: 50px;
@@ -126,9 +124,6 @@ const SNSBox = styled.div<BgProps>`
   span {
     flex: 1;
     text-align: center;
-  }
-  a {
-    text-decoration: none;
     color: #444444;
     font-family: Roboto;
     font-size: 18px;

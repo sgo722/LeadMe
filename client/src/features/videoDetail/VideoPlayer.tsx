@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
-import { Video } from "../../types";
-import { InteractionButtons } from "./InteractionButtons";
-import { CommentSection } from "./CommentSection";
+import { Video } from "types/index";
+import { InteractionButtons } from "features/videoDetail/InteractionButtons";
+import { CommentSection } from "features/videoDetail/CommentSection";
 
 interface VideoPlayerProps {
   video: Video;

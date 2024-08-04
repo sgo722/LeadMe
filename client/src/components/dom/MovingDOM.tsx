@@ -1,5 +1,5 @@
 import { useRecoilValue } from "recoil";
-import { IsEnteredAtom } from "../../stores";
+import { IsEnteredAtom } from "stores/index";
 import { useRef } from "react";
 import { Scroll, useScroll } from "@react-three/drei";
 import styled from "styled-components";

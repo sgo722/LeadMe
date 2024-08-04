@@ -1,5 +1,5 @@
 import { useRecoilState } from "recoil";
-import { IsEnteredAtom } from "../stores";
+import { IsEnteredAtom } from "stores/index";
 import { Html, useProgress } from "@react-three/drei";
 import styled, { keyframes } from "styled-components";
 import { useEffect } from "react";

@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import Header from "../components/Header";
-import { SearchBar } from "../components/SearchBar";
-import { SearchResult } from "../features/search/SearchResult";
+import Header from "components/Header";
+import { SearchBar } from "components/SearchBar";
+import { SearchResult } from "features/search/SearchResult";
 
 export const Search: React.FC = () => {
   return (

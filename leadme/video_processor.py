@@ -9,25 +9,43 @@ from pymongo import MongoClient
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
+
+PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
+
 # MongoDB 연결 설정
-client = MongoClient('mongodb://localhost:27017/')
+client = MongoClient('mongodb://i11c109.p.ssafy.io:27017/')
 db = client['local']  # 'local' 데이터베이스 이름 설정
 collection = db['landmarks']  # 'landmarks' 컬렉션 이름 설정
 
 # 비디오 다운로드 함수
-def download_video(url, output_path='downloaded_video.mp4'):
+def download_video(url, youtube_id, output_dir=PERMANENT_DIRECTORY_CHALLENGE):
+    output_path = os.path.join(output_dir, f"{youtube_id}.mp4")
     # 기존 파일이 있다면 삭제
     if os.path.exists(output_path):
         os.remove(output_path)
 
     ydl_opts = {
-        'format': 'bestvideo+bestaudio/best',
-        'outtmpl': output_path,
-        'quiet': True
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',  # mp4 확장자 지정
+        'outtmpl': output_path,  # 출력 파일명 설정
+        'quiet': True,
+        'external_downloader': 'aria2c',  # 빠른 다운로드를 위한 외부 다운로더 사용
+        'external_downloader_args': ['-x', '16', '-k', '1M']  # 병렬 연결 수와 단위 설정
     }
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
+
+    # 다운로드 후 파일 확장자 확인 및 변경
+    base, ext = os.path.splitext(output_path)
+
+    print("현재 확장자명 : " + ext)
+
+    if ext == '.webm':
+        new_output_path = base + '.mp4'
+        os.rename(output_path, new_output_path)
+        output_path = new_output_path
+
     return output_path
+
 
 
 def process_video(youtubeId, video_path):
@@ -35,7 +53,7 @@ def process_video(youtubeId, video_path):
 
     # 비디오 파일이 존재하는지 확인
     if not os.path.exists(video_path):
-        print("Error: Video file not found.")
+        print("Error: "+ video_path + " Video file not found.")
         return keypoints_list
 
     # 비디오 파일 로드
@@ -78,7 +96,7 @@ def process_video(youtubeId, video_path):
             mp.solutions.drawing_utils.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
         # 프레임 표시 (선택 사항)
-        cv2.imshow('Frame', frame)
+        # cv2.imshow('Frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
@@ -149,7 +167,7 @@ def process_video_user(video_path):
             mp.solutions.drawing_utils.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
         # 프레임 표시 (선택 사항)
-        cv2.imshow('Frame', frame)
+        # 화면 보고싶으면 cv2.imshow('Frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 

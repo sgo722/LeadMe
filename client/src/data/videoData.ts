@@ -1,6 +1,6 @@
 import { Video } from "../types";
-import img1 from "../assets/image/img1.png";
-import img2 from "../assets/image/img2.png";
+import img1 from "assets/image/img1.png";
+import img2 from "assets/image/img2.png";
 
 // 임시 데이터
 

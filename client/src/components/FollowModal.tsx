@@ -109,6 +109,18 @@ const OverContainer = styled.div`
   padding: 0 36px;
   height: 100%;
   overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 15px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #dfdfdf;
+    border-radius: 10px;
+    border: 4px solid rgba(0, 0, 0, 0);
+    background-clip: padding-box;
+    cursor: pointer;
+  }
 `;
 
 const UserRow = styled.div`

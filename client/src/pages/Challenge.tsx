@@ -1,8 +1,8 @@
-import Header from "./../components/Header";
+import Header from "components/Header";
 import styled from "styled-components";
-import playButtonIcon from "../assets/icons/playButton.png";
-import img1 from "../assets/image/img1.png";
-import img2 from "../assets/image/img2.png";
+import playButtonIcon from "assets/icons/playButton.png";
+import img1 from "assets/image/img1.png";
+import img2 from "assets/image/img2.png";
 
 interface ImageData {
   id: number;

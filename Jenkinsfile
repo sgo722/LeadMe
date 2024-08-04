@@ -30,28 +30,61 @@ pipeline {
                     dir('S11P12C109/server') {
                         sh 'chmod +x ./gradlew'
                         
-                        sh './gradlew clean build'
+                        sh './gradlew clean build -x test'
                     }
                 }
             }
         }
 
-        stage('Docker Build and Push') {
+        stage('Docker Build and Push Java Docker Image') {
             steps {
                 script {
-                    // Docker build and push
-                    dir('S11P12C109/server'){
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                        sh '''
-                        docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-                        '''
-                    }
-                        sh "docker build -t ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY} ."
-                        sh "docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest"
+                    dir('S11P12C109/server') {
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                            sh '''
+                            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+                            docker build -t ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest .
+                            docker push ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
+                            '''
+                        }
                     }
                 }
             }
         }
+
+        stage('Build and Push Python Docker Image') {
+            steps {
+                script {
+                    dir('S11P12C109/leadme') {
+                        sh 'docker stop python-container || true'
+                        sh 'docker rm python-container || true'
+
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                            sh '''
+                            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+                            '''
+
+                            sh '''
+                            docker build -t ${DOCKERHUB_USERNAME}/python-image:latest .
+                            docker push ${DOCKERHUB_USERNAME}/python-image:latest
+                            '''
+                        }
+
+                        // 컨테이너 실행
+                        sh '''
+                        docker run -d --name python-container -p 4567:4567 \
+                                -v /home/ubuntu/python/video/temporary:/home/ubuntu/python/video/temporary \
+                                -v /home/ubuntu/python/video/user:/home/ubuntu/python/video/user \
+                                -v /home/ubuntu/python/video/challenge:/home/ubuntu/python/video/challenge \
+                                ${DOCKERHUB_USERNAME}/python-image:latest
+                        '''
+                    }
+                }
+            }
+        }
+
+
+
 
         stage('Deploy to EC2') {
             steps {
@@ -67,7 +100,9 @@ pipeline {
                                         docker pull ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
                                         docker stop ${DOCKERHUB_NAME} || true
                                         docker rm ${DOCKERHUB_NAME} || true
-                                        docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
+                                        // docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
+                                        docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" -v /home/ubuntu:/host ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
+
                                         docker image prune -f
                                         """,
                                         execTimeout: 120000
