@@ -18,6 +18,7 @@ export interface Video {
 
 // 유저 프로필
 export interface UserProfile {
+  id: number;
   name: string;
   nickname: string;
   email: string;

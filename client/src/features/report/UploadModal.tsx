@@ -2,19 +2,72 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FaLock } from "react-icons/fa";
 import { FaLockOpen } from "react-icons/fa";
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
+import { useRecoilValue } from "recoil";
+import { useNavigate } from "react-router-dom";
+import { userProfileState } from "stores/authAtom";
+import { baseUrl } from "axiosInstance/constants";
+
+interface scoreData {
+  uuid: string;
+  youtubeId: string;
+  challengeId: string;
+  totalScore: number;
+  scoreHistory: number[];
+}
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
+  reportData: scoreData | null;
 }
 
-const UpdateModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
+const UpdateModal: React.FC<ModalProps> = ({ isOpen, onClose, reportData }) => {
   const [inputValue, setInputValue] = useState("");
   const [isDisabled, setIsDisabled] = useState(true);
+  const userProfile = useRecoilValue(userProfileState);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsDisabled(inputValue.length === 0);
   }, [inputValue]);
+
+  const mutation = useMutation({
+    mutationFn: async (access: string) => {
+      if (!reportData || !userProfile) throw new Error("Missing data");
+
+      const requestData = {
+        challengeId: reportData.challengeId,
+        userId: userProfile.id,
+        uuid: reportData.uuid,
+        fileName: inputValue,
+        access: access,
+      };
+
+      const response = await axios.post(
+        `${baseUrl}/api/v1/userChallenge/temporary/save`,
+        requestData
+      );
+
+      return response.data;
+    },
+    onSuccess: (data) => {
+      console.log("Response:", data);
+      alert("업로드 완료");
+      onClose(); // 요청이 성공하면 모달 닫기
+      navigate("/mypage"); // 업로드 된 영상 디테일 페이지로 이동 (수정 필요)
+    },
+    onError: (error) => {
+      console.error("Error uploading data:", error);
+    },
+  });
+
+  const handleUpload = (access: string) => {
+    if (!isDisabled) {
+      mutation.mutate(access);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -32,11 +85,17 @@ const UpdateModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           />
           <Info>공개 비공개 여부는 추후에도 수정이 가능합니다.</Info>
           <Flex>
-            <PrivateBtn disabled={isDisabled}>
+            <PrivateBtn
+              disabled={isDisabled}
+              onClick={() => handleUpload("private")}
+            >
               <FaLock size="16" color="#d6d6d6" />
               <div>private</div>
             </PrivateBtn>
-            <PuplicBtn disabled={isDisabled}>
+            <PuplicBtn
+              disabled={isDisabled}
+              onClick={() => handleUpload("public")}
+            >
               <FaLockOpen size="18" color="#d6d6d6" />
               <div>public</div>
             </PuplicBtn>
