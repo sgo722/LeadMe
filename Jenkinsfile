@@ -56,18 +56,23 @@ pipeline {
             steps {
                 script {
                     dir('S11P12C109/leadme') {
-                        if (sh(script: 'docker ps -q -f name=python-container', returnStatus: true) == 0) {
+                        // 컨테이너가 존재하는지 확인
+                        def containerExists = sh(script: 'docker ps -q -f name=python-container', returnStatus: true)
+                        
+                        if (containerExists == 0) {
+                            // 컨테이너가 존재할 경우 중지 및 제거
                             sh 'docker stop python-container'
                             sh 'docker rm python-container'
-                        }else {
+                        } else {
+                            // 컨테이너가 존재하지 않을 경우 메시지 출력
                             echo 'python-container does not exist, skipping stop and remove.'
                         }
-                        
+
                         withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
                             sh '''
                             echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-                            docker build -t ${DOCKERHUB_USERNAME}/python-container:latest .
-                            docker push ${DOCKERHUB_USERNAME}/python-container:latest
+                            docker build -t ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY}:latest .
+                            docker push ${DOCKERHUB_USERNAME}/${PYTHON_DOCKERHUB_REPOSITORY}:latest
                             '''
                         }
 
@@ -77,6 +82,7 @@ pipeline {
                 }
             }
         }
+
 
         stage('Deploy to EC2') {
             steps {
