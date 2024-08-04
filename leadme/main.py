@@ -32,16 +32,18 @@ class Video(BaseModel):
     youtubeId : str
 
 UPLOAD_DIRECTORY = "."
-# TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
 # TEMP_DIRECTORY = "video/temporary"
 # PERMANENT_DIRECTORY_USER = "video/user"
 # PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
 # PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
+# THUMBNAIL_DIRECTORY = "video/temporary/thumnail"
+
 
 TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
 PERMANENT_DIRECTORY_USER = "/home/ubuntu/python/video/user"
 PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
 PERMANENT_DIRECTORY_CHALLENGE_AUDIO =  "/home/ubuntu/python/video/challenge/audio"
+THUMBNAIL_DIRECTORY = "/home/ubuntu/python/video/temporary/thumnail"
 
 
 ## 서비스 로직 호출 부분을 Ray로 병렬 처리한다.
@@ -84,7 +86,8 @@ async def saveVideoDataByUserFile(
     flipped_temp_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_flipped_temp.avi")
     final_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}.mp4")
     youtube_video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
-    youtube_audio_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE_AUDIO, f"{youtubeId}.mp3")
+    youtube_audio_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE_AUDIO, f"{unique_id}.mp3")
+    thumbnail_path = os.path.join(THUMBNAIL_DIRECTORY, f"{unique_id}.png")
     
     download_start = time.time()
     with open(original_video_path, "wb") as buffer:
@@ -114,6 +117,9 @@ async def saveVideoDataByUserFile(
         clip.write_videofile(final_video_path, codec="libx264")
 
         convert_end = time.time()
+
+        # 썸네일 생성 및 저장
+        generate_thumbnail(final_video_path, thumbnail_path)
 
         extract_audio_from_video(youtube_video_path, youtube_audio_path)
         # replace_audio_in_video(final_video_path, youtube_audio_path, final_video_path)
@@ -178,3 +184,11 @@ def combine_audio_video(audio_source_path, video_source_path, output_path):
 
     # 최종 비디오 파일을 저장
     final_video.write_videofile(output_path, codec='libx264', audio_codec='aac')
+
+def generate_thumbnail(video_path: str, thumbnail_path: str, time_frame: float = 1.0):
+    try:
+        clip = VideoFileClip(video_path)
+        clip.save_frame(thumbnail_path, t=time_frame)
+    except Exception as e:
+        print(f"Thumbnail generation error: {str(e)}")
+        raise

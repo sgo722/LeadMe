@@ -71,11 +71,18 @@ youtube:
 python-server:
   url: http://i11c109.p.ssafy.io:4567
   temp-directory: host/python/video/temporary
+#  temp-thumnail-directory: host/python/video/temporary
   permanent-directory: host/python/video/user
+#  permanent-thumnail-directory: host/python/video/temporary
+#  youtube-audio-directory: host/python/video/audio
 
 #  url: http://localhost:8000
 #  temp-directory: C:/leadme/video/temporary
+#  temp-thumnail-directory:
 #  permanent-directory: C:/leadme/video/user
+#  permanent-thumnail-directory:
+#  youtube-audio-directory:
+
 
 openvidu:
   url: https://i11c109.p.ssafy.io:8443
