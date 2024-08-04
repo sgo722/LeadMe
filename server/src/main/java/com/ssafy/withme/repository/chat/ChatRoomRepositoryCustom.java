@@ -9,5 +9,7 @@ public interface ChatRoomRepositoryCustom {
 
     List<ChatRoom> findByUserId(Long userId);
 
+    Optional<ChatRoom> findByUserIdAndPartnerId(Long userId, Long partnerId);
+
     ChatRoom findByUserIdAndRoomId(Long userId, Long roomId);
 }

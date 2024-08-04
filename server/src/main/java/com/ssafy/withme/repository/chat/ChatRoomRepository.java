@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long>, ChatRoomRepositoryCustom {
 
+    @Override
     Optional<ChatRoom> findByUserIdAndPartnerId(Long userId, Long partnerId);
 
     @Override

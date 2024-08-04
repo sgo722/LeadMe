@@ -26,6 +26,17 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
     }
 
     @Override
+    public Optional<ChatRoom> findByUserIdAndPartnerId(Long userId, Long partnerId) {
+
+        return Optional.ofNullable(qf.selectFrom(chatRoom)
+                .where(
+                        (chatRoom.user.id.eq(userId).and(chatRoom.partner.id.eq(partnerId)))
+                                .or(chatRoom.user.id.eq(partnerId).and(chatRoom.partner.id.eq(userId)))
+                )
+                .fetchOne());
+    }
+
+    @Override
     public ChatRoom findByUserIdAndRoomId(Long userId, Long roomId) {
 
         return qf.selectFrom(chatRoom)
