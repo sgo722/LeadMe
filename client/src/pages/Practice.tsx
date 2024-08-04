@@ -384,12 +384,16 @@ export const Practice: React.FC = () => {
     setCountdown(3);
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
+        if (prev === null) return null; // prev가 null인 경우 처리
         if (prev === 1) {
           clearInterval(countdownInterval);
-          startActualRecording();
-          return null;
+          setTimeout(() => {
+            startActualRecording();
+            setCountdown(null);
+          }, 1000); // 1초 더 기다린 후 녹화 시작
+          return 0;
         }
-        return prev! - 1;
+        return prev - 1;
       });
     }, 1000);
   };
@@ -397,9 +401,9 @@ export const Practice: React.FC = () => {
   const startActualRecording = () => {
     setIsRecording(true);
     if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.seekTo(0);
       youtubePlayerRef.current.setPlaybackRate(1);
       setPlaybackRate(1);
-      youtubePlayerRef.current.seekTo(0);
       youtubePlayerRef.current.playVideo();
     }
     // 웹캠 녹화 시작 로직
@@ -614,7 +618,10 @@ export const Practice: React.FC = () => {
                 <Webcam>
                   {countdown !== null && (
                     <CountdownOverlay>
-                      <CountdownNumber>{countdown}</CountdownNumber>
+                      <CountdownCircle>
+                        <CountdownSpinner $countdown={countdown} />
+                        <CountdownNumber>{countdown}</CountdownNumber>
+                      </CountdownCircle>
                     </CountdownOverlay>
                   )}
                   <Video ref={videoRef} autoPlay playsInline />
@@ -640,7 +647,11 @@ export const Practice: React.FC = () => {
               <Buttons>
                 {videoId &&
                   (!isRecording ? (
-                    <Button onClick={startRecording}>
+                    <Button
+                      onClick={startRecording}
+                      disabled={countdown !== null}
+                      style={{ opacity: countdown !== null ? 0.5 : 1 }}
+                    >
                       <BiVideoRecording style={{ fontSize: "20px" }} />
                       녹화
                     </Button>
@@ -938,8 +949,38 @@ const CountdownOverlay = styled.div`
   z-index: 10;
 `;
 
+const CountdownCircle = styled.div`
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background-color: rgba(238, 80, 80, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+`;
+
 const CountdownNumber = styled.div`
-  font-size: 120px;
+  font-size: 80px;
   color: white;
   font-weight: bold;
+`;
+
+const CountdownSpinner = styled.div<{ $countdown: number }>`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 8px solid transparent;
+  border-top-color: #ee5050;
+  animation: spin 1s linear infinite;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
 `;
