@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN pip3 install tensorflow
+
 
 # 필요한 디렉토리 생성 (데이터 저장용)
 RUN mkdir -p /home/ubuntu/python/video/temporary /home/ubuntu/python/video/user /home/ubuntu/python/video/challenge /home/ubuntu/python/video/challenge/audio /home/ubuntu/python/video/challenge/thumnail
