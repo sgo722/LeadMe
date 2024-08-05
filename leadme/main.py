@@ -119,7 +119,7 @@ async def saveVideoDataByUserFile(
         convert_end = time.time()
 
         # 썸네일 생성 및 저장
-        generate_thumbnail(final_video_path, thumbnail_path)
+        # generate_thumbnail(final_video_path, thumbnail_path)
 
         extract_audio_from_video(youtube_video_path, youtube_audio_path)
         # replace_audio_in_video(final_video_path, youtube_audio_path, final_video_path)
