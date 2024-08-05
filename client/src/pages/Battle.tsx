@@ -5,17 +5,68 @@ import { SearchBar } from "components/SearchBar";
 import { MdLock } from "react-icons/md";
 import { CreateRoomModal } from "features/battle/CreateRoomModal";
 import { InputPasswordModal } from "features/battle/InputPasswordModal";
+import { axiosInstance } from "axiosInstance/apiClient";
+import { useQuery } from "@tanstack/react-query";
+import { Pagination } from "features/battle/Pagination";
+
+// 로딩 새로고침
+// 타입 제대로 지정 꼼꼼히
+// 비밀번호 로직 추가
+// 방 입장 로직 추가
+
+// 방 목록 & 검색 api
+const fetchRooms = async (page: number, searchKeyword: string = "") => {
+  const res = await axiosInstance.get(
+    // 검색어가 있으면 파라미터에 추가, 없으면 빼고 요청
+    `/api/v1/competitions?page=${page}${
+      searchKeyword ? `&searchKeyword=${searchKeyword}` : ""
+    }`
+  );
+  return res.data.data;
+};
+
+interface Room {
+  competitionId: number;
+  createdDate: string;
+  nickname: string | null;
+  profileImg: string | null;
+  public: boolean;
+  roomName: string;
+  sessionId: string;
+}
 
 export const Battle: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState<string>(""); // 검색어
+  const [currentPage, setCurrentPage] = useState<number>(0);
   const [showCreateRoomModal, setShowCreateRoomModal] =
     useState<boolean>(false);
   const [showInputPasswordModal, setShowInputPasswordModal] =
     useState<boolean>(false); // 비밀번호 입력 모달 표시 여부
-  const [selectedRoom, setSelectedRoom] = useState<any>(null);
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
 
-  const handleEnterRoom = (room: any) => {
+  const {
+    data: rooms,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["rooms", searchTerm, currentPage],
+    queryFn: () => fetchRooms(currentPage, searchTerm),
+    staleTime: 5 * 60 * 1000, // 5분
+  });
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(0);
+    console.log("검색어", term);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleEnterRoom = (room: Room) => {
     // 만약 비번방이면
-    if (room.isLocked) {
+    if (!room.public) {
       // selectedRoom에 선택한 방 객체 넣고
       setSelectedRoom(room);
       // 비밀번호 입력 모달창 띄우기
@@ -33,46 +84,34 @@ export const Battle: React.FC = () => {
     setShowInputPasswordModal(false);
   };
 
-  const dummyRooms = [
-    {
-      id: 1,
-      userId: "user1",
-      title: "에스파 챌린지 같이 추실 분",
-      date: "2024-07-30 17:34",
-      isLocked: true,
-    },
-    {
-      id: 2,
-      userId: "user2",
-      title: "카리나 챌린지 같이 할 사람",
-      date: "2024-07-30 18:15",
-      isLocked: false,
-    },
-    {
-      id: 3,
-      userId: "user3",
-      title: "블랙핑크 댄스 배우실 분",
-      date: "2024-07-30 19:22",
-      isLocked: true,
-    },
-  ];
+  // 방 생성 날짜 포멧팅
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
 
+    return `${month}-${day} ${hours}:${minutes}`;
+  };
+  // if (isLoading) return <div>로딩중</div>;
+  if (isError) return <div>Error: {(error as Error).message}</div>;
   return (
     <>
       <Header />
       <Container>
         <MainSection>
-          <SearchBar width={560} icon />
+          <SearchBar width={560} icon onSearch={handleSearch} />
           <RoomContainer>
-            {dummyRooms.map((room) => (
-              <Room key={room.id}>
+            {rooms?.competitions.map((room: Room) => (
+              <Room key={room.competitionId}>
                 <RoomTop>
-                  <div>{room.userId}</div>
-                  <div>{room.isLocked && <MdLock />}</div>
+                  <div>{room.nickname || "수정하셈"}</div>
+                  <div>{!room.public && <MdLock />}</div>
                 </RoomTop>
-                <RoomMid>{room.title}</RoomMid>
+                <RoomMid>{room.roomName}</RoomMid>
                 <RoomBottom>
-                  <RoomCreatedAt>{room.date}</RoomCreatedAt>
+                  <RoomCreatedAt>{formatDate(room.createdDate)}</RoomCreatedAt>
                   <EnterButton onClick={() => handleEnterRoom(room)}>
                     enter
                   </EnterButton>
@@ -83,7 +122,11 @@ export const Battle: React.FC = () => {
         </MainSection>
         <Footer>
           <PaginationContainer>
-            <div>1,2,3</div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={rooms?.totalPages || 1}
+              onPageChange={handlePageChange}
+            />
           </PaginationContainer>
           <CreateRoomButtonContainer>
             <CreateRoomButton onClick={() => setShowCreateRoomModal(true)}>
@@ -99,7 +142,7 @@ export const Battle: React.FC = () => {
         <InputPasswordModal
           onClose={() => setShowInputPasswordModal(false)}
           onEnter={handlePasswordEnter}
-          roomTitle={selectedRoom.title}
+          roomTitle={selectedRoom.roomName}
         />
       )}
     </>
