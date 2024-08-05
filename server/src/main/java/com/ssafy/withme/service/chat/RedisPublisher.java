@@ -24,6 +24,7 @@ public class RedisPublisher {
 
         log.info("RedisPublisher publishing to room {}: {}", roomId, message.getChatMessageDto().getMessage());
 
+        log.info(channelTopic.getTopic());
         redisTemplate.convertAndSend(channelTopic.getTopic(), message); // 해당 방으로 메시지 발행
     }
 }
