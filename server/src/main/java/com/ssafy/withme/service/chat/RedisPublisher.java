@@ -15,7 +15,7 @@ public class RedisPublisher {
     private final RedisTemplate<String, Object> redisTemplate;
 
     private ChannelTopic getChannelTopic(Long roomId) {
-        return new ChannelTopic("/sub/chat/message/" + roomId); // 방별로 고유한 토픽 생성
+        return new ChannelTopic("chatroom:" + roomId); // 방별로 고유한 토픽 생성
     }
 
     public void publish(MessageSubDto message, Long roomId) {

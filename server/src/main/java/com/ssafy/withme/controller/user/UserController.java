@@ -87,6 +87,7 @@ public class UserController {
         return SuccessResponse.of(expiration);
     }
 
+    // 닉네임 중복여부 확인
     @GetMapping("/user/check/{nickname}")
     public boolean checkNickname(
             @RequestHeader("Authorization") String authorization,
@@ -94,4 +95,7 @@ public class UserController {
 
         return userService.findByNickname(nickname);
     }
+
+    // 프로필 수정
+//    @PostMapping("/user/profile/save")
 }
