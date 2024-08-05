@@ -14,6 +14,7 @@ interface ChatRoomGetResponse {
   roomId: number;
   userNickname: string;
   partnerNickname: string;
+  partnerImageUrl: string;
   lastChatMessage: ChatMessageDto;
 }
 
@@ -40,6 +41,7 @@ export const Chat: React.FC = () => {
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
     null
   );
+  const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const [chatList, setChatList] = useState<ChatRoomGetResponse[]>([]);
   const [userProfile, setUserProfile] = useRecoilState(userProfileState);
@@ -96,14 +98,16 @@ export const Chat: React.FC = () => {
     }
   }, [currentUserId, connectWebSocket, subscribeToChannel]);
 
-  const openModal = (nickname: string, partnerId: number) => {
+  const openModal = (nickname: string, partnerId: number, profile: string) => {
     setSelectedNickname(nickname);
     setSelectedPartnerId(partnerId);
+    setSelectedProfile(profile);
   };
 
   const closeModal = () => {
     setSelectedNickname(null);
     setSelectedPartnerId(null);
+    setSelectedProfile(null);
   };
 
   const openSendModal = () => {
@@ -114,8 +118,12 @@ export const Chat: React.FC = () => {
     setIsSendModalOpen(false);
   };
 
-  const openChatModal = (nickname: string, partnerId: number) => {
-    openModal(nickname, partnerId);
+  const openChatModal = (
+    nickname: string,
+    partnerId: number,
+    profile: string
+  ) => {
+    openModal(nickname, partnerId, profile);
   };
 
   return (
@@ -131,10 +139,16 @@ export const Chat: React.FC = () => {
               chatList.map((chat) => (
                 <ChatListItem
                   key={chat.roomId}
-                  onClick={() => openModal(chat.partnerNickname, chat.roomId)}
+                  onClick={() =>
+                    openModal(
+                      chat.partnerNickname,
+                      chat.roomId,
+                      chat.partnerImageUrl
+                    )
+                  }
                 >
                   <UserProfileImage
-                    src="https://via.placeholder.com/40"
+                    src={chat.partnerImageUrl}
                     alt={`${chat.userNickname}'s profile`}
                   />
                   <ChatPreviewInfo>
@@ -164,6 +178,7 @@ export const Chat: React.FC = () => {
           currentNickname={currentNickname}
           partnerNickname={selectedNickname}
           partnerId={selectedPartnerId}
+          partnerProfile={selectedProfile}
         />
       </Container>
       <FindModal
