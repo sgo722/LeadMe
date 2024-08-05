@@ -27,6 +27,11 @@ public class ChatService {
      * 채팅방에 메시지 발송
      */
     public void sendChatMessage(ChatMessageDto chatMessage, Long roomId) {
+
+        log.info("############################");
+        log.info("#####debug send chat message: {}", chatMessage.getStatus());
+        log.info("############################");
+
         // 0. redis에 해당 채팅방 roomId(key)에 마지막 메시지(value)를 넣어준다.
         chatRoomRedisRepository.setLastChatMessage(chatMessage.getRoomId(), chatMessage);
 
