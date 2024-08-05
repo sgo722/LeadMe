@@ -22,9 +22,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @EnableRedisRepositories
 public class RedisConfig {
 
-    // yml 파일 redis 설정 불러오기
-//    private final RedisProperties redisProperties;
-
     @Value("${spring.data.redis.host}")
     private String redisHost;
 

@@ -1,5 +1,7 @@
 package com.ssafy.withme.dto.chat;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ssafy.withme.domain.chat.ChatRoom;
 import lombok.*;
 
@@ -22,6 +24,25 @@ public class ChatRoomGetResponse {
     private String partnerImageUrl;
 
     private ChatMessageDto lastChatMessageDto;
+
+    @JsonCreator
+    public ChatRoomGetResponse(
+            @JsonProperty("roomId") Long roomId,
+            @JsonProperty("userId") Long userId,
+            @JsonProperty("userNickname") String userNickname,
+            @JsonProperty("partnerId") Long partnerId,
+            @JsonProperty("partnerNickname") String partnerNickname,
+            @JsonProperty("partnerImageUrl") String partnerImageUrl,
+            @JsonProperty("lastChatMessageDto") ChatMessageDto lastChatMessageDto) {
+        this.roomId = roomId;
+        this.userId = userId;
+        this.userNickname = userNickname;
+        this.partnerId = partnerId;
+        this.partnerNickname = partnerNickname;
+        this.partnerImageUrl = partnerImageUrl;
+        this.lastChatMessageDto = lastChatMessageDto;
+    }
+
 
     public void updateChatMessageDto(ChatMessageDto chatMessageDto) {
         this.lastChatMessageDto = chatMessageDto;
