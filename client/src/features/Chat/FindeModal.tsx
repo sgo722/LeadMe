@@ -9,13 +9,13 @@ import { accessTokenState } from "stores/authAtom";
 interface SendModalProps {
   isOpen: boolean;
   onClose: () => void;
-  openChatModal: (nickname: string, partnerId: number) => void;
+  openChatModal: (nickname: string, partnerId: number, profile: string) => void;
 }
 
 interface ResponseData {
   code: number;
   message: string;
-  data: { id: number; nickname: string }[];
+  data: { id: number; nickname: string; profile: string }[];
   errors: object;
   isSuccess: boolean;
 }
@@ -27,18 +27,18 @@ const FindModal: React.FC<SendModalProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [searchResults, setSearchResults] = useState<
-    { id: number; nickname: string }[]
+    { id: number; nickname: string; profile: string }[]
   >([]);
   const accessToken = useRecoilValue(accessTokenState);
 
   const mutation = useMutation<
-    { id: number; nickname: string }[],
+    { id: number; nickname: string; profile: string }[],
     Error,
     string
   >({
     mutationFn: async (
       value: string
-    ): Promise<{ id: number; nickname: string }[]> => {
+    ): Promise<{ id: number; nickname: string; profile: string }[]> => {
       const response = await axios.get<ResponseData>(
         `${baseUrl}/api/v1/user/search`,
         {
@@ -48,7 +48,7 @@ const FindModal: React.FC<SendModalProps> = ({
       );
       return response.data.data;
     },
-    onSuccess: (data: { id: number; nickname: string }[]) => {
+    onSuccess: (data: { id: number; nickname: string; profile: string }[]) => {
       setSearchResults(data);
     },
     onError: (error: Error) => {
@@ -71,7 +71,11 @@ const FindModal: React.FC<SendModalProps> = ({
       (user) => user.nickname === inputValue
     );
     if (inputValue.length > 0 && selectedUser) {
-      openChatModal(selectedUser.nickname, selectedUser.id);
+      openChatModal(
+        selectedUser.nickname,
+        selectedUser.id,
+        selectedUser.profile
+      );
       handleClose();
     }
   };
