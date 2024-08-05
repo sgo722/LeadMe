@@ -26,11 +26,14 @@ interface ChatModalProps {
 
 const formatTime = (timeString: string) => {
   const date = new Date(timeString);
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const ampm = hours >= 12 ? "오후" : "오전";
-  const formattedHours = hours % 12 || 12;
-  return `${ampm} ${formattedHours}:${minutes < 10 ? `0${minutes}` : minutes}`;
+  const options: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+    timeZone: "Asia/Seoul",
+  };
+  const formattedTime = new Intl.DateTimeFormat("ko-KR", options).format(date);
+  return formattedTime;
 };
 
 export const ChatModal: React.FC<ChatModalProps> = ({
@@ -51,7 +54,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({
 
   useEffect(() => {
     if (isOpen && partnerId) {
-      // 채팅방을 생성한다. - room1
       axios
         .post(
           `${baseUrl}/api/v1/chat/room/create`,
@@ -70,15 +72,16 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           console.log("roomId:", createdRoomId);
           setRoomId(createdRoomId);
 
-          // WebSocket 구독 설정 - room3
           subscribeToChannel(
             `/sub/chat/message/${createdRoomId}`,
             (message: ChatMessageDto) => {
-              setMessages((prevMessages) => [...prevMessages, message]);
+              setMessages((prevMessages) => [
+                ...prevMessages,
+                { ...message, time: formatTime(message.time) },
+              ]);
             }
           );
 
-          // 해당 채팅방을 조회한다. - room2
           return axios.get(`${baseUrl}/api/v1/chat/room/message/list`, {
             params: {
               roomId: createdRoomId,
@@ -113,12 +116,14 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         userId: currentUserId,
         nickname: currentNickname,
         message: newMessage,
-        time: formatTime(new Date().toISOString()),
+        time: new Date().toISOString(), // ISO 문자열로 시간 저장
         status: "UNREAD",
       };
-      // 메시지 전송 - room3
       sendMessage(`/pub/chat/message/${roomId}`, message);
-      setMessages([...messages, message]);
+      setMessages([
+        ...messages,
+        { ...message, time: formatTime(message.time) },
+      ]);
       setNewMessage("");
     }
   };
