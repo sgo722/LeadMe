@@ -43,8 +43,8 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
         QUser user = QUser.user;
 
         return qf.selectFrom(chatRoom)
-                .leftJoin(chatRoom.user, user)
-                .leftJoin(chatRoom.partner, user)
+                .join(chatRoom.user, user).fetchJoin()
+                .join(chatRoom.partner, user).fetchJoin()
                 .where(chatRoom.user.id.eq(userId), chatRoom.id.eq(roomId))
                 .fetchOne();
     }
