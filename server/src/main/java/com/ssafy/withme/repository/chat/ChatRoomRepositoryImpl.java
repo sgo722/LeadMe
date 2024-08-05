@@ -39,8 +39,12 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
     @Override
     public ChatRoom findByUserIdAndRoomId(Long userId, Long roomId) {
 
+        QChatRoom chatRoom = QChatRoom.chatRoom;
+        QUser user = QUser.user;
+
         return qf.selectFrom(chatRoom)
+                .leftJoin(chatRoom.user, user) // fetch join을 사용하여 연관된 User를 함께 로드
                 .where(chatRoom.user.id.eq(userId), chatRoom.id.eq(roomId))
-                .fetch().get(0);
+                .fetchOne(); // fetch().get(0) 대신 fetchOne()을 사용
     }
 }
