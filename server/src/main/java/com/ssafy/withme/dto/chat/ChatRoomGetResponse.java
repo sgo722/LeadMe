@@ -19,6 +19,8 @@ public class ChatRoomGetResponse {
 
     private String partnerNickname;
 
+    private String partnerImageUrl;
+
     private ChatMessageDto lastChatMessageDto;
 
     public void updateChatMessageDto(ChatMessageDto chatMessageDto) {
@@ -33,6 +35,7 @@ public class ChatRoomGetResponse {
                 .userId(chatRoom.getUser().getId())
                 .partnerNickname(chatRoom.getPartner().getNickname())
                 .partnerId(chatRoom.getPartner().getId())
+                .partnerImageUrl(chatRoom.getPartner().getProfileImg())
                 .build();
     }
 }
