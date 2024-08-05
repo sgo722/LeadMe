@@ -12,6 +12,6 @@ import org.springframework.stereotype.Repository;
 public interface CompetitionRepository extends JpaRepository<Competition, Integer> {
     Page<Competition> findByStatus(CompetitionStatus status, Pageable pageable);
 
-    Page<Competition> findByStausAndRoomNameContains(CompetitionStatus status, String roomName, Pageable pageable);
+    Page<Competition> findByStatusAndRoomNameContains(CompetitionStatus status, String roomName, Pageable pageable);
 
 }
