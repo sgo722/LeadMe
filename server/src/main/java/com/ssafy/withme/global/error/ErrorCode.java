@@ -33,6 +33,7 @@ public enum ErrorCode {
 
     // 채팅
     NOT_FOUND_CHATROOM(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당하는 채팅방을 찾을 수 없습니다."),
+    FAILED_TO_CONVERT_TYPE(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.value(), "DTO -> String 변환 실패"),
     ;
 
     ErrorCode(HttpStatus httpStatus, Integer statusCode, String message) {

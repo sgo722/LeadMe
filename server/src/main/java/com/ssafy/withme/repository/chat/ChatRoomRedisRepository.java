@@ -1,9 +1,12 @@
 package com.ssafy.withme.repository.chat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.withme.dto.chat.ChatMessageDto;
 import com.ssafy.withme.dto.chat.ChatRoomGetResponse;
+import com.ssafy.withme.global.error.ErrorCode;
+import com.ssafy.withme.global.exception.BusinessException;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +30,10 @@ public class ChatRoomRedisRepository {
     private final ObjectMapper objectMapper;
 
     @Resource(name = "redisTemplate")
-    private HashOperations<String, String, ChatRoomGetResponse> opsHashChatRoom;
+    private HashOperations<String, String, String> opsHashChatRoom;
 
     @Resource(name = "redisTemplate")
-    private HashOperations<String, String, ChatMessageDto> opsHashLastChatMessage;
+    private HashOperations<String, String, String> opsHashLastChatMessage;
 
     private String getChatRoomKey(Long userId) {
         return userId + CHAT_ROOM_KEY;
@@ -53,34 +56,82 @@ public class ChatRoomRedisRepository {
     }
 
     public void setChatRoom(Long userId, Long roomId, ChatRoomGetResponse response) {
-        opsHashChatRoom.put(getChatRoomKey(userId), String.valueOf(roomId), response);
+
+        String toJson = null;
+
+        try {
+            toJson = objectMapper.writeValueAsString(response);
+        } catch (JsonProcessingException e) {
+            throw new BusinessException(ErrorCode.FAILED_TO_CONVERT_TYPE);
+        }
+
+        opsHashChatRoom.put(getChatRoomKey(userId), String.valueOf(roomId), toJson);
     }
 
     public boolean existChatRoom(Long userId, Long roomId) {
-        return opsHashChatRoom.hasKey(getChatRoomKey(userId), roomId);
+        return opsHashChatRoom.hasKey(getChatRoomKey(userId), String.valueOf(roomId));
     }
 
     public void deleteChatRoom(Long userId, Long roomId) {
-        opsHashChatRoom.delete(getChatRoomKey(userId), roomId);
+        opsHashChatRoom.delete(getChatRoomKey(userId), String.valueOf(roomId));
     }
 
     public ChatRoomGetResponse getChatRoom(Long userId, Long roomId) {
-        return objectMapper.convertValue(opsHashChatRoom.get(getChatRoomKey(userId), roomId), ChatRoomGetResponse.class);
+
+        String json = opsHashChatRoom.get(getChatRoomKey(userId), String.valueOf(roomId));
+
+        if (json == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(json, ChatRoomGetResponse.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public List<ChatRoomGetResponse> getChatRoomList(Long userId) {
-        return objectMapper.convertValue(opsHashChatRoom.values(getChatRoomKey(userId)), new TypeReference<>() {});
+
+        List<String> jsonList = opsHashChatRoom.values(getChatRoomKey(userId));
+
+        try {
+            return objectMapper.readValue(
+                    objectMapper.writeValueAsString(jsonList),
+                    new TypeReference<List<ChatRoomGetResponse>>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
     public void setLastChatMessage(Long roomId, ChatMessageDto chatMessageDto) {
-        log.info("Set last chat message: {}", chatMessageDto);
+
+        String toJson = null;
+        try {
+            toJson = objectMapper.writeValueAsString(chatMessageDto);
+        } catch (JsonProcessingException e) {
+            throw new BusinessException(ErrorCode.FAILED_TO_CONVERT_TYPE);
+        }
+
+        log.info("Set last chat message: {}", toJson);
         log.info("roomId: {}", roomId);
-        opsHashLastChatMessage.put(CHAT_ROOM, String.valueOf(roomId), chatMessageDto);
+        opsHashLastChatMessage.put(CHAT_ROOM, String.valueOf(roomId), toJson);
     }
 
     public ChatMessageDto getLastMessage(Long roomId) {
-        return objectMapper.convertValue(opsHashLastChatMessage.get(CHAT_ROOM, roomId), ChatMessageDto.class);
+
+        String json = opsHashLastChatMessage.get(CHAT_ROOM, String.valueOf(roomId));
+
+        if (json == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(json, ChatMessageDto.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
