@@ -63,7 +63,7 @@ public class ChatRoomController {
 
     @GetMapping("/message/list")
     public SuccessResponse<?> roomFindInfo(
-            @RequestParam(name = "roomId") String roomId,
+            @RequestParam(name = "roomId") Long roomId,
             @RequestParam(name = "page") Integer pageNumber
     ) {
         return SuccessResponse.of(chatMongoService.findAll(roomId, pageNumber));

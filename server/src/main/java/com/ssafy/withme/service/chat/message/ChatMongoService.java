@@ -46,13 +46,13 @@ public class ChatMongoService {
 
     // 채팅 불러오기
     @Transactional(readOnly = true)
-    public List<ChatMessageDto> findAll(String roomId, Integer pageNumber) {
+    public List<ChatMessageDto> findAll(Long roomId, Integer pageNumber) {
         return findByRoomIdWithPaging(roomId, pageNumber, 20)
                 .stream().map(ChatMessageDto::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    private Page<ChatMessage> findByRoomIdWithPaging(String roomId, int page, int size) {
+    private Page<ChatMessage> findByRoomIdWithPaging(Long roomId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "time"));
 
         Query query = new Query()
