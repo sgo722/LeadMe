@@ -74,7 +74,9 @@ async def saveVideoData(video: Video):
     return {"youtubeId": video.youtubeId, "keypoints": keypoints}
 
 @app.post("/upload/userFile")
-async def saveVideDataByUserFile(videoFile: UploadFile = File(...)):
+async def saveVideDataByUserFile(
+    videoFile: UploadFile = File(...),
+    youtubeId: str = Form(...)):
     start_time = time.time()
     unique_id = str(uuid.uuid4())
 
@@ -83,6 +85,7 @@ async def saveVideDataByUserFile(videoFile: UploadFile = File(...)):
     original_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_{videoFile.filename}")
     flipped_temp_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_flipped_temp.avi")
     final_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}.mp4")
+    youtube_video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
     youtube_audio_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE_AUDIO, f"{unique_id}.mp3")
 
 
