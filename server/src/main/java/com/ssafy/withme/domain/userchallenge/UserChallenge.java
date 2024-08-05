@@ -1,5 +1,6 @@
 package com.ssafy.withme.domain.userchallenge;
 
+import com.ssafy.withme.domain.BaseEntity;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.comment.Comment;
 import com.ssafy.withme.domain.user.User;
@@ -16,7 +17,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class UserChallenge {
+public class UserChallenge extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

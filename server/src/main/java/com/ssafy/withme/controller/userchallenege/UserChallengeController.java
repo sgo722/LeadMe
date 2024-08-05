@@ -41,17 +41,15 @@ public class UserChallengeController {
     }
 
     /**
-     * 사용자가 찍은 영상들을 조회한다.
+     * leadMe에 업로드한 사용자들의 영상을 페이징 조회한다.
      * @param pageable
-     * @param user
      * @return
      */
-//    @GetMapping("/api/v1/userChallenge/reports")
-//    public SuccessResponse<List<UserChallengeReportViewResponse>> findReports(
-//            @PageableDefault(size = 10) Pageable pageable,
-//            @CurrentUser User user){
-//        return SuccessResponse.of(userChallengeService.findReportsByUserId(user.getId()));
-//    }
+    @GetMapping("/api/v1/userChallenge")
+    public SuccessResponse<List<UserChallengeReportViewResponse>> findUserChallengeByPageable(
+            @PageableDefault(size = 3) Pageable pageable) {
+        return SuccessResponse.of(userChallengeService.findUserChallengeByPageable(pageable));
+    }
 
     /**
      ** 유저의 스켈레톤 데이터를 받아와서 알고리즘으로 분석률을 반환한다.

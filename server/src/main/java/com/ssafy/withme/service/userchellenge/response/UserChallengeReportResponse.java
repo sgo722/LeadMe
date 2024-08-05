@@ -1,6 +1,7 @@
 package com.ssafy.withme.service.userchellenge.response;
 
 import com.ssafy.withme.domain.report.Report;
+import com.ssafy.withme.domain.userchallenge.UserChallenge;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -40,4 +41,5 @@ public class UserChallengeReportResponse {
                 .videoFile(videoFile)
                 .build();
     }
+
 }
