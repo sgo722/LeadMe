@@ -83,6 +83,8 @@ async def saveVideDataByUserFile(videoFile: UploadFile = File(...)):
     original_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_{videoFile.filename}")
     flipped_temp_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_flipped_temp.avi")
     final_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}.mp4")
+    youtube_audio_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE_AUDIO, f"{unique_id}.mp3")
+
 
     # 파일을 TEMP_DIRECTORY에 원래 이름으로 저장
     download_start = time.time()
@@ -115,6 +117,8 @@ async def saveVideDataByUserFile(videoFile: UploadFile = File(...)):
         clip = VideoFileClip(flipped_temp_video_path)
         clip.write_videofile(final_video_path, codec="libx264")
         convert_end = time.time()
+
+        extract_audio_from_video(youtube_video_path, youtube_audio_path)
     except Exception as e:
         return {"error": str(e)}
     
@@ -129,3 +133,12 @@ async def saveVideDataByUserFile(videoFile: UploadFile = File(...)):
     logger.info(f"userFile API - UUID: {unique_id}, Total Time: {total_time:.4f} seconds")
 
     return {"uuid": unique_id, "keypoints": keypoints}
+
+
+def extract_audio_from_video(video_file_path, audio_file_path):
+    try:
+        video = VideoFileClip(video_file_path)
+        video.audio.write_audiofile(audio_file_path)
+    except Exception as e:
+        print(f"Audio extraction error: {str(e)}")
+        raise
