@@ -10,11 +10,13 @@ import com.ssafy.withme.service.chat.chatroom.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 @Slf4j
 public class ChatService {
@@ -26,6 +28,7 @@ public class ChatService {
     /**
      * 채팅방에 메시지 발송
      */
+    @Transactional
     public void sendChatMessage(ChatMessageDto chatMessage, Long roomId) {
 
         log.info("############################");
