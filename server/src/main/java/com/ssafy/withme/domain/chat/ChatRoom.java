@@ -27,7 +27,7 @@ public class ChatRoom {
     @JoinColumn(name = "partner_id", foreignKey = @ForeignKey(name = "fk_chatroom_partner"))
     private User partner;
 
-    private String roomId; // 방 이름
+    private String roomName; // 방 이름
 
     public static ChatRoom create(User user, User partner) {
         String roomName = user.getId() + "-" + partner.getId();
@@ -35,7 +35,7 @@ public class ChatRoom {
         return ChatRoom.builder()
                 .user(user)
                 .partner(partner)
-                .roomId(roomName)
+                .roomName(roomName)
                 .build();
     }
 }
