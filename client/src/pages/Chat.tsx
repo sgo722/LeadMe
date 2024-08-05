@@ -12,7 +12,9 @@ import { baseUrl } from "axiosInstance/constants";
 
 interface ChatRoomGetResponse {
   roomId: number;
+  userId: number;
   userNickname: string;
+  partnerId: number;
   partnerNickname: string;
   partnerImageUrl: string;
   lastChatMessage: ChatMessageDto;
