@@ -7,15 +7,15 @@ WORKDIR /app
 # 시스템 의존성 설치
 RUN apt-get update && apt-get install -y \
     build-essential \
-    # OpenGL 라이브러리 추가
     libgl1-mesa-glx \
-    libglib2.0-0 \  
+    libglib2.0-0 \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:jonathonf/ffmpeg-4 && \
-    apt-get update && \
-    apt-get install -y ffmpeg
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y software-properties-common \
+    && add-apt-repository ppa:jonathonf/ffmpeg-4 \
+    && apt-get update \
+    && apt-get install -y ffmpeg
 
 # Python 의존성 파일 복사 및 설치
 COPY requirements.txt .
