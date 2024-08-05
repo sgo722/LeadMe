@@ -5,7 +5,7 @@ import styled from "styled-components";
 import img1 from "assets/image/img1.png";
 import img2 from "assets/image/img2.png";
 import ProfileModal from "components/ProfileModal";
-import FollowModal from "components/FollowModal"; // FollowModal import
+import FollowModal from "components/FollowModal";
 
 // 유저 프로필
 export interface UserProfile {
@@ -138,7 +138,9 @@ const Mypage: React.FC = () => {
           </FeedContainer>
         </MainSection>
       </Container>
-      {isProfileModalOpen && <ProfileModal onClose={handleCloseProfileModal} />}
+      {isProfileModalOpen && (
+        <ProfileModal onClose={handleCloseProfileModal} user={user} />
+      )}
       {isFollowModalOpen && followModalType && (
         <FollowModal onClose={handleCloseFollowModal} type={followModalType} />
       )}
