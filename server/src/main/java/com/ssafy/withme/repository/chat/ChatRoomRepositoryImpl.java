@@ -43,8 +43,8 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
         QUser user = QUser.user;
 
         return qf.selectFrom(chatRoom)
-                .leftJoin(chatRoom.user, user) // fetch join을 사용하여 연관된 User를 함께 로드
+                .leftJoin(chatRoom.user, user)
                 .where(chatRoom.user.id.eq(userId), chatRoom.id.eq(roomId))
-                .fetchOne(); // fetch().get(0) 대신 fetchOne()을 사용
+                .fetchOne();
     }
 }
