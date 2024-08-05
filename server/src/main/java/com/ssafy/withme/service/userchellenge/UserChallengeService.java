@@ -12,6 +12,7 @@ import com.ssafy.withme.domain.landmark.Landmark;
 import com.ssafy.withme.domain.report.Report;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.userchallenge.UserChallenge;
+import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.global.exception.FileNotFoundException;
 import com.ssafy.withme.global.response.Frame;
@@ -50,8 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
-import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_USER_CHALLENGE_FILE;
+import static com.ssafy.withme.global.error.ErrorCode.*;
 
 @RequiredArgsConstructor
 @Service
@@ -264,7 +264,13 @@ public class UserChallengeService {
         Challenge challenge = challengeRepository.findById(report.getChallengeId()).get();
         Long challengeId = challenge.getId();
         String youtubeId = challenge.getYoutubeId();
-        return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId);
+        String videoPath = TEMP_DIRECTORY + "/" + uuid + ".mp4";
+        try{
+            byte[] videoFile = Files.readAllBytes(Paths.get(videoPath));
+            return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, videoFile);
+        }catch (IOException e){
+            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE);
+        }
     }
 
 //    /**

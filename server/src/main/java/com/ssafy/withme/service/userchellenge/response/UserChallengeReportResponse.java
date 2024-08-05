@@ -17,23 +17,27 @@ public class UserChallengeReportResponse {
 
     private double[] scoreHistory;
 
+    private byte[] videoFile;
+
 
     @Builder
-    private UserChallengeReportResponse(String uuid, Long challengeId, String youtubeId, Double totalScore, double[] scoreHistory) {
+    private UserChallengeReportResponse(String uuid, Long challengeId, String youtubeId, Double totalScore, double[] scoreHistory, byte[] videoFile) {
         this.uuid = uuid;
         this.challengeId = challengeId;
         this.youtubeId = youtubeId;
         this.totalScore = totalScore;
         this.scoreHistory = scoreHistory;
+        this.videoFile = videoFile;
     }
 
-    public static UserChallengeReportResponse ofResponse(Report report, Long challengeId, String youtubeId){
+    public static UserChallengeReportResponse ofResponse(Report report, Long challengeId, String youtubeId, byte[] videoFile){
         return UserChallengeReportResponse.builder()
                 .uuid(report.getUuid())
                 .challengeId(challengeId)
                 .youtubeId(youtubeId)
                 .totalScore(report.getTotalScore())
                 .scoreHistory(report.getScoreHistory())
+                .videoFile(videoFile)
                 .build();
     }
 }
