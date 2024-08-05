@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
 import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
-import { baseUrl } from "axiosInstance/constants";
+import { sockUrl } from "axiosInstance/constants";
 
 const useWebSocket = () => {
   const clientRef = useRef<Client | null>(null);
@@ -12,7 +12,7 @@ const useWebSocket = () => {
     if (!accessToken) return;
 
     const client = new Client({
-      brokerURL: `${baseUrl}/ws-stomp`,
+      brokerURL: `${sockUrl}/ws-stomp`,
       connectHeaders: {
         Authorization: `Bearer ${accessToken}`,
       },
