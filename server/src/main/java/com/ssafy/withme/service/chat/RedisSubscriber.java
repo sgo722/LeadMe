@@ -29,7 +29,7 @@ public class RedisSubscriber {
 
         try {
             ChatMessageDto chatMessage =
-                    objectMapper.readValue(publishMessage, ChatMessageDto.class);
+                    objectMapper.readValue(publishMessage, MessageSubDto.class).getChatMessageDto();
 
             log.info("Redis Subscriber chatMSG : {}", chatMessage.getMessage());
 
