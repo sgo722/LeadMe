@@ -5,6 +5,7 @@ import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.SessionNotFoundException;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.competition.CompetitionService;
+import com.ssafy.withme.service.competition.response.CompetitionResponse;
 import io.openvidu.java.client.*;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -74,7 +77,25 @@ public class CompetitionController {
                                               @RequestParam(required = false, defaultValue = "4", value = "size") int size,
                                               @RequestParam(required = false) String searchKeyword) {
 
-        return SuccessResponse.of(competitionService.getCompetitions(pageNo, criteria, size, searchKeyword));
+        Map<String, Object> response = new HashMap<>();
+
+        List<CompetitionResponse> competitions = competitionService.getCompetitions(pageNo, criteria, size, searchKeyword);
+        int totalElements = competitionService.getTotlaCompetitions();
+        int totalPages = (int) Math.ceil((double) totalElements / (double) size);
+        boolean isFirst = false;
+        boolean isLast = false;
+
+        if(pageNo == 0) isFirst = true;
+        if(pageNo == totalPages) isLast = true;
+
+        response.put("competitions", competitions);
+        response.put("totalElements", totalElements);
+        response.put("totalPages", totalPages);
+        response.put("isFirst", isFirst);
+        response.put("isLast", isLast);
+        response.put("pageNo", pageNo);
+
+        return SuccessResponse.of(response);
     }
 
 

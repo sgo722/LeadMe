@@ -65,4 +65,8 @@ public class CompetitionService {
         }
         return page.getContent();
     }
+
+    public int getTotlaCompetitions() {
+        return competitionRepository.countByStatus(CompetitionStatus.OPEN);
+    }
 }
