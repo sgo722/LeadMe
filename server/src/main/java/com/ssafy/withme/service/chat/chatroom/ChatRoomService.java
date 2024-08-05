@@ -34,6 +34,7 @@ public class ChatRoomService {
 
     public ChatRoomGetResponse getChatRoomInfo(Long userId, Long roomId) {
 //        return mainFeignClient.getChatRoomInfo(accessToken, roomId);
+        log.info("userId = {}, roomId = {}", userId, roomId);
         ChatRoom findRoom = chatRoomRepository.findByUserIdAndRoomId(userId, roomId);
 
         return ChatRoomGetResponse.from(findRoom);
