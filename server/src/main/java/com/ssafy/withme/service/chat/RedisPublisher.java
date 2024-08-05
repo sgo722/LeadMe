@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class RedisPublisher {
-    private final ChannelTopic channelTopic;
     private final RedisTemplate<String, Object> redisTemplate;
 
     private ChannelTopic getChannelTopic(Long roomId) {
