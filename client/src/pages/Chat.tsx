@@ -11,7 +11,7 @@ import useWebSocket from "utils/useWebSocket";
 import { baseUrl } from "axiosInstance/constants";
 
 interface ChatRoomGetResponse {
-  chatRoomNumber: number;
+  roomId: number;
   userNickname: string;
   partnerNickname: string;
   lastChatMessage: ChatMessageDto;
@@ -19,7 +19,7 @@ interface ChatRoomGetResponse {
 
 interface ChatMessageDto {
   type: string;
-  roomId: string;
+  roomId: number;
   userId: number;
   nickname: string;
   message: string;
@@ -36,7 +36,6 @@ interface ResponseData<T> {
 }
 
 export const Chat: React.FC = () => {
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [selectedNickname, setSelectedNickname] = useState<string | null>(null);
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
     null
@@ -81,7 +80,7 @@ export const Chat: React.FC = () => {
             // 각 채팅에 대해 소켓 구독 요청 - 3
             chatRooms.forEach((chatRoom) => {
               subscribeToChannel(
-                `/sub/chat/message/${chatRoom.chatRoomNumber}`,
+                `/sub/chat/message/${chatRoom.roomId}`,
                 (message) => {
                   console.log("New message received: ", message);
                 }
@@ -97,14 +96,12 @@ export const Chat: React.FC = () => {
     }
   }, [currentUserId, connectWebSocket, subscribeToChannel]);
 
-  const openModal = (chatId: string, nickname: string, partnerId: number) => {
-    setSelectedChatId(chatId);
+  const openModal = (nickname: string, partnerId: number) => {
     setSelectedNickname(nickname);
     setSelectedPartnerId(partnerId);
   };
 
   const closeModal = () => {
-    setSelectedChatId(null);
     setSelectedNickname(null);
     setSelectedPartnerId(null);
   };
@@ -117,9 +114,8 @@ export const Chat: React.FC = () => {
     setIsSendModalOpen(false);
   };
 
-  const openChatModal = (userId: number, nickname: string) => {
-    const chatId = userId.toString();
-    openModal(chatId, nickname, userId);
+  const openChatModal = (nickname: string, partnerId: number) => {
+    openModal(nickname, partnerId);
   };
 
   return (
@@ -134,14 +130,8 @@ export const Chat: React.FC = () => {
             ) : (
               chatList.map((chat) => (
                 <ChatListItem
-                  key={chat.chatRoomNumber}
-                  onClick={() =>
-                    openModal(
-                      String(chat.chatRoomNumber),
-                      chat.partnerNickname,
-                      chat.chatRoomNumber
-                    )
-                  }
+                  key={chat.roomId}
+                  onClick={() => openModal(chat.partnerNickname, chat.roomId)}
                 >
                   <UserProfileImage
                     src="https://via.placeholder.com/40"
@@ -160,7 +150,7 @@ export const Chat: React.FC = () => {
         </ChatListContainer>
         <FindContainer>
           <div>대화 상대를 찾고 메세지를 보내보세요</div>
-          {!selectedChatId && (
+          {!selectedNickname && (
             <MessageButton onClick={openSendModal}>
               <StyledIoIosSend />
               send
@@ -168,9 +158,8 @@ export const Chat: React.FC = () => {
           )}
         </FindContainer>
         <ChatModal
-          isOpen={selectedChatId !== null}
+          isOpen={selectedNickname !== null}
           onClose={closeModal}
-          chatId={selectedChatId}
           currentUserId={currentUserId}
           currentNickname={currentNickname}
           partnerNickname={selectedNickname}
