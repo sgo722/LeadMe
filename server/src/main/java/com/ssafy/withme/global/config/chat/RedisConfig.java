@@ -118,7 +118,7 @@ public class RedisConfig {
 
         // 일반적인 key : value의 경우 직렬화
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+//        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         template.setValueSerializer(new GenericToStringSerializer<>(Object.class));
 
         // Has를 사용할 경우 직렬화
