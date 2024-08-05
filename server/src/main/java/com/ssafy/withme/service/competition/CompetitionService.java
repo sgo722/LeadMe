@@ -33,11 +33,11 @@ public class CompetitionService {
      */
     public void create(CompetitionCreateRequest request, String sessionId, String userId) {
 
-        User user = userRepository.findByEmail(userId)
-                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_EXISTS));
+//        User user = userRepository.findByEmail(userId)
+//                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_EXISTS));
 
         Competition competition = Competition.builder()
-                                .user(user)
+                                //.user(user)
                                 .roomName(request.getRoomName())
                                 .sessionId(sessionId)
                                 .isPublic(request.isPublic())
