@@ -33,7 +33,7 @@ public class ChatMessage {
                 .nickname(dto.getNickname())
                 .userId(dto.getUserId())
                 .message(dto.getMessage())
-                .time(LocalDateTime.now().toString())
+                .time(dto.getTime())
                 .status(dto.getStatus())
                 .build();
     }
