@@ -57,6 +57,9 @@ const useWebSocket = () => {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+        console.log(`Message sent to ${destination}:`, body);
+      } else {
+        console.error("WebSocket is not connected");
       }
     },
     [accessToken]
@@ -65,15 +68,21 @@ const useWebSocket = () => {
   const connectWebSocket = useCallback(() => {
     if (clientRef.current && !clientRef.current.connected) {
       clientRef.current.activate();
+      console.log("WebSocket connection activated");
     }
   }, []);
 
   const subscribeToChannel = useCallback(
     (channel: string, callback: (message: any) => void) => {
       if (clientRef.current && clientRef.current.connected) {
-        clientRef.current.subscribe(channel, (message) => {
+        const subscription = clientRef.current.subscribe(channel, (message) => {
+          console.log(`Message received from ${channel}:`, message.body);
           callback(JSON.parse(message.body));
         });
+        console.log(`Subscribed to channel ${channel}`);
+        return subscription;
+      } else {
+        console.error("WebSocket is not connected");
       }
     },
     []
