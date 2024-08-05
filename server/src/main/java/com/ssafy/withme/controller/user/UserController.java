@@ -86,4 +86,12 @@ public class UserController {
 
         return SuccessResponse.of(expiration);
     }
+
+    @GetMapping("/user/check/{nickname}")
+    public boolean checkNickname(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable("nickname") String nickname) {
+
+        return userService.findByNickname(nickname);
+    }
 }

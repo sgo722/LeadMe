@@ -51,6 +51,13 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Unexpected user"));
     }
 
+    public boolean findByNickname(String nickname) {
+        log.info("find by nickname: {}", nickname);
+
+        User user = userRepository.findByNickname(nickname);
+        return user == null;
+    }
+
     // find user list by name field
     public List<User> findByNameContaining(String name) {
 
