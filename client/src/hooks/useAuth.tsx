@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRecoilState } from "recoil";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -34,6 +35,7 @@ const useAuth = () => {
   );
   const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
 
   // 로그아웃
   const logout = () => {
@@ -54,6 +56,7 @@ const useAuth = () => {
       clearInterval(intervalId);
       setIntervalId(null);
     }
+    navigate("/home");
   };
 
   // refreshToken 유효성 체크
