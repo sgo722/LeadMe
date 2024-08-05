@@ -17,7 +17,7 @@ import Report from "pages/Report";
 import Challenge from "pages/Challenge";
 import Mypage from "pages/Mypage";
 import Feed from "pages/Feed";
-import Battle from "pages/Battle";
+import { Battle } from "pages/Battle";
 
 const App: React.FC = () => {
   return (

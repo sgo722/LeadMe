@@ -85,6 +85,8 @@ dependencies {
 	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
 	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
+	// open vidu
+	implementation 'io.openvidu:openvidu-java-client:2.30.0'
 }
 
 tasks.named('test') {
