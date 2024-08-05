@@ -20,7 +20,12 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
     @Override
     public List<ChatRoom> findByUserId(Long userId) {
 
+        QUser user1 = QUser.user;
+        QUser user2 = new QUser("partnerUser");
+
         return qf.selectFrom(chatRoom)
+                .join(chatRoom.user, user1).fetchJoin()
+                .join(chatRoom.partner, user2).fetchJoin()
                 .where(chatRoom.user.id.eq(userId).or(chatRoom.partner.id.eq(userId)))
                 .fetch();
     }
@@ -28,7 +33,12 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
     @Override
     public Optional<ChatRoom> findByUserIdAndPartnerId(Long userId, Long partnerId) {
 
+        QUser user1 = QUser.user;
+        QUser user2 = new QUser("partnerUser");
+
         return Optional.ofNullable(qf.selectFrom(chatRoom)
+                .join(chatRoom.user, user1).fetchJoin()
+                .join(chatRoom.partner, user2).fetchJoin()
                 .where(
                         (chatRoom.user.id.eq(userId).and(chatRoom.partner.id.eq(partnerId)))
                                 .or(chatRoom.user.id.eq(partnerId).and(chatRoom.partner.id.eq(userId)))
