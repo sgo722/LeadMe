@@ -48,6 +48,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.ssafy.withme.global.error.ErrorCode.*;
@@ -65,6 +66,9 @@ public class UserChallengeService {
 
     @Value("${python-server.url}")
     String FAST_API_URL;
+
+    @Value("${python-server.youtube-audio-directory}")
+    String AUDIO_DIRECTORY;
 
     private final UserChallengeRepository userChallengeRepository;
 
@@ -264,11 +268,16 @@ public class UserChallengeService {
         Long challengeId = challenge.getId();
         String youtubeId = challenge.getYoutubeId();
         String videoPath = TEMP_DIRECTORY + "/" + uuid + ".mp4";
+        String audioPath = AUDIO_DIRECTORY + "/" + uuid + ".mp3";
+        String outputPath = TEMP_DIRECTORY + "/" + uuid + "_merged.mp4";
+
         try{
-            byte[] videoFile = Files.readAllBytes(Paths.get(videoPath));
-            return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, videoFile);
+            byte[] mergedVideoFile = mergeVideoAndAudio(videoPath, audioPath, outputPath);
+            return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, mergedVideoFile);
         }catch (IOException e){
             throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -282,8 +291,7 @@ public class UserChallengeService {
                 .map(userChallenge -> {
                     try {
                         byte[] videoBytes = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
-                        return
-                                UserChallengeReportViewResponse.ofResponse(userChallenge, videoBytes);
+                        return UserChallengeReportViewResponse.ofResponse(userChallenge, videoBytes);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
@@ -292,5 +300,22 @@ public class UserChallengeService {
                 })
                 .filter(Objects::nonNull) // null 값을 필터링하여 스트림에서 제외
                 .collect(Collectors.toList());
+    }
+
+    private byte[] mergeVideoAndAudio(String videoPath, String audioPath, String outputPath) throws IOException, InterruptedException {
+        // ffmpeg 명령어를 사용하여 비디오와 오디오 결합
+        String command = String.format("ffmpeg -i %s -i %s -c:v copy -c:a aac %s", videoPath, audioPath, outputPath);
+        Process process = Runtime.getRuntime().exec(command);
+
+        // ffmpeg 프로세스가 완료될 때까지 기다림
+        process.waitFor(30, TimeUnit.SECONDS);
+
+        // 결과 파일을 바이트 배열로 읽음
+        byte[] mergedFile = Files.readAllBytes(Paths.get(outputPath));
+
+        // 임시 파일 삭제 (옵션)
+        Files.deleteIfExists(Paths.get(outputPath));
+
+        return mergedFile;
     }
 }
