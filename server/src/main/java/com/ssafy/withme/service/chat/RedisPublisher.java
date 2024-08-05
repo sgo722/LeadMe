@@ -11,15 +11,10 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class RedisPublisher {
+    private final ChannelTopic channelTopic;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private ChannelTopic getChannelTopic(Long roomId) {
-        return new ChannelTopic("/sub/chat/message/" + roomId); // 방별로 고유한 토픽 생성
-    }
-
     public void publish(MessageSubDto message, Long roomId) {
-
-        ChannelTopic channelTopic = getChannelTopic(roomId); // 방의 토픽 가져오기
 
         log.info("RedisPublisher publishing to room {}: {}", roomId, message.getChatMessageDto().getMessage());
 

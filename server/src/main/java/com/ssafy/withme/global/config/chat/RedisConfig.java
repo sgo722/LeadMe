@@ -35,10 +35,10 @@ public class RedisConfig {
     private String redisPassword;
 
     // 단일 Topic 사용을 위한 Bean 설정
-//    @Bean
-//    public ChannelTopic channelTopic() {
-//        return new ChannelTopic("chatroom");
-//    }
+    @Bean
+    public ChannelTopic channelTopic() {
+        return new ChannelTopic("chatroom");
+    }
 
 //    @Bean
 //    public JedisConnectionFactory jedisConnectionFactory() {
