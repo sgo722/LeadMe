@@ -2,16 +2,19 @@ import styled from "styled-components";
 import React, { ChangeEvent, useState } from "react";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+
 interface SearchBarProps {
   width?: number;
   icon?: boolean;
   navigation?: boolean;
+  onSearch?: (searchTerm: string) => void;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   width,
   icon = false,
   navigation = false,
+  onSearch,
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const nav = useNavigate();
@@ -22,14 +25,24 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (navigation && searchTerm.trim()) {
-      nav(`/search?q=${encodeURIComponent(searchTerm)}`);
+    if (searchTerm.trim()) {
+      if (navigation) {
+        nav(`/search?q=${encodeURIComponent(searchTerm)}`);
+      } else if (onSearch) {
+        onSearch(searchTerm);
+        setSearchTerm("");
+      }
     }
   };
 
   return (
     <SearchForm $width={width} $icon={icon}>
-      <SearchField type="text" value={searchTerm} onChange={handleChange} />
+      <SearchField
+        type="text"
+        value={searchTerm}
+        onChange={handleChange}
+        placeholder="검색어를 입력하세요"
+      />
       <SearchButton type="submit" onClick={handleSearch}>
         {icon ? <IoSearchSharp /> : "search"}
       </SearchButton>
