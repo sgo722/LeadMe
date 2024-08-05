@@ -1,15 +1,69 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
+import { useRecoilValue } from "recoil";
+import { UserProfile, ResponseData } from "types";
+import { accessTokenState } from "stores/authAtom";
+import { baseUrl } from "axiosInstance/constants";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 interface ModalProps {
   onClose: () => void;
+  user: UserProfile; // 유저 데이터를 받는 props 추가
 }
 
-const Modal: React.FC<ModalProps> = ({ onClose }) => {
+const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
+  const [nickname, setNickname] = useState(user.nickname);
+  const [info, setInfo] = useState<{
+    message: string;
+    isAvailable: boolean | null;
+  }>({
+    message: "",
+    isAvailable: null,
+  });
+  const [profileComment, setProfileComment] = useState(
+    user.profileComment || ""
+  );
+  const accessToken = useRecoilValue(accessTokenState);
+
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
+  };
+
+  const handleSaveChanges = () => {
+    // 여기서 변경된 데이터를 저장하는 로직을 구현합니다.
+    // 예를 들어, API 호출 등을 통해 변경 사항을 저장할 수 있습니다.
+    onClose();
+  };
+
+  const mutation = useMutation<boolean, Error, string>({
+    mutationFn: async (value: string) => {
+      const response = await axios.get<ResponseData<{ response: boolean }>>(
+        `${baseUrl}/api/v1/user/check`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          params: { nickname: value },
+        }
+      );
+      return response.data.data.response;
+    },
+    onSuccess: (data) => {
+      if (data) {
+        setInfo({ message: "사용 가능한 아이디입니다.", isAvailable: true });
+      } else {
+        setInfo({ message: "사용 불가능한 아이디입니다.", isAvailable: false });
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching data:", error);
+    },
+  });
+
+  const handleCheckNickname = () => {
+    mutation.mutate(nickname);
   };
 
   return (
@@ -17,14 +71,39 @@ const Modal: React.FC<ModalProps> = ({ onClose }) => {
       <Container>
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>Profile</Title>
-        <ProfileImg></ProfileImg>
+        <ProfileImg src={user.profileImg} alt="프로필 이미지" />
         <Form>
           <Flex>
-            <input type="text" placeholder="rain-bow" />
-            <CheckButton>중복 확인</CheckButton>
+            <div>
+              {info.isAvailable !== null && (
+                <>
+                  {info.isAvailable ? (
+                    <SuccessMessage>
+                      <FaCheckCircle />
+                      {info.message}
+                    </SuccessMessage>
+                  ) : (
+                    <ErrorMessage>
+                      <FaTimesCircle />
+                      {info.message}
+                    </ErrorMessage>
+                  )}
+                </>
+              )}
+            </div>
+            <input
+              type="text"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+            />
+            <CheckButton onClick={handleCheckNickname}>중복 확인</CheckButton>
           </Flex>
-          <input type="text" placeholder="안녕하세요. 반갑습니다." />
-          <button>change</button>
+          <input
+            type="text"
+            value={profileComment}
+            onChange={(e) => setProfileComment(e.target.value)}
+          />
+          <button onClick={handleSaveChanges}>change</button>
         </Form>
       </Container>
     </Overlay>
@@ -82,7 +161,7 @@ const Title = styled.div`
   margin-bottom: 20px;
 `;
 
-const ProfileImg = styled.div`
+const ProfileImg = styled.img`
   width: 70px;
   height: 70px;
   border-radius: 50%;
@@ -142,6 +221,14 @@ const Flex = styled.div`
   flex-wrap: wrap;
   justify-content: space-between;
   width: 100%;
+  position: relative;
+
+  & > div:first-child {
+    position: absolute;
+    top: -16px;
+    width: 100%;
+    text-align: center;
+  }
 
   & > input {
     width: 248px;
@@ -180,6 +267,32 @@ const CheckButton = styled.div`
   font-family: "Noto Sans KR", sans-serif;
   font-weight: 400;
   cursor: pointer;
+`;
+
+const SuccessMessage = styled.div`
+  display: flex;
+  align-items: center;
+  color: #6faf6f;
+  font-size: 12px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-weight: 400;
+
+  svg {
+    margin-right: 5px;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  display: flex;
+  align-items: center;
+  color: #ff5454;
+  font-size: 12px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-weight: 400;
+
+  svg {
+    margin-right: 5px;
+  }
 `;
 
 export default Modal;
