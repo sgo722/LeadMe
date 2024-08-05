@@ -71,7 +71,7 @@ public class CompetitionController {
         return SuccessResponse.of(connection.getToken());
     }
 
-    @GetMapping("api/v1/competitons")
+    @GetMapping("api/v1/competitions")
     public SuccessResponse<?> getCompetitions(@RequestParam(required = false, defaultValue = "0", value = "page") int pageNo,
                                               @RequestParam(required = false, defaultValue = "createdDate", value = "criteria") String criteria,
                                               @RequestParam(required = false, defaultValue = "4", value = "size") int size,
