@@ -74,28 +74,26 @@ async def saveVideoData(video: Video):
     return {"youtubeId": video.youtubeId, "keypoints": keypoints}
 
 @app.post("/upload/userFile")
-async def saveVideoDataByUserFile(
-    videoFile: UploadFile = File(...),
-    youtubeId: str = Form(...)
-):
+async def saveVideDataByUserFile(videoFile: UploadFile = File(...)):
     start_time = time.time()
     unique_id = str(uuid.uuid4())
 
+    
     os.makedirs(TEMP_DIRECTORY, exist_ok=True)
     original_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_{videoFile.filename}")
     flipped_temp_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_flipped_temp.avi")
     final_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}.mp4")
-    youtube_video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
-    youtube_audio_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE_AUDIO, f"{unique_id}.mp3")
-    thumbnail_path = os.path.join(THUMBNAIL_DIRECTORY, f"{unique_id}.png")
-    
+
+    # 파일을 TEMP_DIRECTORY에 원래 이름으로 저장
     download_start = time.time()
     with open(original_video_path, "wb") as buffer:
         shutil.copyfileobj(videoFile.file, buffer)
     download_end = time.time()
 
+    # 비디오 파일을 수평으로 뒤집고 임시 파일로 저장
     try:
         flip_start = time.time()
+        # 원본 비디오를 읽어와서 뒤집기
         cap = cv2.VideoCapture(original_video_path)
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         out = cv2.VideoWriter(flipped_temp_video_path, fourcc, cap.get(cv2.CAP_PROP_FPS), 
@@ -113,82 +111,21 @@ async def saveVideoDataByUserFile(
         flip_end = time.time()
 
         convert_start = time.time()
+        # 뒤집힌 비디오 파일을 mp4로 변환
         clip = VideoFileClip(flipped_temp_video_path)
         clip.write_videofile(final_video_path, codec="libx264")
-
         convert_end = time.time()
-
-        # 썸네일 생성 및 저장
-        # generate_thumbnail(final_video_path, thumbnail_path)
-
-        extract_audio_from_video(youtube_video_path, youtube_audio_path)
-        # replace_audio_in_video(final_video_path, youtube_audio_path, final_video_path)
-        # combine_audio_video(youtube_video_path, final_video_path,final_video_path)
-
     except Exception as e:
         return {"error": str(e)}
     
+    # 원본 비디오 파일과 임시 파일 삭제
     os.remove(original_video_path)
     os.remove(flipped_temp_video_path)
-    
+
+    # 비디오 처리 실행 및 결과 대기
     keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video_user.remote(final_video_path)))
 
     total_time = time.time() - start_time
     logger.info(f"userFile API - UUID: {unique_id}, Total Time: {total_time:.4f} seconds")
 
     return {"uuid": unique_id, "keypoints": keypoints}
-
-def extract_audio_from_video(video_file_path, audio_file_path):
-    try:
-        video = VideoFileClip(video_file_path)
-        video.audio.write_audiofile(audio_file_path)
-    except Exception as e:
-        print(f"Audio extraction error: {str(e)}")
-        raise
-
-def replace_audio_in_video(video_file_path, new_audio_file_path, output_file_path, volume=1.0):
-    try:
-        video = VideoFileClip(video_file_path)
-        new_audio = AudioFileClip(new_audio_file_path)
-        new_audio = new_audio.volumex(volume)
-
-        if new_audio.duration > video.duration:
-            new_audio = new_audio.subclip(0, video.duration)
-
-        video = video.set_audio(new_audio)
-        video.write_videofile(output_file_path, codec='libx264', audio_codec='aac')
-    except Exception as e:
-        print(f"Audio replacement error: {str(e)}")
-        raise
-
-
-def combine_audio_video(audio_source_path, video_source_path, output_path):
-    """
-    오디오 소스 파일의 오디오와 비디오 소스 파일의 비디오를 결합하여 새로운 비디오 파일을 생성합니다.
-
-    :param audio_source_path: 오디오 소스 파일 경로 (MP4 파일)
-    :param video_source_path: 비디오 소스 파일 경로 (MP4 파일)
-    :param output_path: 출력 비디오 파일 경로
-    """
-    # 오디오 소스 파일에서 오디오를 추출
-    audio_clip = VideoFileClip(audio_source_path).audio
-
-    # 비디오 소스 파일을 로드
-    video_clip = VideoFileClip(video_source_path)
-
-    # 비디오 길이에 맞게 오디오를 자르거나 반복
-    audio_clip = audio_clip.set_duration(video_clip.duration)
-
-    # 새로운 오디오를 비디오에 설정
-    final_video = video_clip.set_audio(audio_clip)
-
-    # 최종 비디오 파일을 저장
-    final_video.write_videofile(output_path, codec='libx264', audio_codec='aac')
-
-def generate_thumbnail(video_path: str, thumbnail_path: str, time_frame: float = 1.0):
-    try:
-        clip = VideoFileClip(video_path)
-        clip.save_frame(thumbnail_path, t=time_frame)
-    except Exception as e:
-        print(f"Thumbnail generation error: {str(e)}")
-        raise
