@@ -17,6 +17,7 @@ import java.io.Serializable;
 public class ChatMessageDto implements Serializable {
 
     // 메시지 타입 : 입장, 채팅, 퇴장
+    @Enumerated(EnumType.STRING)
     private MessageType type; // 메시지 타입
     private Long roomId; // 방 번호
     private Long userId;
