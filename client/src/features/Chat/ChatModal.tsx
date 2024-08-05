@@ -1,12 +1,12 @@
 import styled from "styled-components";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import useWebSocket from "utils/useWebSocket"; // WebSocket 훅 임포트
+import useWebSocket from "utils/useWebSocket";
 import { baseUrl } from "axiosInstance/constants";
 
 interface ChatMessageDto {
   type: string;
-  roomId: string;
+  roomId: number;
   userId: number;
   nickname: string;
   message: string;
@@ -17,7 +17,6 @@ interface ChatMessageDto {
 interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
-  chatId: string | null;
   currentUserId: number;
   currentNickname: string;
   partnerNickname: string | null;
@@ -27,7 +26,6 @@ interface ChatModalProps {
 export const ChatModal: React.FC<ChatModalProps> = ({
   isOpen,
   onClose,
-  chatId,
   currentUserId,
   currentNickname,
   partnerNickname,
@@ -36,11 +34,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   const modalBodyRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<ChatMessageDto[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
+  const [roomId, setRoomId] = useState<number | null>(null);
 
   const { sendMessage } = useWebSocket();
 
   useEffect(() => {
-    if (isOpen && chatId && partnerId) {
+    if (isOpen && partnerId) {
       // 채팅방을 생성한다. - room1
       axios
         .post(
@@ -56,42 +55,34 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           }
         )
         .then((response) => {
-          console.log("Chat room created:", response.data);
-        })
-        .catch((error) => {
-          console.error("Failed to create chat room", error);
-        });
-    }
-  }, [isOpen, chatId, currentUserId, partnerId]);
+          const createdRoomId = response.data.data.roomId;
+          setRoomId(createdRoomId);
 
-  useEffect(() => {
-    if (isOpen && chatId) {
-      // 해당 채팅방을 조회한다. - room2
-      axios
-        .get(`${baseUrl}/api/v1/chat/room/message/list`, {
-          params: {
-            roomId: chatId,
-            page: 0,
-          },
+          // 해당 채팅방을 조회한다. - room2
+          return axios.get(`${baseUrl}/api/v1/chat/room/message/list`, {
+            params: {
+              roomId: createdRoomId,
+              page: 0,
+            },
+          });
         })
         .then((response) => {
-          console.log(response.data.data);
           setMessages(response.data.data);
           if (modalBodyRef.current) {
             modalBodyRef.current.scrollTop = modalBodyRef.current.scrollHeight;
           }
         })
         .catch((error) => {
-          console.error("Failed to fetch chat messages", error);
+          console.error("Failed to create chat room or fetch messages", error);
         });
     }
-  }, [isOpen, chatId]);
+  }, [isOpen, currentUserId, partnerId]);
 
   const handleSendMessage = () => {
-    if (chatId && newMessage.trim() !== "") {
+    if (roomId && newMessage.trim() !== "") {
       const message: ChatMessageDto = {
         type: "TALK",
-        roomId: chatId,
+        roomId: roomId,
         userId: currentUserId,
         nickname: currentNickname,
         message: newMessage,
@@ -99,13 +90,13 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         status: "UNREAD",
       };
       // 메시지 전송 - room3
-      sendMessage(`/pub/chat/message/${chatId}`, message);
+      sendMessage(`/pub/chat/message/${roomId}`, message);
       setMessages([...messages, message]);
       setNewMessage("");
     }
   };
 
-  if (!isOpen || !chatId) return null;
+  if (!isOpen || !partnerNickname) return null;
 
   return (
     <ModalOverlay>
