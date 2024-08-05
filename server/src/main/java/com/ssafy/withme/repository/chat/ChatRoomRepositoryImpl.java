@@ -40,11 +40,13 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
     public ChatRoom findByUserIdAndRoomId(Long userId, Long roomId) {
 
         QChatRoom chatRoom = QChatRoom.chatRoom;
-        QUser user = QUser.user;
+
+        QUser user1 = QUser.user;
+        QUser user2 = new QUser("partnerUser");
 
         return qf.selectFrom(chatRoom)
-                .join(chatRoom.user, user).fetchJoin()
-                .join(chatRoom.partner, user).fetchJoin()
+                .join(chatRoom.user, user1).fetchJoin()
+                .join(chatRoom.partner, user2).fetchJoin()
                 .where(chatRoom.user.id.eq(userId), chatRoom.id.eq(roomId))
                 .fetchOne();
     }
