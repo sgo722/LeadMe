@@ -216,8 +216,9 @@ interface SaveButtonProps {
 }
 
 const SaveButton = styled.button<SaveButtonProps>`
-  color: ${({ $isActive }) => ($isActive ? "#ffffff" : "#ee5050")};
-  background-color: ${({ $isActive }) => ($isActive ? "#ffffff" : "#ee5050")};
+  color: ${({ $isActive }) => ($isActive ? "#ee5050" : "#ee5050")};
+  background-color: ${({ $isActive }) =>
+    $isActive ? "#ffffff" : "rgba(255, 255, 255, 0.8)"};
   font-size: 21px;
   font-weight: 500;
   font-family: "Noto Sans", sans-serif;
