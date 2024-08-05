@@ -36,7 +36,7 @@ public class UserChallengeController {
      */
 
     @GetMapping("/api/v1/userChallenge/report/{uuid}")
-    public SuccessResponse<UserChallengeReportResponse> findReportByUuid(@PathVariable("uuid") String uuid) {
+    public SuccessResponse<UserChallengeReportResponse> findReportByUuid(@PathVariable("uuid") String uuid) throws IOException, InterruptedException {
         return SuccessResponse.of(userChallengeService.findReportByUuid(uuid));
     }
 

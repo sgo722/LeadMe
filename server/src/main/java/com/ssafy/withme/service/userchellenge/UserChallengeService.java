@@ -261,7 +261,7 @@ public class UserChallengeService {
      * @return
      */
 
-    public UserChallengeReportResponse findReportByUuid(String uuid) {
+    public UserChallengeReportResponse findReportByUuid(String uuid) throws IOException, InterruptedException {
         Report report = reportRepository.findByUuid(uuid);
 //        UserChallenge userChallenge = userChallengeRepository.findByUuid(uuid);
         Challenge challenge = challengeRepository.findById(report.getChallengeId()).get();
@@ -271,14 +271,10 @@ public class UserChallengeService {
         String audioPath = AUDIO_DIRECTORY + "/" + uuid + ".mp3";
         String outputPath = TEMP_DIRECTORY + "/" + uuid + "_merged.mp4";
 
-        try{
-            byte[] mergedVideoFile = mergeVideoAndAudio(videoPath, audioPath, outputPath);
-            return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, mergedVideoFile);
-        }catch (IOException e){
-            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        byte[] mergedVideoFile = mergeVideoAndAudio(videoPath, audioPath, outputPath);
+
+
+        return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, mergedVideoFile);
     }
 
 
@@ -314,7 +310,7 @@ public class UserChallengeService {
         byte[] mergedFile = Files.readAllBytes(Paths.get(outputPath));
 
         // 임시 파일 삭제 (옵션)
-        Files.deleteIfExists(Paths.get(outputPath));
+//        Files.deleteIfExists(Paths.get(outputPath));
 
         return mergedFile;
     }
