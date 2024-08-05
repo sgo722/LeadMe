@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -95,13 +96,21 @@ public class ChatRoomRedisRepository {
 
         List<String> jsonList = opsHashChatRoom.values(getChatRoomKey(userId));
 
-        try {
-            return objectMapper.readValue(
-                    objectMapper.writeValueAsString(jsonList),
-                    new TypeReference<List<ChatRoomGetResponse>>() {});
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+        for (String json : jsonList) {
+            log.info("#####get chat room list json: {}", json);
         }
+
+        List<ChatRoomGetResponse> chatRoomResponses = new ArrayList<>();
+        for (String json : jsonList) {
+            try {
+                ChatRoomGetResponse response = objectMapper.readValue(json, ChatRoomGetResponse.class);
+                chatRoomResponses.add(response);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Failed to parse JSON: " + json, e);
+            }
+        }
+
+        return chatRoomResponses;
     }
 
 
