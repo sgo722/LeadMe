@@ -42,7 +42,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -261,24 +264,20 @@ public class UserChallengeService {
      * @return
      */
 
-    public UserChallengeReportResponse findReportByUuid(String uuid) {
+    public UserChallengeReportResponse findReportByUuid(String uuid) throws IOException, InterruptedException {
         Report report = reportRepository.findByUuid(uuid);
 //        UserChallenge userChallenge = userChallengeRepository.findByUuid(uuid);
         Challenge challenge = challengeRepository.findById(report.getChallengeId()).get();
         Long challengeId = challenge.getId();
         String youtubeId = challenge.getYoutubeId();
-        String videoPath = TEMP_DIRECTORY + "/" + uuid + ".mp4";
-        String audioPath = AUDIO_DIRECTORY + "/" + uuid + ".mp3";
-        String outputPath = TEMP_DIRECTORY + "/" + uuid + "_merged.mp4";
+        String videoPath = TEMP_DIRECTORY + "\\" + uuid + ".mp4";
+        String audioPath = AUDIO_DIRECTORY + "\\" + uuid + ".mp3";
+        String outputPath = TEMP_DIRECTORY + "\\" + uuid + "_merged.mp4";
 
-        try{
-            byte[] mergedVideoFile = mergeVideoAndAudio(videoPath, audioPath, outputPath);
-            return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, mergedVideoFile);
-        }catch (IOException e){
-            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        byte[] mergedVideoFile = mergeVideoAndAudio(videoPath, audioPath, outputPath);
+
+
+        return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, mergedVideoFile);
     }
 
 
@@ -303,19 +302,41 @@ public class UserChallengeService {
     }
 
     private byte[] mergeVideoAndAudio(String videoPath, String audioPath, String outputPath) throws IOException, InterruptedException {
+        // 입력 파일 경로 확인
+        System.out.println(videoPath);
+        System.out.println(audioPath);
+        Path videoFilePath = Paths.get(videoPath);
+        Path audioFilePath = Paths.get(audioPath);
+
+        if (!Files.exists(videoFilePath)) {
+            throw new IOException("비디오 파일을 찾을 수 없습니다: " + videoPath);
+        }
+
+        if (!Files.exists(audioFilePath)) {
+            throw new IOException("오디오 파일을 찾을 수 없습니다: " + audioPath);
+        }
+
         // ffmpeg 명령어를 사용하여 비디오와 오디오 결합
         String command = String.format("ffmpeg -i %s -i %s -c:v copy -c:a aac %s", videoPath, audioPath, outputPath);
         Process process = Runtime.getRuntime().exec(command);
 
-        // ffmpeg 프로세스가 완료될 때까지 기다림
-        process.waitFor(30, TimeUnit.SECONDS);
+//        if (!process.waitFor(30, TimeUnit.SECONDS)) {
+//            throw new IOException("ffmpeg 프로세스가 시간 초과되었습니다.");
+//        }
 
-        // 결과 파일을 바이트 배열로 읽음
-        byte[] mergedFile = Files.readAllBytes(Paths.get(outputPath));
+        process.waitFor(2, TimeUnit.SECONDS);
+
+        Path outputPathObj = Paths.get(outputPath);
+        if (!Files.exists(outputPathObj)) {
+            throw new IOException("출력 파일을 찾을 수 없습니다: " + outputPath);
+        }
+
+        byte[] mergedFile = Files.readAllBytes(outputPathObj);
 
         // 임시 파일 삭제 (옵션)
-        Files.deleteIfExists(Paths.get(outputPath));
+//        Files.deleteIfExists(outputPathObj);
 
         return mergedFile;
     }
+
 }
