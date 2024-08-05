@@ -25,24 +25,12 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
   const [profileComment, setProfileComment] = useState(
     user.profileComment || ""
   );
-  const [profileImg, setProfileImg] = useState(user.profileImg);
   const accessToken = useRecoilValue(accessTokenState);
 
   const handleSaveChanges = () => {
     // 여기서 변경된 데이터를 저장하는 로직을 구현합니다.
     // 예를 들어, API 호출 등을 통해 변경 사항을 저장할 수 있습니다.
     onClose();
-  };
-
-  const handleProfileImgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImg(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const mutation = useMutation<boolean, Error, string>({
@@ -77,20 +65,7 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
       <Container>
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>Profile</Title>
-        <ProfileImgContainer>
-          <ProfileImg
-            src={profileImg}
-            alt="프로필 이미지"
-            onClick={() => document.getElementById("fileInput")?.click()}
-          />
-          <input
-            id="fileInput"
-            type="file"
-            style={{ display: "none" }}
-            accept="image/*"
-            onChange={handleProfileImgChange}
-          />
-        </ProfileImgContainer>
+        <ProfileImg src={user.profileImg} alt="프로필 이미지" />
         <Form>
           <Flex>
             <div>
@@ -196,17 +171,12 @@ const Title = styled.div`
   margin-bottom: 20px;
 `;
 
-const ProfileImgContainer = styled.div`
-  position: relative;
-`;
-
 const ProfileImg = styled.img`
   width: 70px;
   height: 70px;
   border-radius: 50%;
   background-color: #ececec;
   margin-bottom: 24px;
-  cursor: pointer;
 `;
 
 const Form = styled.form`
