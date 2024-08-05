@@ -23,14 +23,14 @@ interface ChatMessageDto {
   roomId: number;
   userId: number;
   nickname: string;
-  message: string;
+  message: string | undefined;
   time: string;
   status: string;
 }
 
 interface ResponseData<T> {
   code: number;
-  message: string;
+  message: string | undefined;
   data: T;
   errors: object;
   isSuccess: boolean;

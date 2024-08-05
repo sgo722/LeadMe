@@ -25,18 +25,24 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
   const [profileComment, setProfileComment] = useState(
     user.profileComment || ""
   );
+  const [profileImg, setProfileImg] = useState(user.profileImg);
   const accessToken = useRecoilValue(accessTokenState);
-
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
 
   const handleSaveChanges = () => {
     // 여기서 변경된 데이터를 저장하는 로직을 구현합니다.
     // 예를 들어, API 호출 등을 통해 변경 사항을 저장할 수 있습니다.
     onClose();
+  };
+
+  const handleProfileImgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImg(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const mutation = useMutation<boolean, Error, string>({
@@ -67,15 +73,28 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
   };
 
   return (
-    <Overlay onClick={handleOverlayClick}>
+    <Overlay>
       <Container>
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>Profile</Title>
-        <ProfileImg src={user.profileImg} alt="프로필 이미지" />
+        <ProfileImgContainer>
+          <ProfileImg
+            src={profileImg}
+            alt="프로필 이미지"
+            onClick={() => document.getElementById("fileInput")?.click()}
+          />
+          <input
+            id="fileInput"
+            type="file"
+            style={{ display: "none" }}
+            accept="image/*"
+            onChange={handleProfileImgChange}
+          />
+        </ProfileImgContainer>
         <Form>
           <Flex>
             <div>
-              {info.isAvailable !== null && (
+              {info.isAvailable !== null && info.message.length > 0 && (
                 <>
                   {info.isAvailable ? (
                     <SuccessMessage>
@@ -94,7 +113,15 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
             <input
               type="text"
               value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              onChange={(e) => {
+                const newNickname = e.target.value;
+                setNickname(newNickname);
+                if (newNickname === user.nickname) {
+                  setInfo({ message: "", isAvailable: true });
+                } else {
+                  setInfo({ message: "", isAvailable: null });
+                }
+              }}
             />
             <CheckButton onClick={handleCheckNickname}>중복 확인</CheckButton>
           </Flex>
@@ -103,7 +130,15 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
             value={profileComment}
             onChange={(e) => setProfileComment(e.target.value)}
           />
-          <button onClick={handleSaveChanges}>change</button>
+          <SaveButton
+            onClick={handleSaveChanges}
+            disabled={
+              !(nickname === user.nickname || info.isAvailable === true)
+            }
+            $isActive={nickname === user.nickname || info.isAvailable === true}
+          >
+            change
+          </SaveButton>
         </Form>
       </Container>
     </Overlay>
@@ -161,12 +196,17 @@ const Title = styled.div`
   margin-bottom: 20px;
 `;
 
+const ProfileImgContainer = styled.div`
+  position: relative;
+`;
+
 const ProfileImg = styled.img`
   width: 70px;
   height: 70px;
   border-radius: 50%;
   background-color: #ececec;
   margin-bottom: 24px;
+  cursor: pointer;
 `;
 
 const Form = styled.form`
@@ -199,21 +239,27 @@ const Form = styled.form`
   & > input::placeholder {
     font-size: 14px;
   }
+`;
 
-  button {
-    color: #ee5050;
-    font-size: 21px;
-    font-weight: 500;
-    font-family: "Noto Sans", sans-serif;
-    width: 100%;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 0;
-    margin: 8px 0;
-    background-color: rgba(255, 255, 255, 0.8);
-    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-    cursor: pointer;
-  }
+interface SaveButtonProps {
+  $isActive: boolean;
+}
+
+const SaveButton = styled.button<SaveButtonProps>`
+  color: ${({ $isActive }) => ($isActive ? "#ffffff" : "#ee5050")};
+  background-color: ${({ $isActive }) =>
+    $isActive ? "#4CAF50" : "rgba(255, 255, 255, 0.8)"};
+  font-size: 21px;
+  font-weight: 500;
+  font-family: "Noto Sans", sans-serif;
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 0;
+  margin: 8px 0;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  cursor: ${({ $isActive }) => ($isActive ? "pointer" : "not-allowed")};
+  opacity: ${({ $isActive }) => ($isActive ? 1 : 0.6)};
 `;
 
 const Flex = styled.div`
