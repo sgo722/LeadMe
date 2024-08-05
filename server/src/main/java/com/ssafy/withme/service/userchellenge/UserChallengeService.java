@@ -67,7 +67,7 @@ public class UserChallengeService {
     @Value("${python-server.url}")
     String FAST_API_URL;
 
-    @Value("${youtube-audio-directory}")
+    @Value("${python-server.youtube-audio-directory}")
     String AUDIO_DIRECTORY;
 
     private final UserChallengeRepository userChallengeRepository;
