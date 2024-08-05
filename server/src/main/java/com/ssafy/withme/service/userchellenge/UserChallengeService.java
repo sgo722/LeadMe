@@ -32,6 +32,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -45,10 +47,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.ssafy.withme.global.error.ErrorCode.*;
@@ -273,13 +272,25 @@ public class UserChallengeService {
         }
     }
 
-//    /**
-//     * userId로 유저영상들을 페이징 조회한다.
-//     * @param userId
-//     * @return
-//     */
-//    public List<UserChallengeReportViewResponse> findReportsByUserId(Long userId) {
-//        List<UserChallenge> userChallenges = userChallengeRepository.findByUserId(userId);
-//        return null;
-//    }
+
+
+    public List<UserChallengeReportViewResponse> findUserChallengeByPageable(Pageable pageable) {
+        //유저 영상 중 access = "public" 인 영상들을 페이징 조회한다.
+        Page<UserChallenge> findUserChallenge = userChallengeRepository.findByAccessOrderByCreatedDateDesc("public", pageable);
+
+        return findUserChallenge.stream()
+                .map(userChallenge -> {
+                    try {
+                        byte[] videoBytes = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
+                        return
+                                UserChallengeReportViewResponse.ofResponse(userChallenge, videoBytes);
+                    } catch (Exception e) {
+                        // 예외 처리 로직을 여기에 추가
+                        e.printStackTrace();
+                        return null; // 또는 다른 적절한 예외 처리 방법
+                    }
+                })
+                .filter(Objects::nonNull) // null 값을 필터링하여 스트림에서 제외
+                .collect(Collectors.toList());
+    }
 }
