@@ -24,9 +24,12 @@ public class RedisSubscriber {
      * 대기하고 있던 Redis Subscriber가 해당 메시지를 받아 처리한다.
      */
     public void sendMessage(String publishMessage) {
+
+        log.info("publishMessage: {}", publishMessage);
+
         try {
             ChatMessageDto chatMessage =
-                    objectMapper.readValue(publishMessage, MessageSubDto.class).getChatMessageDto();
+                    objectMapper.readValue(publishMessage, ChatMessageDto.class);
 
             log.info("Redis Subscriber chatMSG : {}", chatMessage.getMessage());
 
