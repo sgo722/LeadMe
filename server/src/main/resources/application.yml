@@ -74,7 +74,7 @@ python-server:
 #  temp-thumnail-directory: host/python/video/temporary
   permanent-directory: host/python/video/user
 #  permanent-thumnail-directory: host/python/video/temporary
-#  youtube-audio-directory: host/python/video/audio
+  youtube-audio-directory: host/python/video/audio
 
 #  url: http://localhost:8000
 #  temp-directory: C:/leadme/video/temporary
