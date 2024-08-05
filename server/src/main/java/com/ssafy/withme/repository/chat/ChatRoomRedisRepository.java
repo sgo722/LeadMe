@@ -48,7 +48,7 @@ public class ChatRoomRedisRepository {
         opsHashChatRoom = redisTemplate.opsForHash(); // 빈 방 생성
         for (ChatRoomGetResponse chatRoomListGetRes : list) {
             // 빈 방을 리스트에 박아줌
-            setChatRoom(userId, chatRoomListGetRes.getChatRoomNumber(), chatRoomListGetRes);
+            setChatRoom(userId, chatRoomListGetRes.getRoomId(), chatRoomListGetRes);
         }
     }
 

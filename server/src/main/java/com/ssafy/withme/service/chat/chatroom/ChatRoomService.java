@@ -81,7 +81,7 @@ public class ChatRoomService {
     public void setListChatLastMessage(ChatRoomGetResponse chatRoomListGetResponse) {
 
         // 몽고 디비에서 마지막 메시지 가져와서 저장.
-        Long chatRoomNumber = chatRoomListGetResponse.getChatRoomNumber();
+        Long chatRoomNumber = chatRoomListGetResponse.getRoomId();
         if (chatRoomRedisRepository.getLastMessage(chatRoomNumber) != null) {
             chatRoomListGetResponse.updateChatMessageDto(
                     chatRoomRedisRepository.getLastMessage(chatRoomNumber)
