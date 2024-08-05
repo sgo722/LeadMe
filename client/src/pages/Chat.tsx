@@ -156,7 +156,7 @@ export const Chat: React.FC = () => {
                   <ChatPreviewInfo>
                     <ChatUserName>{chat.userNickname}</ChatUserName>
                     <ChatPreviewMessage>
-                      {chat.lastChatMessage.message}
+                      {/*{chat.lastChatMessage.message}*/}
                     </ChatPreviewMessage>
                   </ChatPreviewInfo>
                 </ChatListItem>
