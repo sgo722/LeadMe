@@ -55,7 +55,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           }
         )
         .then((response) => {
-          const createdRoomId = response.data.data.roomId;
+          const createdRoomId = response.data.data;
           setRoomId(createdRoomId);
 
           // 해당 채팅방을 조회한다. - room2
