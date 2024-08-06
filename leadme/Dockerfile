@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     # OpenGL 라이브러리 추가
     libgl1-mesa-glx \
-    libglib2.0-0 \
+    libglib2.0-0 \  
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
