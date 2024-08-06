@@ -103,4 +103,9 @@ public class User extends BaseEntity implements UserDetails {
     public String getUsername() {
         return this.name;
     }
+
+    public void updateProfile(String nickname, String profileComment) {
+        this.nickname = nickname;
+        this.profileComment = profileComment;
+    }
 }

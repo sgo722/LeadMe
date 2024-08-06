@@ -3,6 +3,7 @@ package com.ssafy.withme.controller.user;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.dto.SearchUserDto;
 import com.ssafy.withme.dto.UserInfoDto;
+import com.ssafy.withme.dto.user.UserUpdateDto;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.UserService;
@@ -88,17 +89,23 @@ public class UserController {
     }
 
     // 닉네임 중복여부 확인
-    @GetMapping("/user/check/{nickname}")
+    @GetMapping("/user/check")
     public boolean checkNickname(
             @RequestHeader("Authorization") String authorization,
-            @PathVariable("nickname") String nickname) {
+            @RequestParam("nickname") String nickname) {
 
         return userService.findByNickname(nickname);
     }
 
     // 프로필 수정
-//    @PostMapping("/user/profile/save")
-//    public SuccessResponse<?> saveProfile() {
-//
-//    }
+    @PatchMapping("/user/profile/save")
+    public SuccessResponse<?> saveProfile(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody UserUpdateDto userUpdateDto) {
+        String accessToken = authorization.split(" ")[1];
+
+        userService.updateUser(accessToken, userUpdateDto);
+
+        return SuccessResponse.of("OK");
+    }
 }
