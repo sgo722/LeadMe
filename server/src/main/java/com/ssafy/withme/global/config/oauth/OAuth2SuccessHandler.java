@@ -101,8 +101,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
 //         리다이렉트 ( 2에서 만든 URL로 리다이렉트합니다)
         log.info("targetUrl: {}" + targetUrl);
-
         log.info("accessToken: {}" + accessToken);
+        log.info("authentication: {}" + authentication);
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
