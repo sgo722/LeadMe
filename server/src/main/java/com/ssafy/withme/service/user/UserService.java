@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -54,8 +55,9 @@ public class UserService {
     public boolean findByNickname(String nickname) {
         log.info("find by nickname: {}", nickname);
 
-        User user = userRepository.findByNickname(nickname);
-        return user == null;
+        Optional<User> findUser = userRepository.findByNickname(nickname);
+
+        return findUser.isEmpty();
     }
 
     // find user list by name field
