@@ -82,7 +82,7 @@ async def saveVideDataByUserFile(
 
     
     os.makedirs(TEMP_DIRECTORY, exist_ok=True)
-    original_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_{videoFile.filename}")
+    original_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_{youtubeId}.mp4")
     flipped_temp_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_flipped_temp.avi")
     final_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}.mp4")
     youtube_video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
@@ -126,8 +126,8 @@ async def saveVideDataByUserFile(
         return {"error": str(e)}
     
     # 원본 비디오 파일과 임시 파일 삭제
-    os.remove(original_video_path)
-    os.remove(flipped_temp_video_path)
+    # os.remove(original_video_path)
+    # os.remove(flipped_temp_video_path)
 
     # 비디오 처리 실행 및 결과 대기
     keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video_user.remote(final_video_path)))
