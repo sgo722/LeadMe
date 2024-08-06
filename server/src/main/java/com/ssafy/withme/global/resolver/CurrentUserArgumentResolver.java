@@ -34,6 +34,8 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+        log.info("authentication at argument: {}", authentication);
+
         if (authentication != null && authentication.getPrincipal() != null) {
             Object principal = authentication.getPrincipal();
             String email;
