@@ -11,9 +11,14 @@ import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 interface ModalProps {
   onClose: () => void;
   user: UserProfile;
+  updateUserProfile: (updatedUser: UserProfile) => void;
 }
 
-const ProfileModal: React.FC<ModalProps> = ({ onClose, user }) => {
+const ProfileModal: React.FC<ModalProps> = ({
+  onClose,
+  user,
+  updateUserProfile,
+}) => {
   const [nickname, setNickname] = useState(user.nickname);
   const [info, setInfo] = useState<{
     message: string;
@@ -72,6 +77,7 @@ const ProfileModal: React.FC<ModalProps> = ({ onClose, user }) => {
         "user_profile",
         JSON.stringify(updatedUserProfile)
       );
+      updateUserProfile(updatedUserProfile); // 상태 업데이트 호출
       onClose();
     },
     onError: (error: Error) => {
