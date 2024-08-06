@@ -1,19 +1,16 @@
-package com.ssafy.withme.controller.userchallenege;
+package com.ssafy.withme.controller.userchallenge;
 
-import com.ssafy.withme.controller.userchallenege.request.UserChallengeAnalyzeRequest;
-import com.ssafy.withme.controller.userchallenege.request.UserChallengeDeleteRequest;
-import com.ssafy.withme.controller.userchallenege.request.UserChallengeReportViewResponse;
-import com.ssafy.withme.controller.userchallenege.request.UserChallengeSaveRequest;
-import com.ssafy.withme.domain.report.Report;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.ApiResponse;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.userchellenge.UserChallengeService;
-import com.ssafy.withme.service.userchellenge.response.UserChallengeAnalyzeResponse;
-import com.ssafy.withme.service.userchellenge.response.UserChallengeReportResponse;
-import com.ssafy.withme.service.userchellenge.response.UserChallengeSaveResponse;
+import com.ssafy.withme.service.userchellenge.response.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
@@ -45,8 +42,8 @@ public class UserChallengeController {
      * @param pageable
      * @return
      */
-    @GetMapping("/api/v1/userChallenge")
-    public SuccessResponse<List<UserChallengeReportViewResponse>> findUserChallengeByPageable(
+    @GetMapping("/api/v1/userChallenge/feed")
+    public SuccessResponse<List<UserChallengeFeedResponse>> findUserChallengeByPageable(
             @PageableDefault(size = 3) Pageable pageable) {
         return SuccessResponse.of(userChallengeService.findUserChallengeByPageable(pageable));
     }
@@ -84,6 +81,13 @@ public class UserChallengeController {
     public SuccessResponse<Void> deleteTemporaryFile(@RequestBody UserChallengeDeleteRequest request){
         userChallengeService.deleteUserFile(request);
         return SuccessResponse.empty();
+    }
+
+    @GetMapping("/api/v1/userChallenge")
+    public SuccessResponse<Page<UserChallengeMyPageResponse>> getUserChallengeByUser(
+            @PageableDefault(size = 8) Pageable pageable,
+            @CurrentUser User user){
+        return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user.getId()));
     }
 
 }

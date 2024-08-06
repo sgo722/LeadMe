@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
@@ -60,6 +62,7 @@ public class GlobalExceptionHandler {
     protected ResponseEntity<ErrorResponse> handleConflict(BusinessException e){
 
         log.error("handleConflict", e);
+        System.out.println(e.getMessage());
         ErrorResponse errorResponse = ErrorResponse.of(e, e.getMessage());
 
         return ResponseEntity.status(e.getErrorCode().getHttpStatus())

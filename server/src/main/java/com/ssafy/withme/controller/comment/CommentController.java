@@ -12,6 +12,7 @@ import com.ssafy.withme.service.comment.response.CommentUpdateResponse;
 import com.ssafy.withme.service.comment.response.CommentViewResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
@@ -27,11 +28,11 @@ public class CommentController {
 
     // 댓글을 조회한다. - 페이징 기능 처리해야함.
     @GetMapping("/api/v1/comment/{userChallengeId}")
-    public List<CommentViewResponse> findByUserChallengeId(
+    public SuccessResponse<Page<CommentViewResponse>> findByUserChallengeId(
             @PageableDefault(size = 10) Pageable pageable,
             @PathVariable Long userChallengeId) {
 
-        return commentService.findCommentByChallengeId(pageable, userChallengeId);
+        return SuccessResponse.of(commentService.findCommentByChallengeId(pageable, userChallengeId));
     }
 
     // 댓글을 등록한다.

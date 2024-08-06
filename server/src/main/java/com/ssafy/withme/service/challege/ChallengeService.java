@@ -3,6 +3,7 @@ package com.ssafy.withme.service.challege;
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.landmark.Landmark;
+import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
@@ -24,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
+import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELETON_DATA;
 
 
 @RequiredArgsConstructor
@@ -44,10 +46,16 @@ public class ChallengeService {
      * 클라이언트가 youtubeURL로 요청하면 영상을 저장하고, 몽고디비에 스켈레톤 데이터를 저장한다.
      * @param request
      */
+    @Transactional
     public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request){
         String youtubeId = request.getYoutubeId();
         Challenge challengeByYoutubeId = challengeRepository.findByYoutubeId(youtubeId);
         if(challengeByYoutubeId != null){
+            Landmark landmark = landmarkRepository.findByYoutubeId(challengeByYoutubeId.getYoutubeId());
+            System.out.println(landmark);
+            if(landmark == null){
+                throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE_SKELETON_DATA);
+            }
             return ChallengeCreateResponse.toResponse(challengeByYoutubeId);
         }
         Challenge challenge = request.toEntity();

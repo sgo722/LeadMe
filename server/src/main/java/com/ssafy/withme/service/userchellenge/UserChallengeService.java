@@ -3,16 +3,14 @@ package com.ssafy.withme.service.userchellenge;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ssafy.withme.controller.userchallenege.request.UserChallengeAnalyzeRequest;
-import com.ssafy.withme.controller.userchallenege.request.UserChallengeDeleteRequest;
-import com.ssafy.withme.controller.userchallenege.request.UserChallengeReportViewResponse;
-import com.ssafy.withme.controller.userchallenege.request.UserChallengeSaveRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
+import com.ssafy.withme.service.userchellenge.response.UserChallengeFeedResponse;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.landmark.Landmark;
 import com.ssafy.withme.domain.report.Report;
-import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.userchallenge.UserChallenge;
-import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.global.exception.FileNotFoundException;
 import com.ssafy.withme.global.response.Frame;
@@ -27,7 +25,7 @@ import com.ssafy.withme.repository.userchallenge.UserChallengeRepository;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeAnalyzeResponse;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeReportResponse;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeSaveResponse;
-import jakarta.annotation.PostConstruct;
+import com.ssafy.withme.service.userchellenge.response.UserChallengeMyPageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,17 +41,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -301,7 +296,7 @@ public class UserChallengeService {
     }
 
 
-    public List<UserChallengeReportViewResponse> findUserChallengeByPageable(Pageable pageable) {
+    public List<UserChallengeFeedResponse> findUserChallengeByPageable(Pageable pageable) {
         //유저 영상 중 access = "public" 인 영상들을 페이징 조회한다.
         Page<UserChallenge> findUserChallenge = userChallengeRepository.findByAccessOrderByCreatedDateDesc("public", pageable);
 
@@ -309,7 +304,7 @@ public class UserChallengeService {
                 .map(userChallenge -> {
                     try {
                         byte[] videoBytes = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
-                        return UserChallengeReportViewResponse.ofResponse(userChallenge, videoBytes);
+                        return UserChallengeFeedResponse.ofResponse(userChallenge, videoBytes);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
@@ -416,5 +411,20 @@ public class UserChallengeService {
         log.info("썸네일 경로 : " + thumbnailPath.toString());
 
         return thumbnailPath.toString();
+    }
+
+    public Page<UserChallengeMyPageResponse> getUserChallengeByUser(Pageable pageable, Long userId) {
+        Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdOrderByCreatedDateDesc(userId, pageable);
+
+        return userChallengeByPaging
+                .map(userChallenge -> {
+                    try {
+                        Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
+                        byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
+                        return UserChallengeMyPageResponse.responseOf(userChallenge, thumbnailBytes);
+                    } catch (IOException e) {
+                        throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
+                    }
+                });
     }
 }
