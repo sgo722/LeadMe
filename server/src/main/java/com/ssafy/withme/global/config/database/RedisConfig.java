@@ -86,9 +86,8 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-//         ObjectMapper에 DefaultTyping 설정
+        // ObjectMapper에 DefaultTyping 설정
         ObjectMapper objectMapper = new ObjectMapper();
-
         objectMapper.activateDefaultTyping(
                 BasicPolymorphicTypeValidator.builder()
                         .allowIfBaseType(Object.class)
@@ -97,13 +96,12 @@ public class RedisConfig {
                 JsonTypeInfo.As.PROPERTY);
 
         GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
-        template.setDefaultSerializer(serializer);
 
-//        // 일반적인 key : value의 경우 직렬화
+        // 일반적인 key : value의 경우 직렬화
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(serializer);
-//
-//        // Hash를 사용할 경우 직렬화
+
+        // Hash를 사용할 경우 직렬화
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(serializer);
 
