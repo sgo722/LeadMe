@@ -71,17 +71,15 @@ youtube:
 python-server:
   url: http://i11c109.p.ssafy.io:4567
   temp-directory: host/python/video/temporary
-#  temp-thumnail-directory: host/python/video/temporary
   permanent-directory: host/python/video/user
-#  permanent-thumnail-directory: host/python/video/temporary
+  permanent-thumbnail-directory: host/python/video/user/thumbnail
   youtube-audio-directory: host/python/video/challenge/audio
 
 #  url: http://localhost:8000
-#  temp-directory: C:/leadme/video/temporary
-#  temp-thumnail-directory:
-#  permanent-directory: C:/leadme/video/user
-#  permanent-thumnail-directory:
-#  youtube-audio-directory:
+#  temp-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\temporary
+#  permanent-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\user
+#  permanent-thumbnail-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\user\thumbnail
+#  youtube-audio-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\challenge\audio
 
 
 openvidu:
