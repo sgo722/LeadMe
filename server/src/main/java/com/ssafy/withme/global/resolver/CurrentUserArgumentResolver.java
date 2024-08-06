@@ -36,21 +36,21 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
 
         log.info("authentication at argument: {}", authentication);
 
-        if (authentication != null && authentication.getPrincipal() != null) {
+        // Check if the user is authenticated
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
             Object principal = authentication.getPrincipal();
-            String email;
+            String email = null;
 
             if (principal instanceof UserDetails) {
                 email = ((UserDetails) principal).getUsername();
             } else if (principal instanceof CustomOAuth2User) {
                 email = ((CustomOAuth2User) principal).getUserDto().getEmail();
-            } else {
-                return null;
             }
 
-            log.info("find email: {}", email);
-
-            return userService.findByEmail(email);
+            if (email != null) {
+                log.info("find email: {}", email);
+                return userService.findByEmail(email);
+            }
         }
 
         return null;
