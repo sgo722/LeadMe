@@ -1,11 +1,11 @@
-package com.ssafy.withme.controller.userchallenge.request;
+package com.ssafy.withme.service.userchellenge.response;
 
 import com.ssafy.withme.domain.userchallenge.UserChallenge;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-public class UserChallengeReportViewResponse {
+public class UserChallengeFeedResponse {
 
     private String fileName;
 
@@ -15,14 +15,14 @@ public class UserChallengeReportViewResponse {
 
 
     @Builder
-    private UserChallengeReportViewResponse(String fileName, Long userChallengeId, byte[] videoFile) {
+    private UserChallengeFeedResponse(String fileName, Long userChallengeId, byte[] videoFile) {
         this.fileName = fileName;
         this.userChallengeId = userChallengeId;
         this.videoFile = videoFile;
     }
 
-    public static UserChallengeReportViewResponse ofResponse(UserChallenge userChallenge, byte[] videoFile){
-        return UserChallengeReportViewResponse.builder()
+    public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, byte[] videoFile){
+        return UserChallengeFeedResponse.builder()
                 .fileName(userChallenge.getFileName())
                 .userChallengeId(userChallenge.getId())
                 .videoFile(videoFile)

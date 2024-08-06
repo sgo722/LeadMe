@@ -30,6 +30,7 @@ public enum ErrorCode {
     // 챌린지
     NOT_EXISTS_CHALLENGE(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당 챌린지 영상은 존재하지 않습니다."),
     NOT_EXISTS_USER_CHALLENGE_FILE(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당 챌린지 영상은 존재하지 않습니다."),
+    NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "유저 챌린지 썸네일이미지는 존재하지 않습니다."),
 
     // 채팅
     NOT_FOUND_CHATROOM(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당하는 채팅방을 찾을 수 없습니다."),
