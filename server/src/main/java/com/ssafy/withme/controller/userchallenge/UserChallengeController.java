@@ -88,7 +88,6 @@ public class UserChallengeController {
             @PageableDefault(size = 8) Pageable pageable,
             @CurrentUser User user){
         return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user.getId()));
-
     }
 
 }

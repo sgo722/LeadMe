@@ -1,8 +1,10 @@
 package com.ssafy.withme.global.error;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+@RequiredArgsConstructor
 @Getter
 public enum ErrorCode {
 
@@ -31,6 +33,7 @@ public enum ErrorCode {
     NOT_EXISTS_CHALLENGE(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당 챌린지 영상은 존재하지 않습니다."),
     NOT_EXISTS_USER_CHALLENGE_FILE(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당 챌린지 영상은 존재하지 않습니다."),
     NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "유저 챌린지 썸네일이미지는 존재하지 않습니다."),
+    NOT_EXISTS_CHALLENGE_SKELETON_DATA(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당 챌린지 영상의 스켈레톤 데이터가 존재하지 않습니다."),
 
     // 채팅
     NOT_FOUND_CHATROOM(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당하는 채팅방을 찾을 수 없습니다."),
@@ -42,13 +45,8 @@ public enum ErrorCode {
 
     ;
 
-    ErrorCode(HttpStatus httpStatus, Integer statusCode, String message) {
-        this.httpStatus = httpStatus;
-        this.statusCode = statusCode;
-        this.message = message;
-    }
 
-    private HttpStatus httpStatus;
-    private Integer statusCode;
-    private String message;
+    private final HttpStatus httpStatus;
+    private final Integer statusCode;
+    private final String message;
 }

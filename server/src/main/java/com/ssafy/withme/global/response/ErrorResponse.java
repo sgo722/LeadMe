@@ -48,9 +48,9 @@ public class ErrorResponse extends ApiResponse<Void>{
 
         ArrayList<CustomErrors> customErrors = new ArrayList<>();
 
-        if (!errors.hasErrors())
+        if(errors == null){
             return new ArrayList<>();
-
+        }
         for (FieldError e: errors.getFieldErrors())
             customErrors.add(new CustomErrors(e.getField(), e.getDefaultMessage(), e.getCode(), e.getObjectName()));
 
