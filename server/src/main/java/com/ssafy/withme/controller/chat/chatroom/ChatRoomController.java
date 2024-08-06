@@ -79,5 +79,4 @@ public class ChatRoomController {
         return SuccessResponse.of(chatRoom.getId());
     }
 
-
 }
