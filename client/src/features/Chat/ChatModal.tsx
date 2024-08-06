@@ -79,6 +79,10 @@ export const ChatModal: React.FC<ChatModalProps> = ({
                 ...prevMessages,
                 { ...message, time: formatTime(message.time) },
               ]);
+              if (modalBodyRef.current) {
+                modalBodyRef.current.scrollTop =
+                  modalBodyRef.current.scrollHeight;
+              }
             }
           );
 
@@ -108,6 +112,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({
     }
   }, [isOpen, currentUserId, partnerId, subscribeToChannel]);
 
+  useEffect(() => {
+    if (modalBodyRef.current) {
+      modalBodyRef.current.scrollTop = modalBodyRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const handleSendMessage = () => {
     if (roomId && newMessage.trim() !== "") {
       const message: ChatMessageDto = {
@@ -120,10 +130,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         status: "UNREAD",
       };
       sendMessage(`/pub/chat/message/${roomId}`, message);
-      setMessages([
-        ...messages,
-        { ...message, time: formatTime(message.time) },
-      ]);
       setNewMessage("");
     }
   };
