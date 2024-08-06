@@ -2,18 +2,18 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
-import { useRecoilValue } from "recoil";
-import { UserProfile, ResponseData } from "types";
-import { accessTokenState } from "stores/authAtom";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import { UserProfile } from "types";
+import { accessTokenState, userProfileState } from "stores/authAtom";
 import { baseUrl } from "axiosInstance/constants";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 interface ModalProps {
   onClose: () => void;
-  user: UserProfile; // 유저 데이터를 받는 props 추가
+  user: UserProfile;
 }
 
-const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
+const ProfileModal: React.FC<ModalProps> = ({ onClose, user }) => {
   const [nickname, setNickname] = useState(user.nickname);
   const [info, setInfo] = useState<{
     message: string;
@@ -26,23 +26,18 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
     user.profileComment || ""
   );
   const accessToken = useRecoilValue(accessTokenState);
+  const setUserProfile = useSetRecoilState(userProfileState);
 
-  const handleSaveChanges = () => {
-    // 여기서 변경된 데이터를 저장하는 로직을 구현합니다.
-    // 예를 들어, API 호출 등을 통해 변경 사항을 저장할 수 있습니다.
-    onClose();
-  };
-
-  const mutation = useMutation<boolean, Error, string>({
+  const mutationCheck = useMutation<boolean, Error, string>({
     mutationFn: async (value: string) => {
-      const response = await axios.get<ResponseData<{ response: boolean }>>(
+      const response = await axios.get<boolean>(
         `${baseUrl}/api/v1/user/check`,
         {
           headers: { Authorization: `Bearer ${accessToken}` },
           params: { nickname: value },
         }
       );
-      return response.data.data.response;
+      return response.data;
     },
     onSuccess: (data) => {
       if (data) {
@@ -56,8 +51,41 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
     },
   });
 
+  const mutationSave = useMutation<
+    void,
+    Error,
+    { nickname: string; profileComment: string }
+  >({
+    mutationFn: async ({ nickname, profileComment }) => {
+      await axios.patch(
+        `${baseUrl}/api/v1/user/profile/save`,
+        { nickname, profileComment },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+    },
+    onSuccess: () => {
+      const updatedUserProfile = { ...user, nickname, profileComment };
+      setUserProfile(updatedUserProfile);
+      sessionStorage.setItem(
+        "user_profile",
+        JSON.stringify(updatedUserProfile)
+      );
+      onClose();
+    },
+    onError: (error: Error) => {
+      console.error("Error saving data:", error);
+    },
+  });
+
   const handleCheckNickname = () => {
-    mutation.mutate(nickname);
+    mutationCheck.mutate(nickname);
+  };
+
+  const handleSaveChanges = (e: React.FormEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    mutationSave.mutate({ nickname, profileComment });
   };
 
   return (
@@ -69,27 +97,29 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
         <Form>
           <Flex>
             <div>
-              {info.isAvailable !== null && info.message.length > 0 && (
-                <>
-                  {info.isAvailable ? (
-                    <SuccessMessage>
-                      <FaCheckCircle />
-                      {info.message}
-                    </SuccessMessage>
-                  ) : (
-                    <ErrorMessage>
-                      <FaTimesCircle />
-                      {info.message}
-                    </ErrorMessage>
-                  )}
-                </>
-              )}
+              {info.isAvailable !== null &&
+                info.message.length > 0 &&
+                nickname !== user.nickname && (
+                  <>
+                    {info.isAvailable ? (
+                      <SuccessMessage>
+                        <FaCheckCircle />
+                        {info.message}
+                      </SuccessMessage>
+                    ) : (
+                      <ErrorMessage>
+                        <FaTimesCircle />
+                        {info.message}
+                      </ErrorMessage>
+                    )}
+                  </>
+                )}
             </div>
             <input
               type="text"
               value={nickname}
               onChange={(e) => {
-                const newNickname = e.target.value;
+                const newNickname = e.target.value.toLowerCase(); // 입력 값을 소문자로 변환
                 setNickname(newNickname);
                 if (newNickname === user.nickname) {
                   setInfo({ message: "", isAvailable: true });
@@ -106,7 +136,9 @@ const Modal: React.FC<ModalProps> = ({ onClose, user }) => {
             onChange={(e) => setProfileComment(e.target.value)}
           />
           <SaveButton
-            onClick={handleSaveChanges}
+            onClick={(e) => {
+              handleSaveChanges(e);
+            }}
             disabled={
               !(nickname === user.nickname || info.isAvailable === true)
             }
@@ -311,4 +343,4 @@ const ErrorMessage = styled.div`
   }
 `;
 
-export default Modal;
+export default ProfileModal;
