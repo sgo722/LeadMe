@@ -36,6 +36,7 @@ public enum ErrorCode {
 
     // 경쟁
     NOT_FOUND_SESSION(HttpStatus.NOT_FOUND, HttpStatus.NO_CONTENT.value(), "세션을 찾을 수 없습니다."),
+    NOT_FOUND_COMPETITION(HttpStatus.NOT_FOUND, HttpStatus.NO_CONTENT.value(), "해당 경쟁전을 찾을 수 없습니다."),
     FAILED_TO_CONVERT_TYPE(HttpStatus.NOT_FOUND, HttpStatus.NO_CONTENT.value(), "타입을 변환할 수 없습니다."),
 
     ;

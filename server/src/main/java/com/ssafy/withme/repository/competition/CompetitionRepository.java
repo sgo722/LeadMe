@@ -14,5 +14,5 @@ public interface CompetitionRepository extends JpaRepository<Competition, Intege
 
     Page<Competition> findByStatusAndRoomNameContains(CompetitionStatus status, String roomName, Pageable pageable);
 
-    int countByStatus(CompetitionStatus competitionStatus);
+    int countByStatusAndRoomNameContains(CompetitionStatus competitionStatus, String roomName);
 }
