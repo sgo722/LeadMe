@@ -2,7 +2,7 @@ package com.ssafy.withme.service.chat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.withme.dto.chat.ChatMessageDto;
-import com.ssafy.withme.dto.chat.ChatRoomGetResponse;
+import com.ssafy.withme.dto.chat.response.ChatRoomGetResponse;
 import com.ssafy.withme.dto.chat.MessageSubDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

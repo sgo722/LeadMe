@@ -1,7 +1,7 @@
 package com.ssafy.withme.controller.user;
 
 import com.ssafy.withme.domain.user.User;
-import com.ssafy.withme.dto.UserInfoDto;
+import com.ssafy.withme.dto.user.UserInfoDto;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.FollowService;

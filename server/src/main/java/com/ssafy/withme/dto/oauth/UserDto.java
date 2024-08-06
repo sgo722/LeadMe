@@ -1,4 +1,4 @@
-package com.ssafy.withme.domain.dto;
+package com.ssafy.withme.dto.oauth;
 
 import com.ssafy.withme.domain.user.constant.UserStatus;
 import lombok.Getter;

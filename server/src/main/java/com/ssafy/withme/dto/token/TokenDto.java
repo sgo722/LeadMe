@@ -1,4 +1,4 @@
-package com.ssafy.withme.dto;
+package com.ssafy.withme.dto.token;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

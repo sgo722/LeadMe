@@ -2,7 +2,7 @@ package com.ssafy.withme.service.user;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.UserStatus;
-import com.ssafy.withme.dto.SearchUserDto;
+import com.ssafy.withme.dto.user.SearchUserDto;
 import com.ssafy.withme.dto.user.UserUpdateDto;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.error.ErrorCode;
@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 

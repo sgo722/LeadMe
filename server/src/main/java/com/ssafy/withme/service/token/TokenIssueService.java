@@ -1,7 +1,7 @@
 package com.ssafy.withme.service.token;
 
-import com.ssafy.withme.dto.AccessTokenResponseDto;
-import com.ssafy.withme.dto.TokenDetails;
+import com.ssafy.withme.dto.token.AccessTokenResponseDto;
+import com.ssafy.withme.dto.token.TokenDetails;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.config.jwt.constant.TokenType;
 import com.ssafy.withme.service.user.UserService;

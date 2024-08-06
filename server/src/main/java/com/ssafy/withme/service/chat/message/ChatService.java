@@ -2,7 +2,7 @@ package com.ssafy.withme.service.chat.message;
 
 import com.ssafy.withme.domain.chat.constant.MessageType;
 import com.ssafy.withme.dto.chat.ChatMessageDto;
-import com.ssafy.withme.dto.chat.ChatRoomGetResponse;
+import com.ssafy.withme.dto.chat.response.ChatRoomGetResponse;
 import com.ssafy.withme.dto.chat.MessageSubDto;
 import com.ssafy.withme.repository.chat.ChatRoomRedisRepository;
 import com.ssafy.withme.service.chat.RedisPublisher;

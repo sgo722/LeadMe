@@ -1,8 +1,8 @@
 package com.ssafy.withme.global.config.oauth;
 
-import com.ssafy.withme.domain.dto.*;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.UserStatus;
+import com.ssafy.withme.dto.oauth.*;
 import com.ssafy.withme.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -13,7 +13,6 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor

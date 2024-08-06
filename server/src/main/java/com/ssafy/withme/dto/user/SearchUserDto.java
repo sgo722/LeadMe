@@ -1,4 +1,4 @@
-package com.ssafy.withme.dto;
+package com.ssafy.withme.dto.user;
 
 import com.ssafy.withme.domain.user.User;
 

@@ -1,16 +1,12 @@
 package com.ssafy.withme.global.config.jwt;
 
 import com.ssafy.withme.domain.user.User;
-import com.ssafy.withme.dto.AccessTokenResponseDto;
-import com.ssafy.withme.dto.TokenDetails;
+import com.ssafy.withme.dto.token.TokenDetails;
 import com.ssafy.withme.global.config.jwt.constant.TokenType;
-import com.ssafy.withme.global.util.CryptoUtils;
-import com.ssafy.withme.service.user.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

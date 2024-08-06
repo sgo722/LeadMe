@@ -1,29 +1,22 @@
 package com.ssafy.withme.global.config.oauth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ssafy.withme.domain.dto.AuthResponse;
-import com.ssafy.withme.domain.dto.CustomOAuth2User;
+import com.ssafy.withme.dto.oauth.CustomOAuth2User;
 import com.ssafy.withme.domain.user.RefreshToken;
 import com.ssafy.withme.domain.user.User;
-import com.ssafy.withme.dto.TokenDetails;
-import com.ssafy.withme.dto.TokenDto;
+import com.ssafy.withme.dto.token.TokenDetails;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.config.jwt.constant.TokenType;
 import com.ssafy.withme.global.util.CookieUtil;
 import com.ssafy.withme.repository.user.RefreshTokenRepository;
 import com.ssafy.withme.service.user.UserService;
-import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -32,8 +25,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Component
