@@ -18,6 +18,7 @@ import Challenge from "pages/Challenge";
 import Mypage from "pages/Mypage";
 import Feed from "pages/Feed";
 import { Battle } from "pages/Battle";
+import { BattleRoom } from "pages/BattleRoom";
 
 const App: React.FC = () => {
   return (
@@ -45,6 +46,7 @@ const App: React.FC = () => {
         <Route path="/practice/:videoId" element={<Practice />}></Route>
         <Route path="/feed" element={<Feed />}></Route>
         <Route path="/battle" element={<Battle />}></Route>
+        <Route path="/battleRoom/:sessionId" element={<BattleRoom />} />
       </Routes>
       <ShortsModal />
     </ThemeProvider>
