@@ -413,10 +413,10 @@ public class UserChallengeService {
         return thumbnailPath.toString();
     }
 
-    public List<UserChallengeMyPageResponse> getUserChallengeByUser(Pageable pageable, Long userId) {
+    public Page<UserChallengeMyPageResponse> getUserChallengeByUser(Pageable pageable, Long userId) {
         Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdOrderByCreatedDateDesc(userId, pageable);
 
-        return userChallengeByPaging.stream()
+        return userChallengeByPaging
                 .map(userChallenge -> {
                     try {
                         Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
@@ -425,7 +425,6 @@ public class UserChallengeService {
                     } catch (IOException e) {
                         throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
                     }
-                })
-                .toList();
+                });
     }
 }

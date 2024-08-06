@@ -10,6 +10,7 @@ import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.userchellenge.UserChallengeService;
 import com.ssafy.withme.service.userchellenge.response.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
@@ -83,7 +84,7 @@ public class UserChallengeController {
     }
 
     @GetMapping("/api/v1/userChallenge")
-    public SuccessResponse<List<UserChallengeMyPageResponse>> getUserChallengeByUser(
+    public SuccessResponse<Page<UserChallengeMyPageResponse>> getUserChallengeByUser(
             @PageableDefault(size = 8) Pageable pageable,
             @CurrentUser User user){
         return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user.getId()));
