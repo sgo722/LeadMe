@@ -16,6 +16,7 @@ public class RedisPublisher {
 
     public void publish(MessageSubDto message, Long roomId) {
 
+        // 지금 여기서 dto를 못받을 가능성이 높음
         log.info("RedisPublisher publishing to room {}: {}", roomId, message.getChatMessageDto().getMessage());
 
         log.info("topic : {} ", channelTopic.getTopic());

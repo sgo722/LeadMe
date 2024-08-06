@@ -9,9 +9,8 @@ import lombok.*;
 
 @Builder
 @Getter
-//@NoArgsConstructor(access = AccessLevel.PROTECTED)
-//@AllArgsConstructor
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class ChatRoomGetResponse {
 
     private Long roomId;
@@ -42,23 +41,5 @@ public class ChatRoomGetResponse {
                 .partnerId(chatRoom.getPartner().getId())
                 .partnerImageUrl(chatRoom.getPartner().getProfileImg())
                 .build();
-    }
-
-    @JsonCreator
-    public ChatRoomGetResponse(
-            @JsonProperty("roomId") Long roomId,
-            @JsonProperty("userId") Long userId,
-            @JsonProperty("userNickname") String userNickname,
-            @JsonProperty("partnerId") Long partnerId,
-            @JsonProperty("partnerNickname") String partnerNickname,
-            @JsonProperty("partnerImageUrl") String partnerImageUrl,
-            @JsonProperty("lastChatMessageDto") ChatMessageDto lastChatMessageDto) {
-        this.roomId = roomId;
-        this.userId = userId;
-        this.userNickname = userNickname;
-        this.partnerId = partnerId;
-        this.partnerNickname = partnerNickname;
-        this.partnerImageUrl = partnerImageUrl;
-        this.lastChatMessageDto = lastChatMessageDto;
     }
 }
