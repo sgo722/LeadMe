@@ -26,7 +26,7 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
         return qf.selectFrom(chatRoom)
                 .join(chatRoom.user, user1).fetchJoin()
                 .join(chatRoom.partner, user2).fetchJoin()
-                .where(chatRoom.user.id.eq(userId).or(chatRoom.partner.id.eq(userId)))
+                .where(chatRoom.user.id.eq(userId))
                 .fetch();
     }
 
