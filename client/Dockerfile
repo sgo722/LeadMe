@@ -19,7 +19,7 @@ FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # 포트 노출 (기본값: 80)
-EXPOSE 5173
+EXPOSE 80
 
 # Nginx 실행
 CMD ["nginx", "-g", "daemon off;"]
