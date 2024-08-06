@@ -1,7 +1,6 @@
-package com.ssafy.withme.controller.userchallenege.request;
+package com.ssafy.withme.controller.userchallenge.request;
 
 import com.ssafy.withme.domain.userchallenge.UserChallenge;
-import com.ssafy.withme.service.userchellenge.response.UserChallengeReportResponse;
 import lombok.Builder;
 import lombok.Getter;
 

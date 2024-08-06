@@ -1,4 +1,4 @@
-package com.ssafy.withme.controller.userchallenege.request;
+package com.ssafy.withme.controller.userchallenge.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
