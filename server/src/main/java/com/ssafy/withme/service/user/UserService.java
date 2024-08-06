@@ -59,6 +59,7 @@ public class UserService {
         log.info("find by nickname: {}", nickname);
 
         Optional<User> findUser = userRepository.findByNickname(nickname);
+
         return findUser.isEmpty();
     }
 

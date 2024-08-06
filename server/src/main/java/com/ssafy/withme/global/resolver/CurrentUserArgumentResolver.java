@@ -44,6 +44,8 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
                 return null;
             }
 
+            log.info("find email: {}", email);
+
             return userService.findByEmail(email);
         }
 
