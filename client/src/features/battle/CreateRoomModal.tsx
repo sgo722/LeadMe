@@ -3,12 +3,18 @@ import styled from "styled-components";
 
 interface CreateRoomModalProps {
   onClose: () => void;
+  onCreateRoom: (roomData: {
+    roomName: string;
+    isPublic: boolean;
+    password?: string;
+  }) => void;
 }
 
 export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
   onClose,
+  onCreateRoom,
 }) => {
-  const [isPrivate, setIsPrivate] = useState<boolean>(false); // private, public 상태
+  const [isPublic, setIsPublic] = useState<boolean>(false); // private, public 상태
   const [password, setPassword] = useState<string>("");
   const [title, setTitle] = useState<string>("");
 
@@ -16,6 +22,15 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     if (e.target === e.currentTarget) {
       onClose();
     }
+  };
+
+  const handleSubmit = () => {
+    const roomData = {
+      roomName: title,
+      isPublic: !isPublic,
+      ...(!isPublic ? {} : { password }),
+    };
+    onCreateRoom(roomData);
   };
   return (
     <ModalOverlay onClick={handleOverlayClick}>
@@ -33,12 +48,12 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         <PrivateToggle>
           <input
             type="checkbox"
-            checked={isPrivate}
-            onChange={() => setIsPrivate(!isPrivate)}
+            checked={isPublic}
+            onChange={() => setIsPublic(!isPublic)}
           />
           <span>private</span>
         </PrivateToggle>
-        {isPrivate && (
+        {isPublic && (
           <InputField
             type="password"
             placeholder="비밀번호"
@@ -46,7 +61,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             onChange={(e) => setPassword(e.target.value)}
           />
         )}
-        <StartButton>start</StartButton>
+        <StartButton onClick={handleSubmit}>start</StartButton>
       </ModalContent>
     </ModalOverlay>
   );

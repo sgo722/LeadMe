@@ -5,12 +5,14 @@ interface InputPasswordModalProps {
   onClose: () => void;
   onEnter: (password: string) => void;
   roomTitle: string;
+  isError: boolean;
 }
 
 export const InputPasswordModal: React.FC<InputPasswordModalProps> = ({
   onClose,
   onEnter,
   roomTitle,
+  isError,
 }) => {
   const [password, setPassword] = useState<string>("");
 
@@ -26,7 +28,7 @@ export const InputPasswordModal: React.FC<InputPasswordModalProps> = ({
 
   return (
     <ModalOverlay onClick={handleOverlayClick}>
-      <ModalContent>
+      <ModalContent $isError={isError}>
         <ModalHeader>
           <h2>Password</h2>
           <CloseButton onClick={onClose}>✕</CloseButton>
@@ -38,6 +40,7 @@ export const InputPasswordModal: React.FC<InputPasswordModalProps> = ({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        {isError && <ErrorMessage>비밀번호가 틀렸습니다.</ErrorMessage>}
         <EnterButton onClick={handleEnter}>enter</EnterButton>
       </ModalContent>
     </ModalOverlay>
@@ -57,7 +60,7 @@ const ModalOverlay = styled.div`
   z-index: 999;
 `;
 
-const ModalContent = styled.div`
+const ModalContent = styled.div<{ $isError: boolean }>`
   padding: 20px;
   width: 350px;
   position: relative;
@@ -66,6 +69,43 @@ const ModalContent = styled.div`
   background: rgba(252, 252, 252, 0.85);
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(10px);
+
+  animation: ${(props) =>
+    props.$isError ? "shake 0.82s cubic-bezier(.36,.07,.19,.97) both" : "none"};
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+
+  @keyframes shake {
+    10%,
+    90% {
+      transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+      transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+      transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+      transform: translate3d(4px, 0, 0);
+    }
+  }
+`;
+
+const ErrorMessage = styled.p`
+  color: #ee5050;
+  font-size: 14px;
+  text-align: center;
+  margin-top: -10px;
+  margin-bottom: 10px;
 `;
 
 const ModalHeader = styled.div`

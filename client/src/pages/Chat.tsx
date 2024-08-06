@@ -100,7 +100,11 @@ export const Chat: React.FC = () => {
     }
   }, [currentUserId, connectWebSocket, subscribeToChannel]);
 
-  const openModal = (nickname: string, partnerId: number, profile: string) => {
+  const openChatModal = (
+    nickname: string,
+    partnerId: number,
+    profile: string
+  ) => {
     setSelectedNickname(nickname);
     setSelectedPartnerId(partnerId);
     setSelectedProfile(profile);
@@ -120,14 +124,6 @@ export const Chat: React.FC = () => {
     setIsSendModalOpen(false);
   };
 
-  const openChatModal = (
-    nickname: string,
-    partnerId: number,
-    profile: string
-  ) => {
-    openModal(nickname, partnerId, profile);
-  };
-
   return (
     <>
       <Header stickyOnly />
@@ -142,9 +138,9 @@ export const Chat: React.FC = () => {
                 <ChatListItem
                   key={chat.roomId}
                   onClick={() =>
-                    openModal(
+                    openChatModal(
                       chat.partnerNickname,
-                      chat.roomId,
+                      chat.partnerId,
                       chat.partnerImageUrl
                     )
                   }
@@ -154,9 +150,9 @@ export const Chat: React.FC = () => {
                     alt={`${chat.userNickname}'s profile`}
                   />
                   <ChatPreviewInfo>
-                    <ChatUserName>{chat.userNickname}</ChatUserName>
+                    <ChatUserName>{chat.partnerNickname}</ChatUserName>
                     <ChatPreviewMessage>
-                      {/*{chat.lastChatMessage.message}*/}
+                      {/*{chat.lastChatMessageDto.message}*/}
                     </ChatPreviewMessage>
                   </ChatPreviewInfo>
                 </ChatListItem>
@@ -247,11 +243,13 @@ const ChatListItem = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 20px;
-  border-bottom: 1px solid #ffffff;
+  padding: 4px 20px;
+  margin: 12px 0;
+  cursor: pointer;
 
-  &:last-child {
-    border-bottom: none;
+  &:hover {
+    border-radius: 12px;
+    background-color: #ffffff;
   }
 `;
 
