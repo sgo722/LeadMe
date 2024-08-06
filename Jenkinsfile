@@ -52,6 +52,22 @@ pipeline {
             }
         }
 
+        stage('Build and Push Client Docker Image') {
+            steps {
+                script {
+                    dir('S11P12C109/client') { // 클라이언트 디렉토리 경로 변경
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                            sh '''
+                            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+                            docker build -t ${DOCKERHUB_USERNAME}/client-image:latest .
+                            docker push ${DOCKERHUB_USERNAME}/client-image:latest
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Build and Push Python Docker Image') {
             steps {
                 script {
@@ -103,6 +119,11 @@ pipeline {
                                         docker rm ${DOCKERHUB_NAME} || true
                                         // docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
                                         docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" -v /home/ubuntu:/host ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
+
+                                        docker pull ${DOCKERHUB_USERNAME}/client-image:latest
+                                        docker stop client || true
+                                        docker rm client || true
+                                        docker run --name client -d -p 5173:80 ${DOCKERHUB_USERNAME}/client-image:latest
 
                                         docker image prune -f
                                         """,
