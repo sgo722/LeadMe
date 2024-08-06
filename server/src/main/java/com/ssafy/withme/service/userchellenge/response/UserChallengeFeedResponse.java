@@ -11,21 +11,21 @@ public class UserChallengeFeedResponse {
 
     private Long userChallengeId;
 
-    private byte[] videoFile;
+    private byte[] thumbnail;
 
 
     @Builder
-    private UserChallengeFeedResponse(String fileName, Long userChallengeId, byte[] videoFile) {
+    private UserChallengeFeedResponse(String fileName, Long userChallengeId, byte[] thumbnail) {
         this.fileName = fileName;
         this.userChallengeId = userChallengeId;
-        this.videoFile = videoFile;
+        this.thumbnail = thumbnail;
     }
 
-    public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, byte[] videoFile){
+    public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, byte[] thumbnail){
         return UserChallengeFeedResponse.builder()
                 .fileName(userChallenge.getFileName())
                 .userChallengeId(userChallenge.getId())
-                .videoFile(videoFile)
+                .thumbnail(thumbnail)
                 .build();
     }
 }

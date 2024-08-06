@@ -303,8 +303,8 @@ public class UserChallengeService {
         return findUserChallenge.stream()
                 .map(userChallenge -> {
                     try {
-                        byte[] videoBytes = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
-                        return UserChallengeFeedResponse.ofResponse(userChallenge, videoBytes);
+                        byte[] thumbnail = Files.readAllBytes(Paths.get(userChallenge.getThumbnailPath()));
+                        return UserChallengeFeedResponse.ofResponse(userChallenge, thumbnail);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
