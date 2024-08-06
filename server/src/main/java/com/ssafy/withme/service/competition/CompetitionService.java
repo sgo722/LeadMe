@@ -60,7 +60,7 @@ public class CompetitionService {
 
         Pageable pageable = PageRequest.of(pageNo, size, Sort.by(Sort.Direction.DESC, criteria));
         Page<CompetitionResponse> page;
-        if(searchKeyword == null && searchKeyword.isEmpty()) {
+        if(searchKeyword == null || searchKeyword.isEmpty()) {
             page = competitionRepository.findByStatus(CompetitionStatus.OPEN, pageable).map(CompetitionResponse :: toResponse);
         } else {
             page = competitionRepository.findByStatusAndRoomNameContains(CompetitionStatus.OPEN, searchKeyword, pageable).map(CompetitionResponse :: toResponse);
