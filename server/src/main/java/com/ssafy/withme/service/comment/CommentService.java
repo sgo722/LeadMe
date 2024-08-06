@@ -17,6 +17,7 @@ import com.ssafy.withme.service.comment.response.CommentCreateResponse;
 import com.ssafy.withme.service.comment.response.CommentUpdateResponse;
 import com.ssafy.withme.service.comment.response.CommentViewResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -32,11 +33,10 @@ public class CommentService {
     private final UserRepository userRepository;
 
 
-    public List<CommentViewResponse> findCommentByChallengeId(Pageable pageable, Long userChallengeId) {
-        List<Comment> findCommentByUserChallengeId = commentRepository.findByUserChallengeId(userChallengeId, pageable);
-        List<CommentViewResponse> comments = findCommentByUserChallengeId.stream()
-                .map(comment -> CommentViewResponse.of(comment))
-                .collect(Collectors.toList());
+    public Page<CommentViewResponse> findCommentByChallengeId(Pageable pageable, Long userChallengeId) {
+        Page<Comment> findCommentByUserChallengeId = commentRepository.findByUserChallengeId(userChallengeId, pageable);
+        Page<CommentViewResponse> comments = findCommentByUserChallengeId
+                .map(comment -> CommentViewResponse.of(comment));
         return comments;
     }
 
