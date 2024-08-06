@@ -1,6 +1,7 @@
 package com.ssafy.withme.controller.competition;
 
 import com.ssafy.withme.controller.competition.request.CompetitionCreateRequest;
+import com.ssafy.withme.controller.competition.request.PasswordVerificationRequest;
 import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.SessionNotFoundException;
 import com.ssafy.withme.global.response.SuccessResponse;
@@ -39,7 +40,6 @@ public class CompetitionController {
     public SuccessResponse<?> initializeSession(@RequestBody(required = false) CompetitionCreateRequest request) throws OpenViduJavaClientException, OpenViduHttpException {
 
         String userId = "test";
-
         //SessionProperties properties = SessionProperties.fromJson().build();
         Session session = openVidu.createSession();
 
@@ -51,13 +51,13 @@ public class CompetitionController {
     /**
      * 커넥션 생성 및 토큰 부여
      * @param sessionId
-     * @param params
+     * @param request
      * @return
      * @throws OpenViduJavaClientException
      * @throws OpenViduHttpException
      */
     @PostMapping("/api/v1/sessions/{sessionId}/connections")
-    public SuccessResponse<?> createConnection(@PathVariable("sessionId") String sessionId, @RequestBody(required = false) Map<String, Object> params) throws OpenViduJavaClientException, OpenViduHttpException {
+    public SuccessResponse<?> createConnection(@PathVariable("sessionId") String sessionId, @RequestBody(required = false) PasswordVerificationRequest request) throws OpenViduJavaClientException, OpenViduHttpException {
 
         Session session = openVidu.getActiveSession(sessionId);
 
@@ -65,13 +65,36 @@ public class CompetitionController {
             throw new SessionNotFoundException(ErrorCode.NOT_FOUND_SESSION);
         }
 
-        ConnectionProperties properties = ConnectionProperties.fromJson(params).build();
-        Connection connection = session.createConnection(properties);
+        Connection connection = session.createConnection();
 
-        return SuccessResponse.of(connection.getToken());
+        HashMap<String, Object> response = new HashMap<>();
+        // 비밀번호가 설정된 경쟁전에 참여하는 경우
+        if(request != null) {
+            if(competitionService.verifyCompetitionsPassword(request)) {
+                response.put("validation", true);
+                response.put("token", connection.getToken());
+            } else {
+                response.put("validation", false);
+            }
+        }
+
+        // 비밀번호가 설정되지 않은 경쟁전에 참여하는 경우
+        if(request == null) {
+            response.put("token", connection.getToken());
+        }
+
+        return SuccessResponse.of(response);
     }
 
-    @GetMapping("api/v1/competitions")
+    /**
+     * OPEN 상태와 방 이름 기반으로 페이징 처리하여 조회
+     * @param pageNo
+     * @param criteria
+     * @param size
+     * @param searchKeyword
+     * @return
+     */
+    @GetMapping("api/v1/competititons")
     public SuccessResponse<?> getCompetitions(@RequestParam(required = false, defaultValue = "0", value = "page") int pageNo,
                                               @RequestParam(required = false, defaultValue = "createdDate", value = "criteria") String criteria,
                                               @RequestParam(required = false, defaultValue = "4", value = "size") int size,
@@ -80,7 +103,7 @@ public class CompetitionController {
         Map<String, Object> response = new HashMap<>();
 
         List<CompetitionResponse> competitions = competitionService.getCompetitions(pageNo, criteria, size, searchKeyword);
-        int totalElements = competitionService.getTotlaCompetitions();
+        int totalElements = competitionService.getTotlaCompetitions(searchKeyword);
         int totalPages = (int) Math.ceil((double) totalElements / (double) size);
         boolean isFirst = false;
         boolean isLast = false;
@@ -98,6 +121,6 @@ public class CompetitionController {
         return SuccessResponse.of(response);
     }
 
-
-
 }
+
+

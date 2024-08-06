@@ -1,8 +1,9 @@
-package com.ssafy.withme.dto.oauth;
+package com.ssafy.withme.domain.dto;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.MessageDigest;

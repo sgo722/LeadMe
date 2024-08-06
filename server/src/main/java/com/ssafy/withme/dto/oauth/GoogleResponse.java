@@ -1,8 +1,9 @@
-package com.ssafy.withme.dto.oauth;
+package com.ssafy.withme.domain.dto;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
+import lombok.RequiredArgsConstructor;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -44,22 +45,7 @@ public class GoogleResponse implements OAuth2Response{
     }
 
     private String hashString(String input) {
-        MessageDigest digest = null;
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-        byte[] hash = digest.digest(input.getBytes());
-        StringBuilder hexString = new StringBuilder();
-
-        for (byte b : hash) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) hexString.append('0');
-            hexString.append(hex);
-        }
-
-        return hexString.toString().substring(0, 10);
+        return SHA256Util.hashString(input);
     }
 
     @Override
