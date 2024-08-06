@@ -21,9 +21,11 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom{
     public List<ChatRoom> findByUserId(Long userId) {
 
         QUser user1 = QUser.user;
+        QUser user2 = QUser.user;
 
         return qf.selectFrom(chatRoom)
                 .join(chatRoom.user, user1).fetchJoin()
+                .join(chatRoom.partner, user2).fetchJoin()
                 .where(chatRoom.user.id.eq(userId).or(chatRoom.partner.id.eq(userId)))
                 .fetch();
     }

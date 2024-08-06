@@ -13,6 +13,7 @@ import com.ssafy.withme.service.chat.message.ChatMongoService;
 import com.ssafy.withme.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,11 @@ public class ChatRoomService {
 
         // Feign Client를 사용하는 것이 아닌 직접 redis에서 채팅내역 조회
         // TODO: Redis -> RDBMS
+
+//        List<ChatRoom> chatRoomList = chatRoomRepository.findByUserId(userId);
+//        chatRoomList.forEach(chatRoom -> Hibernate.initialize(chatRoom.getUser()));
+
+
         List<ChatRoomGetResponse> chatRoomListGetResponseList =
                 chatRoomRepository.findByUserId(userId).stream()
                         .map(ChatRoomGetResponse::from)

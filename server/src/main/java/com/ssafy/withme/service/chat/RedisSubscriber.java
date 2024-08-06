@@ -42,34 +42,4 @@ public class RedisSubscriber {
         }
     }
 
-//    public void sendRoomList(String publishMessage) {
-//        try {
-//            log.info("Redis Subscriber roomList");
-//
-//            MessageSubDto dto = objectMapper.readValue(publishMessage, MessageSubDto.class);
-//
-//            ChatMessageDto chatMessage = dto.getChatMessageDto();
-//
-//            List<ChatRoomGetResponse> chatRoomListGetResponseList = dto.getList();
-//            List<ChatRoomGetResponse> chatRoomListGetResponseListPartner = dto.getPartnerList();
-//
-//            Long userId = dto.getUserId();
-//            Long partnerId = dto.getPartnerId();
-//
-//            // 로그인 유저 채팅방 리스트 최신화 -> 로그인한 내 계정에 보냄
-//            for (ChatRoomGetResponse response : chatRoomListGetResponseList) {
-//                messagingTemplate.convertAndSend(
-//                        "/sub/chat/roomList/" + userId, response
-//                );
-//            }
-//
-//            // 파트너 계정에도 리스트 최신화
-////            messagingTemplate.convertAndSend(
-////                    "/sub/chat/roomList/" + partnerId, chatRoomListGetResponseListPartner
-////            );
-//
-//        } catch (Exception e) {
-//            log.error("Exception {}", e);
-//        }
-//    }
 }
