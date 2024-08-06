@@ -1,6 +1,6 @@
-FROM openjdk:17-alpine
+FROM openjdk:17-slim-buster
 
-RUN apk update && apk add ffmpeg
+RUN apt-get update && apt-get install -y ffmpeg
 
 ARG JAR_FILE=build/libs/*.jar
 
