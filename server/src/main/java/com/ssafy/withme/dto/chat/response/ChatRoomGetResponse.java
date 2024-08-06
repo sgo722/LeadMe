@@ -19,6 +19,8 @@ public class ChatRoomGetResponse {
 
     private String userNickname;
 
+    private String userImageUrl;
+
     private Long partnerId;
 
     private String partnerNickname;
@@ -36,6 +38,7 @@ public class ChatRoomGetResponse {
         return ChatRoomGetResponse.builder()
                 .roomId(chatRoom.getId())
                 .userNickname(chatRoom.getUser().getNickname())
+                .userImageUrl(chatRoom.getUser().getProfileImg())
                 .userId(chatRoom.getUser().getId())
                 .partnerNickname(chatRoom.getPartner().getNickname())
                 .partnerId(chatRoom.getPartner().getId())
