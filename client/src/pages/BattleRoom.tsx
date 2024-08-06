@@ -26,6 +26,14 @@ export const BattleRoom: React.FC = () => {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]); // 원격 비디오 스트림 구독자 목록 상태 관리
   const [error, setError] = useState<string | null>(null); // 에러 상태 관리
 
+  // 걍 임시로 썻음 빌드할때 에러나서
+  useEffect(() => {
+    if (session) {
+      console.log("세션이 설정되었습니다:", session);
+      // 여기서 session을 사용한 추가 로직을 구현할 수 있습니다.
+    }
+  }, [session]);
+
   // 컴포넌트가 마운트될때나 token, roomName이 변경될 때 실행
   useEffect(() => {
     // OpenVidu 객체 생성
