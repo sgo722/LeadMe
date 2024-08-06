@@ -91,11 +91,14 @@ public class UserController {
     @GetMapping("/user/check/{nickname}")
     public boolean checkNickname(
             @RequestHeader("Authorization") String authorization,
-            @RequestParam("nickname") String nickname) {
+            @PathVariable("nickname") String nickname) {
 
         return userService.findByNickname(nickname);
     }
 
     // 프로필 수정
 //    @PostMapping("/user/profile/save")
+//    public SuccessResponse<?> saveProfile() {
+//
+//    }
 }
