@@ -31,7 +31,6 @@ public class ChatRoomService {
     private final UserService userService;
 
     public ChatRoomGetResponse getChatRoomInfo(Long userId, Long roomId) {
-//        return mainFeignClient.getChatRoomInfo(accessToken, roomId);
         log.info("userId = {}, roomId = {}", userId, roomId);
         ChatRoom findRoom = chatRoomRepository.findByUserIdAndRoomId(userId, roomId);
 
@@ -61,9 +60,7 @@ public class ChatRoomService {
             chatRoomListGetResponseList = chatRoomRedisRepository.getChatRoomList(userId);
 
         } else {
-            // 채팅방이 레디스에 없으면 페인 사용해서 불러온다!
             // -> 레디스에 없으면 그냥 만들자
-//            chatRoomListGetResponseList = mainFeignClient.getChatRoomList(accessToken);
             chatRoomListGetResponseList = new ArrayList<>();
             chatRoomRedisRepository.initChatRoomList(userId, chatRoomListGetResponseList);
         }
