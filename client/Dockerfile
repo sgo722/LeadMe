@@ -5,7 +5,7 @@ COPY package.json ./
 COPY package-lock.json ./
 RUN npm install
 COPY . .
-RUN npm run build
+RUN vite build
 
 #2단계: 배포 단계
 FROM nginx:alpine
