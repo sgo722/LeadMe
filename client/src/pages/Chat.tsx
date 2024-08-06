@@ -14,6 +14,7 @@ interface ChatRoomGetResponse {
   roomId: number;
   userId: number;
   userNickname: string;
+  userImageUrl: string;
   partnerId: number;
   partnerNickname: string;
   partnerImageUrl: string;
@@ -76,7 +77,7 @@ export const Chat: React.FC = () => {
           }
         )
         .then((response) => {
-          console.log(response.data);
+          console.log("채팅 목록", response.data);
           const chatRooms = response.data.data;
           if (Array.isArray(chatRooms)) {
             setChatList(chatRooms);
@@ -139,20 +140,38 @@ export const Chat: React.FC = () => {
                   key={chat.roomId}
                   onClick={() =>
                     openChatModal(
-                      chat.partnerNickname,
-                      chat.partnerId,
-                      chat.partnerImageUrl
+                      chat.partnerId !== currentUserId
+                        ? chat.partnerNickname
+                        : chat.userNickname,
+                      chat.partnerId !== currentUserId
+                        ? chat.partnerId
+                        : chat.userId,
+                      chat.partnerId !== currentUserId
+                        ? chat.partnerImageUrl
+                        : chat.userImageUrl
                     )
                   }
                 >
                   <UserProfileImage
-                    src={chat.partnerImageUrl}
-                    alt={`${chat.userNickname}'s profile`}
+                    src={
+                      chat.partnerId !== currentUserId
+                        ? chat.partnerImageUrl
+                        : chat.userImageUrl
+                    }
+                    alt={`${
+                      chat.partnerId !== currentUserId
+                        ? chat.partnerNickname
+                        : chat.userNickname
+                    }'s profile`}
                   />
                   <ChatPreviewInfo>
-                    <ChatUserName>{chat.partnerNickname}</ChatUserName>
+                    <ChatUserName>
+                      {chat.partnerId !== currentUserId
+                        ? chat.partnerNickname
+                        : chat.userNickname}
+                    </ChatUserName>
                     <ChatPreviewMessage>
-                      {/*{chat.lastChatMessageDto.message}*/}
+                      {chat.lastChatMessageDto.message}
                     </ChatPreviewMessage>
                   </ChatPreviewInfo>
                 </ChatListItem>
