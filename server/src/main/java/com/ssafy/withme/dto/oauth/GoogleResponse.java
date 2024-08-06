@@ -1,15 +1,17 @@
-package com.ssafy.withme.domain.dto;
+package com.ssafy.withme.dto.oauth;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
+import com.ssafy.withme.dto.oauth.OAuth2Response;
+import com.ssafy.withme.global.util.SHA256Util;
 import lombok.RequiredArgsConstructor;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-public class GoogleResponse implements OAuth2Response{
+public class GoogleResponse implements OAuth2Response {
 
     private final Map<String, Object> attributes;
 

@@ -1,8 +1,9 @@
-package com.ssafy.withme.domain.dto;
+package com.ssafy.withme.dto.oauth;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
+import com.ssafy.withme.dto.oauth.OAuth2Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,7 +12,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 @Slf4j
-public class KakaoResponse implements OAuth2Response{
+public class KakaoResponse implements OAuth2Response {
 
     private final Map<String, Object> attributes;
     private final Map<String, Object> kakaoAccount;
