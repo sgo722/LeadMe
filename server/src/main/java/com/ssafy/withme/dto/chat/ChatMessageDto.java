@@ -42,5 +42,4 @@ public class ChatMessageDto implements Serializable {
                 .status(chatMessage.getStatus())
                 .build();
     }
-
 }
