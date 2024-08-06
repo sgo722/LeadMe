@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
@@ -25,7 +25,7 @@ interface ResponseData {
 }
 
 const useAuth = () => {
-  const [accessToken, setAccessToken] = useRecoilState(accessTokenState);
+  const setAccessToken = useSetRecoilState(accessTokenState);
   const [accessTokenExpireTime, setAccessTokenExpireTime] = useRecoilState(
     accessTokenExpireTimeState
   );
