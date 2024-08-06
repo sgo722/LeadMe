@@ -44,8 +44,10 @@ public class UserChallenge extends BaseEntity {
 
     private String uuid;
 
+    private String thumbnailPath;
+
     @Builder
-    public UserChallenge(String access, List<Comment> comments, User user, Challenge challenge, Integer likes, String videoPath, String fileName, String uuid) {
+    public UserChallenge(String access, List<Comment> comments, User user, Challenge challenge, Integer likes, String videoPath, String fileName, String uuid, String thumbnailPath) {
         this.access = access;
         this.comments = comments;
         this.user = user;
@@ -54,6 +56,7 @@ public class UserChallenge extends BaseEntity {
         this.videoPath = videoPath;
         this.fileName = fileName;
         this.uuid = uuid;
+        this.thumbnailPath = thumbnailPath;
     }
 
 }

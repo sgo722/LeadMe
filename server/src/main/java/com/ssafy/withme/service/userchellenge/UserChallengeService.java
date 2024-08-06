@@ -51,7 +51,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.ssafy.withme.global.error.ErrorCode.*;
@@ -73,6 +77,10 @@ public class UserChallengeService {
     @Value("${python-server.youtube-audio-directory}")
     String AUDIO_DIRECTORY;
 
+
+    @Value("${python-server.permanent-thumbnail-directory}")
+    String THUMBNAIL_DIRECTORY;
+
     private final UserChallengeRepository userChallengeRepository;
 
     private final UserRepository userRepository;
@@ -86,12 +94,14 @@ public class UserChallengeService {
 
     /**
      * * 유저의 스켈레톤 데이터를 받아와서 알고리즘으로 분석률을 반환한다.
+     *
      * @param request
      * @param videoFile
      * @return
      * @throws EntityNotFoundException
      * @throws IOException
      */
+
     public UserChallengeAnalyzeResponse analyzeVideo(UserChallengeAnalyzeRequest request, MultipartFile videoFile) throws EntityNotFoundException, IOException {
         // 챌린지 아이디
         Long challengeId = request.getChallengeId();
@@ -100,7 +110,7 @@ public class UserChallengeService {
         Challenge challenge = challengeRepository.findById(challengeId).orElse(null);
 
         // 조회한 챌린지가 없는 경우 예외처리
-        if(challenge == null){
+        if (challenge == null) {
             throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
         }
 
@@ -131,7 +141,7 @@ public class UserChallengeService {
 
         // 저장된 챌린지 포즈 정보
         Landmark landmark = landmarkRepository.findByYoutubeId(challenge.getYoutubeId());
-        log.info("youtubeID : {} 동영상 분석 준비" , challenge.getYoutubeId());
+        log.info("youtubeID : {} 동영상 분석 준비", challenge.getYoutubeId());
 
         // 기존 챌린지 정보를 List<Frame> 형태로 캐스팅
         List<Frame> challengeFrames = landmark.getLandmarks().stream()
@@ -161,6 +171,7 @@ public class UserChallengeService {
 
     /**
      * 파이썬 서버에서 받아온 keypoints 값을 역직렬화 진행
+     *
      * @param jsonResponse
      * @return List<Frame>
      * @throws JsonProcessingException
@@ -174,15 +185,15 @@ public class UserChallengeService {
         List<Frame> frames = new ArrayList<>();
 
         // landmarks[]
-        for(JsonNode frameNode : landmarkNode){
+        for (JsonNode frameNode : landmarkNode) {
             List<Keypoint> keypoints = new ArrayList<>();
 
             // landmark[][]
-            for(JsonNode keypointNode : frameNode) {
+            for (JsonNode keypointNode : frameNode) {
                 double x = keypointNode.path("x").asDouble();
                 double y = keypointNode.path("y").asDouble();
                 double z = keypointNode.path("z").asDouble();
-                double visibility  = keypointNode.path("visibility").asDouble();
+                double visibility = keypointNode.path("visibility").asDouble();
 
                 keypoints.add(new Keypoint(x, y, z, visibility));
             }
@@ -194,6 +205,7 @@ public class UserChallengeService {
 
     /**
      * uuid와 fileName을 받아 임시저장 파일에서 해당 영상을 찾아 영구저장 파일로 이동시키고 파일 이름을 변경하여 영구저장한다.
+     *
      * @param request
      */
     public UserChallengeSaveResponse saveUserFile(UserChallengeSaveRequest request) {
@@ -211,19 +223,23 @@ public class UserChallengeService {
             throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_FILE);
         }
 
+
         try {
             // 영구 저장 경로로 이동 및 파일명 변경
             String finalFileName = request.getFileName() + ".mp4";
             Path permanentVideoPath = Paths.get(PERMANENT_DIRECTORY, finalFileName);
             Files.move(tempVideoPath, permanentVideoPath);
 
+            String thumbnailPath = extractThumbnail(permanentVideoPath, request.getFileName());
+
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
 //                    .user(user)
                     .challenge(challenge)
-                    .videoPath(PERMANENT_DIRECTORY+"/"+finalFileName)
+                    .videoPath(PERMANENT_DIRECTORY + "/" + finalFileName)
                     .access(request.getAccess())
                     .uuid(request.getUuid())
+                    .thumbnailPath(thumbnailPath)
                     .build();
             UserChallenge savedUserChallenge = userChallengeRepository.save(userChallenge);
 
@@ -231,7 +247,9 @@ public class UserChallengeService {
             findReportByUuid.setUserChallengeId(savedUserChallenge.getId());
             reportRepository.save(findReportByUuid);
             return UserChallengeSaveResponse.ofResponse(savedUserChallenge);
-        } catch(IOException e) {
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         return null;
@@ -239,6 +257,7 @@ public class UserChallengeService {
 
     /**
      * 유저 영상 uuid를 받아 임시저장폴더에서 해당 영상을 찾아서 삭제한다.
+     *
      * @param request
      */
     public void deleteUserFile(UserChallengeDeleteRequest request) {
@@ -260,6 +279,7 @@ public class UserChallengeService {
 
     /**
      * uuid를 기반으로 영상 분석데이터를 조회한다.
+     *
      * @param uuid
      * @return
      */
@@ -279,7 +299,6 @@ public class UserChallengeService {
 
         return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, mergedVideoFile);
     }
-
 
 
     public List<UserChallengeReportViewResponse> findUserChallengeByPageable(Pageable pageable) {
@@ -339,4 +358,63 @@ public class UserChallengeService {
         return mergedFile;
     }
 
+    private String extractThumbnail(Path videoPath, String fileName) throws IOException, InterruptedException {
+        // 비디오 길이 확인
+        String durationCommand = String.format("ffmpeg -i %s", videoPath.toString());
+        Process process = Runtime.getRuntime().exec(durationCommand);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
+        String line;
+        String durationStr = null;
+        Pattern pattern = Pattern.compile("Duration: (\\d{2}):(\\d{2}):(\\d{2}\\.\\d{2})");
+
+        while ((line = reader.readLine()) != null) {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.find()) {
+                durationStr = matcher.group(0);
+                break;
+            }
+        }
+        process.waitFor();
+
+        if (durationStr == null) {
+            throw new IOException("Failed to retrieve video duration.");
+        }
+
+        log.info("비디오 길이 : " + durationStr);
+
+        // 비디오 길이를 초 단위로 변환
+        String[] timeParts = durationStr.split(":");
+        String[] secondPart = timeParts[3].split("//.");
+        int minutes = Integer.parseInt(timeParts[2]);
+        double seconds = Double.parseDouble(secondPart[0]);
+        double totalDuration = minutes * 60 + seconds;
+
+        // 3/5 지점 계산
+        double targetTime = totalDuration * 3 / 5;
+
+        // 썸네일 추출
+        String thumbnailFileName = fileName + ".png";
+        Path thumbnailPath = Paths.get(THUMBNAIL_DIRECTORY, thumbnailFileName);
+
+        // 디렉토리 존재 여부 확인 및 생성
+        Files.createDirectories(thumbnailPath.getParent());
+
+        // 수정된 부분 시작
+        String thumbnailCommand = String.format("ffmpeg -i %s -ss %f -vframes 1 %s", videoPath.toString(), targetTime, thumbnailPath.toString());
+        ProcessBuilder builder = new ProcessBuilder(thumbnailCommand.split(" "));
+        builder.redirectErrorStream(true);
+
+        Process thumbnailProcess = builder.start();
+
+        // 프로세스 출력 로그
+        reader = new BufferedReader(new InputStreamReader(thumbnailProcess.getInputStream()));
+
+
+        // 수정된 부분 끝
+
+        log.info("썸네일 경로 : " + thumbnailPath.toString());
+
+        return thumbnailPath.toString();
+    }
 }
