@@ -1,6 +1,11 @@
-package com.ssafy.withme.global.config.chat;
+package com.ssafy.withme.global.config.database;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.ssafy.withme.service.chat.RedisSubscriber;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,8 +19,6 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.GenericToStringSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -31,35 +34,13 @@ public class RedisConfig {
     @Value("${spring.data.redis.password}")
     private String redisPassword;
 
-    // 단일 Topic 사용을 위한 Bean 설정
     @Bean
     public ChannelTopic channelTopic() {
         return new ChannelTopic("chatroom");
     }
 
-//    @Bean
-//    public JedisConnectionFactory jedisConnectionFactory() {
-//        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration("localhost", 6379);
-//        redisStandaloneConfiguration.setPassword(RedisPassword.of("yourRedisPasswordIfAny"));
-//        return new JedisConnectionFactory(redisStandaloneConfiguration);
-//    }
-
-    // deprecated 됐다고해서 위에 방법 사용 추천
-//    @Bean
-//    public RedisConnectionFactory redisConnectionFactory() {
-//
-//        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory();
-//
-//        lettuceConnectionFactory.setHostName(redisHost);
-//        lettuceConnectionFactory.setPort(Integer.parseInt(redisPort));
-//        lettuceConnectionFactory.setPassword(redisPassword);
-//
-//        return lettuceConnectionFactory;
-//    }
-
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
-
         RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
         redisStandaloneConfiguration.setHostName(redisHost); // Redis 서버 호스트명
         redisStandaloneConfiguration.setPort(redisPort); // Redis 서버 포트
@@ -68,10 +49,6 @@ public class RedisConfig {
         return new LettuceConnectionFactory(redisStandaloneConfiguration);
     }
 
-    /**
-     * redis에 발행(publish)된 메시지 처리를 위한 리스너 설정
-     * @return RedisMessageListenerContainer
-     */
     @Bean
     public RedisMessageListenerContainer redisMessageListener (
             MessageListenerAdapter listenerAdapterChatMessage,
@@ -83,12 +60,10 @@ public class RedisConfig {
         return container;
     }
 
-    // 실제 메시지를 처리하는 subscriber 설정 추가
     @Bean
     public MessageListenerAdapter listenerAdapterChatMessage(RedisSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, "sendMessage");
     }
-
 
     @Bean
     public RedisMessageListenerContainer redisMessageListenerRoomList (
@@ -101,31 +76,35 @@ public class RedisConfig {
         return container;
     }
 
-    // 실제 메시지 방을 처리하는 subscriber 설정 추가
     @Bean
     public MessageListenerAdapter listenerAdapterChatRoomList(RedisSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, "sendRoomList");
     }
-
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
+        // ObjectMapper에 DefaultTyping 설정
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.activateDefaultTyping(
+                BasicPolymorphicTypeValidator.builder()
+                        .allowIfBaseType(Object.class)
+                        .build(),
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY);
+
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+
         // 일반적인 key : value의 경우 직렬화
         template.setKeySerializer(new StringRedisSerializer());
-//        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setValueSerializer(new GenericToStringSerializer<>(Object.class));
+        template.setValueSerializer(serializer);
 
-        // Has를 사용할 경우 직렬화
+        // Hash를 사용할 경우 직렬화
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new StringRedisSerializer());
-
-        // 모든 경우
-        template.setDefaultSerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(serializer);
 
         return template;
     }
-
 }

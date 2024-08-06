@@ -2,13 +2,15 @@ package com.ssafy.withme.dto.chat;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.ssafy.withme.domain.chat.ChatRoom;
 import lombok.*;
 
 @Builder
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+//@NoArgsConstructor(access = AccessLevel.PROTECTED)
+//@AllArgsConstructor
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public class ChatRoomGetResponse {
 
     private Long roomId;
@@ -24,6 +26,22 @@ public class ChatRoomGetResponse {
     private String partnerImageUrl;
 
     private ChatMessageDto lastChatMessageDto;
+
+    public void updateChatMessageDto(ChatMessageDto chatMessageDto) {
+        this.lastChatMessageDto = chatMessageDto;
+    }
+
+    public static ChatRoomGetResponse from(ChatRoom chatRoom) {
+
+        return ChatRoomGetResponse.builder()
+                .roomId(chatRoom.getId())
+                .userNickname(chatRoom.getUser().getNickname())
+                .userId(chatRoom.getUser().getId())
+                .partnerNickname(chatRoom.getPartner().getNickname())
+                .partnerId(chatRoom.getPartner().getId())
+                .partnerImageUrl(chatRoom.getPartner().getProfileImg())
+                .build();
+    }
 
     @JsonCreator
     public ChatRoomGetResponse(
@@ -41,22 +59,5 @@ public class ChatRoomGetResponse {
         this.partnerNickname = partnerNickname;
         this.partnerImageUrl = partnerImageUrl;
         this.lastChatMessageDto = lastChatMessageDto;
-    }
-
-
-    public void updateChatMessageDto(ChatMessageDto chatMessageDto) {
-        this.lastChatMessageDto = chatMessageDto;
-    }
-
-    public static ChatRoomGetResponse from(ChatRoom chatRoom) {
-
-        return ChatRoomGetResponse.builder()
-                .roomId(chatRoom.getId())
-                .userNickname(chatRoom.getUser().getNickname())
-                .userId(chatRoom.getUser().getId())
-                .partnerNickname(chatRoom.getPartner().getNickname())
-                .partnerId(chatRoom.getPartner().getId())
-                .partnerImageUrl(chatRoom.getPartner().getProfileImg())
-                .build();
     }
 }
