@@ -52,17 +52,6 @@ pipeline {
             }
         }
 
-        stage('Build Client Project') {
-            steps {
-                script {
-                    dir('S11P12C109/client') {
-                        sh 'npm install'
-                        sh 'npm run build'
-                    }
-                }
-            }
-        }
-
         stage('Build and Push Client Docker Image') {
             steps {
                 script {
