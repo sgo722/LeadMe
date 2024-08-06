@@ -9,6 +9,8 @@ import java.security.NoSuchAlgorithmException;
 public class SHA256Util {
 
     public static String hashString(String input) {
+        if(input == null || input.equals("")) return "";
+
         MessageDigest digest = null;
         try {
             digest = MessageDigest.getInstance("SHA-256");

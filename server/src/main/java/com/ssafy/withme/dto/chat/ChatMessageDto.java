@@ -1,8 +1,5 @@
 package com.ssafy.withme.dto.chat;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.ssafy.withme.domain.chat.ChatMessage;
 import com.ssafy.withme.domain.chat.constant.MessageStatus;
 import com.ssafy.withme.domain.chat.constant.MessageType;
@@ -45,4 +42,5 @@ public class ChatMessageDto implements Serializable {
                 .status(chatMessage.getStatus())
                 .build();
     }
+
 }

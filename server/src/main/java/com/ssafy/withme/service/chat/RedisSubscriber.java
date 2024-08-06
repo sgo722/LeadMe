@@ -64,9 +64,9 @@ public class RedisSubscriber {
             }
 
             // 파트너 계정에도 리스트 최신화
-//            messagingTemplate.convertAndSend(
-//                    "/sub/chat/roomList/" + partnerId, chatRoomListGetResponseListPartner
-//            );
+            messagingTemplate.convertAndSend(
+                    "/sub/chat/roomList/" + partnerId, chatRoomListGetResponseListPartner
+            );
 
         } catch (Exception e) {
             log.error("Exception {}", e);
