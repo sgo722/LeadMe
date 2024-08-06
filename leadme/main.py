@@ -100,10 +100,15 @@ async def saveVideDataByUserFile(
         flip_start = time.time()
         # 원본 비디오를 읽어와서 뒤집기
         cap = cv2.VideoCapture(original_video_path)
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter(flipped_temp_video_path, fourcc, cap.get(cv2.CAP_PROP_FPS), 
-                            (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+        # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        # out = cv2.VideoWriter(flipped_temp_video_path, fourcc, cap.get(cv2.CAP_PROP_FPS), 
+        #                     (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+
+        out = cv2.VideoWriter(flipped_temp_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
