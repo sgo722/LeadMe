@@ -100,6 +100,7 @@ public class UserController {
             @RequestBody UserUpdateDto userUpdateDto) {
         String accessToken = authorization.split(" ")[1];
 
+        log.info(userUpdateDto.getNickname() + " " + userUpdateDto.getProfileComment());
         userService.updateUser(accessToken, userUpdateDto);
 
         return SuccessResponse.of("OK");

@@ -6,6 +6,8 @@ import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,6 +23,7 @@ import java.util.List;
 @NoArgsConstructor
 public class User extends BaseEntity implements UserDetails {
 
+    private static final Logger log = LoggerFactory.getLogger(User.class);
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -105,6 +108,7 @@ public class User extends BaseEntity implements UserDetails {
     }
 
     public void updateProfile(String nickname, String profileComment) {
+        log.info(nickname + " " + profileComment);
         this.nickname = nickname;
         this.profileComment = profileComment;
     }
