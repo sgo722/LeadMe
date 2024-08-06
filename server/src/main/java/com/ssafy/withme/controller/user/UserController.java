@@ -91,7 +91,7 @@ public class UserController {
     @GetMapping("/user/check/{nickname}")
     public boolean checkNickname(
             @RequestHeader("Authorization") String authorization,
-            @PathVariable("nickname") String nickname) {
+            @RequestParam("nickname") String nickname) {
 
         return userService.findByNickname(nickname);
     }
