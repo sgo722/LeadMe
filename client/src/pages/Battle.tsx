@@ -9,7 +9,7 @@ import { axiosInstance } from "axiosInstance/apiClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pagination } from "features/battle/Pagination";
 import { AxiosResponse } from "axios";
-
+import { useNavigate } from "react-router-dom";
 // 로딩 새로고침
 // 타입 제대로 지정 꼼꼼히
 // 비밀번호 로직 추가
@@ -48,6 +48,8 @@ export const Battle: React.FC = () => {
     useState<boolean>(false); // 비밀번호 입력 모달 표시 여부
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isPasswordError, setIsPasswordError] = useState<boolean>(false); // 비밀번호 틀렸는지에 대한 상태
+
+  const nav = useNavigate();
 
   useEffect(() => {
     if (isPasswordError) {
@@ -97,39 +99,46 @@ export const Battle: React.FC = () => {
     },
   });
 
-  // public 방 토큰을 가져오기 위한 mutation
+  // public 방 토큰을 가져와서 입장시키는 mutation
   const enterPublicRoomMutation = useMutation({
-    mutationFn: (sessionId: string) =>
-      axiosInstance.post(`api/v1/sessions/${sessionId}/connections`),
-    onSuccess: (data) => {
+    mutationFn: (room: Room) =>
+      axiosInstance.post(`api/v1/sessions/${room.sessionId}/connections`),
+    onSuccess: (data, room) => {
       console.log("공개 방 토근 발급 성공", data.data.data.token);
+      console.log("세션아이디:", room.sessionId);
+      console.log("방이름:", room.roomName);
+      nav(`/battleRoom/${room.sessionId}`, {
+        state: {
+          token: data.data.data.token,
+          sessionId: room.sessionId,
+          roomName: room.roomName,
+        },
+      });
     },
     onError: (error) => {
       console.error("공개 방 토큰 발급 요류:", error);
     },
   });
 
-  // private 방 토큰을 가져오기 위한 mutation
+  // private 방 토큰을 가져와서 입장시키는 mutation
   const enterPrivateRoomMutation = useMutation({
-    mutationFn: ({
-      sessionId,
-      competitionId,
-      password,
-    }: {
-      sessionId: string;
-      competitionId: string;
-      password: string;
-    }) =>
-      axiosInstance.post(`/api/v1/sessions/${sessionId}/connections`, {
-        competitionId,
+    mutationFn: ({ room, password }: { room: Room; password: string }) =>
+      axiosInstance.post(`/api/v1/sessions/${room.sessionId}/connections`, {
+        competitionId: room.competitionId.toString(),
         password,
       }),
-    onSuccess: (data) => {
+    onSuccess: (data, { room }) => {
       if (data.data.data.validation) {
-        console.log(data.data.isSuccess);
         console.log("비공개방 토큰 발급 성공", data.data.data.token);
         setShowInputPasswordModal(false);
         setIsPasswordError(false);
+        nav(`/battleRoom/${room.sessionId}`, {
+          state: {
+            token: data.data.data.token,
+            sessionId: room.sessionId,
+            roomNamd: room.roomName,
+          },
+        });
       }
       if (!data.data.data.validation) {
         console.log("비밀번호 틀림");
@@ -149,7 +158,7 @@ export const Battle: React.FC = () => {
   const handleEnterRoom = (room: Room) => {
     if (room.public) {
       // 공개 방이면 바로 입장 시도
-      enterPublicRoomMutation.mutate(room.sessionId);
+      enterPublicRoomMutation.mutate(room);
     }
     if (!room.public) {
       // 비공개 방이면 선택한 방 정보 저장 후 비밀번호 입력 모달 표시
@@ -163,8 +172,7 @@ export const Battle: React.FC = () => {
     if (selectedRoom) {
       // 선택된 방이 있을때 비공개 방 입장 시도
       enterPrivateRoomMutation.mutate({
-        sessionId: selectedRoom.sessionId,
-        competitionId: selectedRoom.competitionId.toString(),
+        room: selectedRoom,
         password,
       });
     }
