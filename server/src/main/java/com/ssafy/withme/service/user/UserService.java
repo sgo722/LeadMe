@@ -103,6 +103,7 @@ public class UserService {
         Long userId = tokenProvider.getUserId(accessToken);
 
         User findUser = findById(userId);
+        log.info("find user: {}", findUser);
 
         findUser.updateProfile(userUpdateDto.getNickname(), userUpdateDto.getProfileComment());
     }
