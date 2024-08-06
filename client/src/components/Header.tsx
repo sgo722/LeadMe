@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useRecoilValue } from "recoil";
-import { accessTokenState } from "stores/authAtom";
+import { accessTokenState, userProfileState } from "stores/authAtom";
 import styled from "styled-components";
 import { FaTiktok } from "react-icons/fa6";
 import { FaYoutube } from "react-icons/fa";
@@ -17,6 +17,8 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
   const [loginModal, setLoginModal] = useState<boolean>(false);
 
   const accessToken = useRecoilValue(accessTokenState);
+  const userProfile = useRecoilValue(userProfileState);
+  const currentUserId = userProfile?.id;
   const isLogin = !!accessToken;
 
   const { logout } = useAuth();
@@ -83,7 +85,9 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
                   <LeftHoverBox>
                     <HoverLink to="/mypage">마이페이지</HoverLink>
                     <Hr />
-                    <HoverLink to="/chat/test">메세지 목록</HoverLink>
+                    <HoverLink to={`/chat/${currentUserId}`}>
+                      메세지 목록
+                    </HoverLink>
                   </LeftHoverBox>
                 </Fake>
               </Mypage>
