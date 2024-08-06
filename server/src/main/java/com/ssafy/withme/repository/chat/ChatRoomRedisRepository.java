@@ -1,10 +1,9 @@
 package com.ssafy.withme.repository.chat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.withme.dto.chat.ChatMessageDto;
-import com.ssafy.withme.dto.chat.ChatRoomGetResponse;
+import com.ssafy.withme.dto.chat.response.ChatRoomGetResponse;
 import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.BusinessException;
 import jakarta.annotation.Resource;

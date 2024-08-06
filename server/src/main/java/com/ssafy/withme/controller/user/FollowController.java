@@ -1,15 +1,17 @@
 package com.ssafy.withme.controller.user;
 
 import com.ssafy.withme.domain.user.User;
-import com.ssafy.withme.dto.UserInfoDto;
+import com.ssafy.withme.dto.user.UserInfoDto;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.FollowService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -37,6 +39,8 @@ public class FollowController {
      */
     @GetMapping("/user/following/list")
     public SuccessResponse<?> getFollowings(@CurrentUser User user) {
+
+        log.info("user: {}", user);
 
         List<UserInfoDto> followings = followService.findFollowing(user.getId());
 

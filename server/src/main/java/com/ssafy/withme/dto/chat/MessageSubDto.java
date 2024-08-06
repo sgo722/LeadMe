@@ -1,5 +1,6 @@
 package com.ssafy.withme.dto.chat;
 
+import com.ssafy.withme.dto.chat.response.ChatRoomGetResponse;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

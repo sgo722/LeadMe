@@ -6,29 +6,10 @@ import img1 from "assets/image/img1.png";
 import img2 from "assets/image/img2.png";
 import ProfileModal from "components/ProfileModal";
 import FollowModal from "components/FollowModal";
+import { UserProfile } from "types";
 
-// 유저 프로필
-export interface UserProfile {
-  id: number;
-  name: string;
-  nickname: string;
-  email: string;
-  gender: string | null;
-  age: number | null;
-  roleType: string;
-  profileImg: string;
-  profileComment: string | null;
-  loginDateTime: string | null;
-  userStatus: string;
-}
-
-interface ImageData {
-  id: number;
-  src: string;
-  title: string;
-}
-
-const imageData: ImageData[] = [
+// 유저 프로필 데이터 타입
+const imageData = [
   {
     id: 1,
     src: img1,
@@ -86,6 +67,11 @@ const Mypage: React.FC = () => {
     }
   };
 
+  const updateUserProfile = (updatedUser: UserProfile) => {
+    setUser(updatedUser);
+    sessionStorage.setItem("user_profile", JSON.stringify(updatedUser));
+  };
+
   if (!user) {
     return <div>Loading...</div>;
   }
@@ -139,7 +125,11 @@ const Mypage: React.FC = () => {
         </MainSection>
       </Container>
       {isProfileModalOpen && (
-        <ProfileModal onClose={handleCloseProfileModal} user={user} />
+        <ProfileModal
+          onClose={handleCloseProfileModal}
+          user={user}
+          updateUserProfile={updateUserProfile}
+        />
       )}
       {isFollowModalOpen && followModalType && (
         <FollowModal onClose={handleCloseFollowModal} type={followModalType} />

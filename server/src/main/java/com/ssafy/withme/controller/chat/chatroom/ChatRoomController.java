@@ -1,7 +1,7 @@
 package com.ssafy.withme.controller.chat.chatroom;
 
 import com.ssafy.withme.domain.chat.ChatRoom;
-import com.ssafy.withme.dto.chat.ChatRoomGetResponse;
+import com.ssafy.withme.dto.chat.response.ChatRoomGetResponse;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.dto.chat.request.ChatRoomCreateRequest;
 import com.ssafy.withme.global.response.SuccessResponse;

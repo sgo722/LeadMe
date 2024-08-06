@@ -1,4 +1,4 @@
-package com.ssafy.withme.dto;
+package com.ssafy.withme.dto.token;
 
 import lombok.Builder;
 import lombok.Getter;

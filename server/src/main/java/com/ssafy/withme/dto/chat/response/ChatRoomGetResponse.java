@@ -1,9 +1,10 @@
-package com.ssafy.withme.dto.chat;
+package com.ssafy.withme.dto.chat.response;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.ssafy.withme.domain.chat.ChatRoom;
+import com.ssafy.withme.dto.chat.ChatMessageDto;
 import lombok.*;
 
 @Builder

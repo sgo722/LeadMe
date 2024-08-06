@@ -1,8 +1,9 @@
 package com.ssafy.withme.controller.user;
 
 import com.ssafy.withme.domain.user.User;
-import com.ssafy.withme.dto.SearchUserDto;
-import com.ssafy.withme.dto.UserInfoDto;
+import com.ssafy.withme.dto.user.SearchUserDto;
+import com.ssafy.withme.dto.user.UserInfoDto;
+import com.ssafy.withme.dto.user.UserUpdateDto;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.UserService;
@@ -11,17 +12,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -88,14 +85,24 @@ public class UserController {
     }
 
     // 닉네임 중복여부 확인
-    @GetMapping("/user/check/{nickname}")
+    @GetMapping("/user/check")
     public boolean checkNickname(
             @RequestHeader("Authorization") String authorization,
-            @PathVariable("nickname") String nickname) {
+            @RequestParam("nickname") String nickname) {
 
         return userService.findByNickname(nickname);
     }
 
     // 프로필 수정
-//    @PostMapping("/user/profile/save")
+    @PatchMapping("/user/profile/save")
+    public SuccessResponse<?> saveProfile(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody UserUpdateDto userUpdateDto) {
+        String accessToken = authorization.split(" ")[1];
+
+        log.info(userUpdateDto.getNickname() + " " + userUpdateDto.getProfileComment());
+        userService.updateUser(accessToken, userUpdateDto);
+
+        return SuccessResponse.of("OK");
+    }
 }

@@ -270,9 +270,9 @@ public class UserChallengeService {
         Challenge challenge = challengeRepository.findById(report.getChallengeId()).get();
         Long challengeId = challenge.getId();
         String youtubeId = challenge.getYoutubeId();
-        String videoPath = TEMP_DIRECTORY + "\\" + uuid + ".mp4";
-        String audioPath = AUDIO_DIRECTORY + "\\" + uuid + ".mp3";
-        String outputPath = TEMP_DIRECTORY + "\\" + uuid + "_merged.mp4";
+        String videoPath = TEMP_DIRECTORY + "/" + uuid + ".mp4";
+        String audioPath = AUDIO_DIRECTORY + "/" + uuid + ".mp3";
+        String outputPath = TEMP_DIRECTORY + "/" + uuid + "_merged.mp4";
 
         byte[] mergedVideoFile = mergeVideoAndAudio(videoPath, audioPath, outputPath);
 

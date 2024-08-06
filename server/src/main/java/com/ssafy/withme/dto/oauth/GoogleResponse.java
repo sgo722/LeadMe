@@ -3,27 +3,30 @@ package com.ssafy.withme.domain.dto;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
-import com.ssafy.withme.global.util.SHA256Util;
+import lombok.RequiredArgsConstructor;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-public class NaverResponse implements OAuth2Response{
+public class GoogleResponse implements OAuth2Response{
 
     private final Map<String, Object> attributes;
 
-    public NaverResponse(Map<String, Object> attributes) {
+    public GoogleResponse(Map<String, Object> attributes) {
         System.out.println(attributes);
-        this.attributes = (Map<String, Object>) attributes.get("response");
+        this.attributes = attributes;
     }
+
 
     @Override
     public String getProvider() {
-        return "naver";
+        return "google";
     }
 
     @Override
     public String getProviderId() {
-        return attributes.get("id").toString();
+        return attributes.get("sub").toString();
     }
 
     @Override
@@ -41,7 +44,6 @@ public class NaverResponse implements OAuth2Response{
         return hashString(email);
     }
 
-
     private String hashString(String input) {
         return SHA256Util.hashString(input);
     }
@@ -50,8 +52,9 @@ public class NaverResponse implements OAuth2Response{
     public User toEntity() {
 
         return User.builder()
-                .email(getEmail())
                 .name(getName())
+                .email(getEmail())
+                .profileImg(attributes.get("picture").toString())
                 .roleType(RoleType.USER)
                 .userStatus(UserStatus.ACTIVE)
                 .nickname(makeNickname())

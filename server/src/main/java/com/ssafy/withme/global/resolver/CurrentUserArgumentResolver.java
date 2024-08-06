@@ -1,13 +1,16 @@
 package com.ssafy.withme.global.resolver;
 
+import com.ssafy.withme.dto.oauth.CustomOAuth2User;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -32,19 +35,23 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication != null && authentication.getPrincipal() != null) {
+        log.info("authentication at argument: {}", authentication);
+
+        // Check if the user is authenticated
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
             Object principal = authentication.getPrincipal();
-            String email;
+            String email = null;
 
             if (principal instanceof UserDetails) {
                 email = ((UserDetails) principal).getUsername();
-            } else if (principal instanceof String) {
-                email = (String) principal;
-            } else {
-                return null;
+            } else if (principal instanceof CustomOAuth2User) {
+                email = ((CustomOAuth2User) principal).getUserDto().getEmail();
             }
 
-            return userService.findByEmail(email);
+            if (email != null) {
+                log.info("find email: {}", email);
+                return userService.findByEmail(email);
+            }
         }
 
         return null;

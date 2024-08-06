@@ -2,7 +2,8 @@ package com.ssafy.withme.service.user;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.UserStatus;
-import com.ssafy.withme.dto.SearchUserDto;
+import com.ssafy.withme.dto.user.SearchUserDto;
+import com.ssafy.withme.dto.user.UserUpdateDto;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
@@ -12,7 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -54,8 +57,9 @@ public class UserService {
     public boolean findByNickname(String nickname) {
         log.info("find by nickname: {}", nickname);
 
-        User user = userRepository.findByNickname(nickname);
-        return user == null;
+        Optional<User> findUser = userRepository.findByNickname(nickname);
+
+        return findUser.isEmpty();
     }
 
     // find user list by name field
@@ -91,5 +95,16 @@ public class UserService {
         User findUser = findById(id);
 
         findUser.updateStatus(status);
+    }
+
+    @Transactional
+    public void updateUser(String accessToken, UserUpdateDto userUpdateDto) {
+
+        Long userId = tokenProvider.getUserId(accessToken);
+
+        User findUser = findById(userId);
+        log.info("find user: {}", findUser);
+
+        findUser.updateProfile(userUpdateDto.getNickname(), userUpdateDto.getProfileComment());
     }
 }
