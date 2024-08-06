@@ -1,13 +1,14 @@
 import Header from "components/Header";
 import styled from "styled-components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SearchBar } from "components/SearchBar";
 import { MdLock } from "react-icons/md";
 import { CreateRoomModal } from "features/battle/CreateRoomModal";
 import { InputPasswordModal } from "features/battle/InputPasswordModal";
 import { axiosInstance } from "axiosInstance/apiClient";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pagination } from "features/battle/Pagination";
+import { AxiosResponse } from "axios";
 
 // 로딩 새로고침
 // 타입 제대로 지정 꼼꼼히
@@ -15,11 +16,14 @@ import { Pagination } from "features/battle/Pagination";
 // 방 입장 로직 추가
 
 // 방 목록 & 검색 api
-const fetchRooms = async (page: number, searchKeyword: string = "") => {
+const fetchRooms = async (
+  page: number,
+  searchKeyword: string = ""
+): Promise<{ competitions: Room[]; totalPages: number }> => {
   const res = await axiosInstance.get(
     // 검색어가 있으면 파라미터에 추가, 없으면 빼고 요청
     `/api/v1/competitions?page=${page}${
-      searchKeyword ? `&searchKeyword=${searchKeyword}` : ""
+      searchKeyword ? `&searchKeyword=${searchKeyword}` : "&searchKeyword="
     }`
   );
   return res.data.data;
@@ -43,45 +47,128 @@ export const Battle: React.FC = () => {
   const [showInputPasswordModal, setShowInputPasswordModal] =
     useState<boolean>(false); // 비밀번호 입력 모달 표시 여부
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [isPasswordError, setIsPasswordError] = useState<boolean>(false); // 비밀번호 틀렸는지에 대한 상태
 
+  useEffect(() => {
+    if (isPasswordError) {
+      const timer = setTimeout(() => {
+        setIsPasswordError(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isPasswordError]);
+
+  // 방 조회
   const {
     data: rooms,
     isError,
     error,
-  } = useQuery({
+  } = useQuery<{ competitions: Room[]; totalPages: number }, Error>({
     queryKey: ["rooms", searchTerm, currentPage],
     queryFn: () => fetchRooms(currentPage, searchTerm),
     staleTime: 5 * 60 * 1000, // 5분
   });
 
+  // 방 검색
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(0);
     console.log("검색어", term);
   };
 
+  const queryClient = useQueryClient();
+
+  // 방 생성을 위한 뮤테이션
+  const createRoomMutation = useMutation({
+    mutationFn: (roomData: {
+      roomName: string;
+      isPublic: boolean;
+      password?: string;
+    }): Promise<AxiosResponse> =>
+      axiosInstance.post("/api/v1/sessions", roomData),
+    onSuccess: () => {
+      // 쿼리무효화로 방목록 최신화
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      // 방생성 모달창 닫기
+      setShowCreateRoomModal(false);
+    },
+    onError: (error) => {
+      console.error("방 생성 중 요류:", error);
+    },
+  });
+
+  // public 방 토큰을 가져오기 위한 mutation
+  const enterPublicRoomMutation = useMutation({
+    mutationFn: (sessionId: string) =>
+      axiosInstance.post(`api/v1/sessions/${sessionId}/connections`),
+    onSuccess: (data) => {
+      console.log("공개 방 토근 발급 성공", data.data.data.token);
+    },
+    onError: (error) => {
+      console.error("공개 방 토큰 발급 요류:", error);
+    },
+  });
+
+  // private 방 토큰을 가져오기 위한 mutation
+  const enterPrivateRoomMutation = useMutation({
+    mutationFn: ({
+      sessionId,
+      competitionId,
+      password,
+    }: {
+      sessionId: string;
+      competitionId: string;
+      password: string;
+    }) =>
+      axiosInstance.post(`/api/v1/sessions/${sessionId}/connections`, {
+        competitionId,
+        password,
+      }),
+    onSuccess: (data) => {
+      if (data.data.data.validation) {
+        console.log(data.data.isSuccess);
+        console.log("비공개방 토큰 발급 성공", data.data.data.token);
+        setShowInputPasswordModal(false);
+        setIsPasswordError(false);
+      }
+      if (!data.data.data.validation) {
+        console.log("비밀번호 틀림");
+        setIsPasswordError(true);
+      }
+    },
+    onError: (error) => {
+      console.error("비공개방 토큰 발급 오류:", error);
+    },
+  });
+
+  // 페이지 변경
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
-
+  // 방 입장
   const handleEnterRoom = (room: Room) => {
-    // 만약 비번방이면
+    if (room.public) {
+      // 공개 방이면 바로 입장 시도
+      enterPublicRoomMutation.mutate(room.sessionId);
+    }
     if (!room.public) {
-      // selectedRoom에 선택한 방 객체 넣고
+      // 비공개 방이면 선택한 방 정보 저장 후 비밀번호 입력 모달 표시
       setSelectedRoom(room);
-      // 비밀번호 입력 모달창 띄우기
+      setIsPasswordError(false);
       setShowInputPasswordModal(true);
-    } else {
-      // 여기에 공개방 입장하는 api 쓰기
-      console.log("비번방 아님");
     }
   };
 
   const handlePasswordEnter = (password: string) => {
+    if (selectedRoom) {
+      // 선택된 방이 있을때 비공개 방 입장 시도
+      enterPrivateRoomMutation.mutate({
+        sessionId: selectedRoom.sessionId,
+        competitionId: selectedRoom.competitionId.toString(),
+        password,
+      });
+    }
     // 비번입력모달 닫기
-    // 여기에 비번방 입장하는 api 쓰기
-    console.log(password);
-    setShowInputPasswordModal(false);
   };
 
   // 방 생성 날짜 포멧팅
@@ -136,13 +223,20 @@ export const Battle: React.FC = () => {
         </Footer>
       </Container>
       {showCreateRoomModal && (
-        <CreateRoomModal onClose={() => setShowCreateRoomModal(false)} />
+        <CreateRoomModal
+          onCreateRoom={(roomData) => createRoomMutation.mutate(roomData)}
+          onClose={() => setShowCreateRoomModal(false)}
+        />
       )}
       {showInputPasswordModal && selectedRoom && (
         <InputPasswordModal
-          onClose={() => setShowInputPasswordModal(false)}
+          onClose={() => {
+            setShowInputPasswordModal(false);
+            setIsPasswordError(false);
+          }}
           onEnter={handlePasswordEnter}
           roomTitle={selectedRoom.roomName}
+          isError={isPasswordError}
         />
       )}
     </>
