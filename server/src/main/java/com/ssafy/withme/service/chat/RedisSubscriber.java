@@ -28,14 +28,13 @@ public class RedisSubscriber {
         log.info("publishMessage: {}", publishMessage);
 
         try {
-            ChatMessageDto chatMessage =
-                    objectMapper.readValue(publishMessage, MessageSubDto.class).getChatMessageDto();
+            MessageSubDto messageSubDto = objectMapper.readValue(publishMessage, MessageSubDto.class);
 
-            log.info("Redis Subscriber chatMSG : {}", chatMessage.getMessage());
+            log.info("Redis Subscriber chatMSG : {}", messageSubDto.getChatMessageDto().getMessage());
 
             // 채팅방을 구독한 클라이언트에게 메시지 발송
             messagingTemplate.convertAndSend(
-                    "/sub/chat/message/" + chatMessage.getRoomId(), chatMessage
+                    "/sub/chat/message/" + messageSubDto.getChatMessageDto().getRoomId(), messageSubDto.getChatMessageDto()
             );
 
         } catch (Exception e) {
