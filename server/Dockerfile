@@ -1,4 +1,5 @@
-FROM openjdk:17
+FROM openjdk:17-slim
+
 RUN apt-get update && apt-get install -y ffmpeg
 
 ARG JAR_FILE=build/libs/*.jar
