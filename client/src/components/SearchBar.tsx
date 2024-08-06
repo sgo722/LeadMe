@@ -75,11 +75,20 @@ const SearchForm = styled.form<SearchFormProps>`
 
 const SearchField = styled.input`
   border: none;
+  font-family: "Noto Sans KR", sans-serif;
   flex-grow: 1;
   background: transparent;
   font-size: 18px;
   outline: none;
   padding-left: 25px;
+  position: relative;
+
+  &::placeholder {
+    color: #d6d6d6;
+    font-size: 14px;
+    position: absolute;
+    top: 3px;
+  }
 `;
 
 const SearchButton = styled.button`

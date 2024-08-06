@@ -42,6 +42,7 @@ interface scoreData {
   challengeId: string;
   totalScore: number;
   scoreHistory: number[];
+  videoFile: string;
 }
 
 interface ResponseData {
@@ -59,6 +60,7 @@ const Report = ({
   const location = useLocation();
   const navigate = useNavigate();
   const [reportData, setReportData] = useState<scoreData | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string>("");
   const [isDataLoaded, setIsDataLoaded] = useState(false); // 데이터 로딩 상태 추가
   const [isModalOpen, setModalOpen] = useState(false); // 모달 열림 상태 추가
   const reportIdRef = useRef<string | null>(null); // 이전 요청 ID 저장
@@ -90,6 +92,21 @@ const Report = ({
     }
   }, [location.pathname, mutation]);
 
+  useEffect(() => {
+    if (reportData && reportData.videoFile) {
+      const base64String = reportData.videoFile;
+      // base64 문자열을 Blob으로 변환
+      const videoBlob = fetch(`data:video/mp4;base64,${base64String}`).then(
+        (res) => res.blob()
+      );
+      // Blob에서 URL 생성
+      videoBlob.then((blob) => {
+        const videoUrl = URL.createObjectURL(blob);
+        setVideoUrl(videoUrl);
+      });
+    }
+  }, [reportData]);
+
   const chunkArray: ChunkArrayFunction = (array, chunkSize) => {
     const result = [];
     for (let i = 0; i < array.length; i += chunkSize) {
@@ -101,6 +118,17 @@ const Report = ({
   const calculateAverage = (array: number[]): number => {
     const total = array.reduce((sum, value) => sum + value, 0);
     return total / array.length;
+  };
+
+  const handleChartClick = (label: string) => {
+    const seconds = parseFloat(label.replace("s", "")); // 라벨에서 초 단위 숫자 추출
+    const videoElement = document.getElementById(
+      "videoPlayer"
+    ) as HTMLVideoElement;
+    if (videoElement) {
+      videoElement.currentTime = seconds;
+      videoElement.play();
+    }
   };
 
   const averagedData = reportData
@@ -119,6 +147,8 @@ const Report = ({
         backgroundColor: backgroundColor,
         fill: true,
         tension: 0.4, // 부드러운 곡선
+        pointRadius: 5, // 포인트 크기 설정
+        hoverRadius: 7, // 마우스 오버 시 포인트 크기
       },
     ],
   };
@@ -136,18 +166,18 @@ const Report = ({
     scales: {
       x: {
         ticks: {
-          color: "#ee5050", // x축 눈금 글씨
+          color: "#ee5050",
         },
         grid: {
-          color: "rgba(255, 255, 255, 0)", // x축 눈금선
+          color: "rgba(255, 255, 255, 0)",
         },
       },
       y: {
         ticks: {
-          color: "#ee5050", // y축 눈금 글씨
+          color: "#ee5050",
         },
         grid: {
-          color: "#ffffff", // y축 눈금선
+          color: "#ffffff",
         },
         beginAtZero: true,
         max: 100,
@@ -155,6 +185,15 @@ const Report = ({
     },
     animation: {
       duration: 2000,
+    },
+    onClick: (_, elements, chart) => {
+      if (elements.length > 0 && chart.data.labels) {
+        const elementIndex = elements[0].index;
+        const label = chart.data.labels[elementIndex];
+        if (label) {
+          handleChartClick(label.toString());
+        }
+      }
     },
   };
 
@@ -182,7 +221,14 @@ const Report = ({
       <Header stickyOnly />
       <Container>
         <MainSection>
-          <div>내 영상</div>
+          <div>
+            {videoUrl && (
+              <video id="videoPlayer" width="320" controls loop>
+                <source src={videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            )}
+          </div>
           <ReportContainer>
             <div>
               <Score>

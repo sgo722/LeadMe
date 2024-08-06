@@ -82,7 +82,7 @@ async def saveVideDataByUserFile(
 
     
     os.makedirs(TEMP_DIRECTORY, exist_ok=True)
-    original_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_{youtubeId}")
+    original_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_{youtubeId}.mp4")
     flipped_temp_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_flipped_temp.avi")
     final_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}.mp4")
     youtube_video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
