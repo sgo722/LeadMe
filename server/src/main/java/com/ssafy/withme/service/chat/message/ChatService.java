@@ -64,20 +64,20 @@ public class ChatService {
 
         // 3. 마지막 메시지들이 담긴 채팅방 리스트들을 가져온다.
         // 4. 파트너 채팅방 리스트도 가져온다. (파트너는 userId로 가져옴)
-        List<ChatRoomGetResponse> chatRoomList = chatRoomService.getChatRoomList(userId);
-        List<ChatRoomGetResponse> partnerChatRoomList = getChatRoomListByPartnerId(partnerId);
+//        List<ChatRoomGetResponse> chatRoomList = chatRoomService.getChatRoomList(userId);
+//        List<ChatRoomGetResponse> partnerChatRoomList = getChatRoomListByPartnerId(partnerId);
 
         // 5. 마지막 메시지 기준으로 정렬 채팅방 리스트 정렬
-        chatRoomList = chatRoomService.sortChatRoomListLatest(chatRoomList);
-        partnerChatRoomList = chatRoomService.sortChatRoomListLatest(partnerChatRoomList);
+//        chatRoomList = chatRoomService.sortChatRoomListLatest(chatRoomList);
+//        partnerChatRoomList = chatRoomService.sortChatRoomListLatest(partnerChatRoomList);
 
         MessageSubDto messageSubDto = MessageSubDto.builder()
                 .userId(userId)
                 .partnerId(partnerId)
                 .roomId(roomId)
                 .chatMessageDto(chatMessage)
-                .list(chatRoomList)
-                .partnerList(partnerChatRoomList)
+//                .list(chatRoomList)
+//                .partnerList(partnerChatRoomList)
                 .build();
 
         log.info("messageSubDto : {}", messageSubDto);

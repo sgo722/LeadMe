@@ -16,6 +16,6 @@ public class MessageSubDto implements Serializable {
     private Long partnerId;
     private Long roomId;
     private ChatMessageDto chatMessageDto;
-    private List<ChatRoomGetResponse> list;
-    private List<ChatRoomGetResponse> partnerList;
+//    private List<ChatRoomGetResponse> list;
+//    private List<ChatRoomGetResponse> partnerList;
 }
