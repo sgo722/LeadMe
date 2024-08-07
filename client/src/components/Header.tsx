@@ -83,11 +83,11 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
                 mypage
                 <Fake>
                   <LeftHoverBox>
-                    <HoverLink to="/mypage">마이페이지</HoverLink>
-                    <Hr />
-                    <HoverLink to={`/chat/${currentUserId}`}>
-                      메세지 목록
+                    <HoverLink to={`/mypage/${currentUserId}`}>
+                      마이페이지
                     </HoverLink>
+                    <Hr />
+                    <HoverLink to="/chat">메세지 목록</HoverLink>
                   </LeftHoverBox>
                 </Fake>
               </Mypage>

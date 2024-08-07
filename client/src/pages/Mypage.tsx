@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
 import Header from "components/Header";
 import styled from "styled-components";
 import img1 from "assets/image/img1.png";
 import img2 from "assets/image/img2.png";
 import ProfileModal from "components/ProfileModal";
 import FollowModal from "components/FollowModal";
-import { UserProfile } from "types";
+import { UserProfile, ResponseData } from "types";
+import { baseUrl } from "axiosInstance/constants";
 
 // 유저 프로필 데이터 타입
 const imageData = [
@@ -31,18 +34,47 @@ const Mypage: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
+  const [isMine, setIsMine] = useState(false);
   const [followModalType, setFollowModalType] = useState<
     "follower" | "following" | null
   >(null);
   const navigate = useNavigate();
+  const fetchSessionUserData = () => {
+    const userData = sessionStorage.getItem("user_profile");
+    return userData ? (JSON.parse(userData) as UserProfile) : null;
+  };
+
+  const sessionUser = fetchSessionUserData();
+
+  const mutation = useMutation<UserProfile, Error, string>({
+    mutationFn: async (value: string): Promise<UserProfile> => {
+      const response = await axios.get<ResponseData<UserProfile>>(
+        `${baseUrl}/api/v1/user/info/${value}`
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: UserProfile) => {
+      if (sessionUser) {
+        if (data.id === sessionUser.id) {
+          setIsMine(true);
+        }
+      }
+      setUser(data);
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching user data:", error);
+    },
+  });
 
   useEffect(() => {
-    const savedUserProfile = sessionStorage.getItem("user_profile");
+    const urlSegments = location.pathname.split("/");
+    const mypageIndex = urlSegments.indexOf("mypage");
+    const value = mypageIndex !== -1 ? urlSegments[mypageIndex + 1] : "";
 
-    if (savedUserProfile) {
-      setUser(JSON.parse(savedUserProfile));
+    if (value && user === null) {
+      mutation.mutate(value);
     }
-  }, []);
+  }, [location.pathname]);
 
   const handleOpenProfileModal = () => {
     setIsProfileModalOpen(true);
@@ -63,13 +95,8 @@ const Mypage: React.FC = () => {
 
   const handleMessagesClick = () => {
     if (user) {
-      navigate(`/chat/${user.id}`);
+      navigate(`/chat`);
     }
-  };
-
-  const updateUserProfile = (updatedUser: UserProfile) => {
-    setUser(updatedUser);
-    sessionStorage.setItem("user_profile", JSON.stringify(updatedUser));
   };
 
   if (!user) {
@@ -97,18 +124,27 @@ const Mypage: React.FC = () => {
                   </Tr>
                   <Tr onClick={() => handleOpenFollowModal("follower")}>
                     <Th>팔로워</Th>
-                    <Td>{}</Td>
+                    <Td>{user.follower}</Td>
                   </Tr>
                   <Tr onClick={() => handleOpenFollowModal("following")}>
                     <Th>팔로잉</Th>
-                    <Td>{}</Td>
+                    <Td>{user.following}</Td>
                   </Tr>
                 </tbody>
               </table>
             </Flex>
             <BtnContainer>
-              <Btn onClick={handleMessagesClick}>메세지 목록</Btn>
-              <Btn onClick={handleOpenProfileModal}>프로필 편집</Btn>
+              {isMine ? (
+                <>
+                  <Btn onClick={handleMessagesClick}>메세지 목록</Btn>
+                  <Btn onClick={handleOpenProfileModal}>프로필 편집</Btn>
+                </>
+              ) : (
+                <>
+                  <Btn>메세지 보내기</Btn>
+                  <Btn>팔로우</Btn>
+                </>
+              )}
             </BtnContainer>
           </ProfileContainer>
         </MainSection>
@@ -128,7 +164,7 @@ const Mypage: React.FC = () => {
         <ProfileModal
           onClose={handleCloseProfileModal}
           user={user}
-          updateUserProfile={updateUserProfile}
+          updateUserProfile={setUser}
         />
       )}
       {isFollowModalOpen && followModalType && (

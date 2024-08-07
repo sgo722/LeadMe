@@ -11,6 +11,10 @@ pipeline {
         DOCKERHUB_NAME = 'leadme'
         VM_OPTION_NAME = credentials('VM_OPTION_NAME')
         VM_OPTION_PASSWORD = credentials('VM_OPTION_PASSWORD')
+        MONGO_USERNAME = credentials('MONGO_USERNAME')
+        MONGO_PASSWORD = credentials('MONGO_PASSWORD')
+        VM_OPTIONS_MONGODB_USERNAME = credentials('VM_OPTIONS_MONGODB_USERNAME')
+        VM_OPTIONS_MONGODB_PASSWORD = credentials('VM_OPTIONS_MONGODB_PASSWORD')
     }
 
     stages {
@@ -118,7 +122,7 @@ pipeline {
                                         docker stop ${DOCKERHUB_NAME} || true
                                         docker rm ${DOCKERHUB_NAME} || true
                                         // docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
-                                        docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" -v /home/ubuntu:/host ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
+                                        docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD} -D${VM_OPTIONS_MONGODB_USERNAME}=${MONGO_USERNAME} -D${VM_OPTIONS_MONGODB_PASSWORD}=${MONGO_PASSWORD}" -v /home/ubuntu:/host ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
 
                                         docker pull ${DOCKERHUB_USERNAME}/client-image:latest
                                         docker stop client || true
