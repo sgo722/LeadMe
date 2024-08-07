@@ -4,33 +4,23 @@ import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import Header from "components/Header";
 import styled from "styled-components";
-import img1 from "assets/image/img1.png";
-import img2 from "assets/image/img2.png";
 import ProfileModal from "components/ProfileModal";
 import FollowModal from "components/FollowModal";
 import { UserProfile, ResponseData } from "types";
 import { baseUrl } from "axiosInstance/constants";
+import { CiImageOff } from "react-icons/ci";
+import { useRecoilValue } from "recoil";
+import { accessTokenState } from "stores/authAtom";
 
-// 유저 프로필 데이터 타입
-const imageData = [
-  {
-    id: 1,
-    src: img1,
-    title: "윈터와 카리나의 블라 블라 ",
-  },
-  {
-    id: 2,
-    src: img2,
-    title: "카리나 챌린지 카리나 챌린지 카리나asdf 챌린지 카리나 챌린지",
-  },
-  { id: 3, src: img1, title: "이주은 챌린지" },
-  { id: 4, src: img2, title: "카리나 챌린지 카리나 챌린지" },
-  { id: 5, src: img1, title: "추가 이미지 1" },
-  { id: 6, src: img2, title: "추가 이미지 2" },
-  { id: 7, src: img1, title: "추가 이미지 3" },
-];
+interface FeedProps {
+  userId: number;
+  userChallengeId: number;
+  title: string;
+  thumbnail: string;
+}
 
 const Mypage: React.FC = () => {
+  const [feed, setFeed] = useState<FeedProps[] | null>();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
@@ -45,8 +35,9 @@ const Mypage: React.FC = () => {
   };
 
   const sessionUser = fetchSessionUserData();
+  const accessToken = useRecoilValue(accessTokenState);
 
-  const mutation = useMutation<UserProfile, Error, string>({
+  const mutationProfile = useMutation<UserProfile, Error, string>({
     mutationFn: async (value: string): Promise<UserProfile> => {
       const response = await axios.get<ResponseData<UserProfile>>(
         `${baseUrl}/api/v1/user/info/${value}`
@@ -66,13 +57,34 @@ const Mypage: React.FC = () => {
     },
   });
 
+  const mutationFeed = useMutation<FeedProps[], Error, number>({
+    mutationFn: async (value: number) => {
+      const response = await axios.get<ResponseData<FeedProps[]>>(
+        `${baseUrl}/api/v1/userChallenge`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          params: { page: value },
+        }
+      );
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      setFeed(data);
+      console.log("feed", data);
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching user data:", error);
+    },
+  });
+
   useEffect(() => {
     const urlSegments = location.pathname.split("/");
     const mypageIndex = urlSegments.indexOf("mypage");
     const value = mypageIndex !== -1 ? urlSegments[mypageIndex + 1] : "";
 
     if (value && user === null) {
-      mutation.mutate(value);
+      mutationProfile.mutate(value);
+      mutationFeed.mutate(1);
     }
   }, [location.pathname]);
 
@@ -151,12 +163,22 @@ const Mypage: React.FC = () => {
         <MainSection>
           <FeedTitle>Feed</FeedTitle>
           <FeedContainer>
-            {imageData.map((img) => (
-              <OneFeed key={img.id}>
-                <OneImg src={img.src} />
-                <OneTitle>{img.title}</OneTitle>
-              </OneFeed>
-            ))}
+            {feed ? (
+              feed.map((item) => (
+                <OneFeed key={item.userChallengeId}>
+                  <OneImg
+                    src={`data:image/jpeg;base64,${item.thumbnail}`}
+                    alt={item.title}
+                  />
+                  <OneTitle>{item.title}</OneTitle>
+                </OneFeed>
+              ))
+            ) : (
+              <None>
+                <CiImageOff color="#a1a1a1" size="28" />
+                <div>업로드한 게시물이 없습니다.</div>
+              </None>
+            )}
           </FeedContainer>
         </MainSection>
       </Container>
@@ -197,7 +219,7 @@ const MainSection = styled.div`
   margin: 0 20px;
 
   &:not(:last-child) {
-    margin-bottom: 50px;
+    margin-bottom: 40px;
   }
 `;
 
@@ -333,6 +355,20 @@ const OneTitle = styled.div`
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+`;
+
+const None = styled.div`
+  width: 100%;
+  color: #a1a1a1;
+  font-size: 14px;
+  font-family: "Noto Sans KR", sans-serif;
+  text-align: center;
+  padding-top: 56px;
+  height: 200px;
+
+  & > div {
+    margin-top: 12px;
+  }
 `;
 
 export default Mypage;
