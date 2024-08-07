@@ -9,17 +9,20 @@ COPY . .
 
 RUN npm run build
 
-# Deployment 단계
-FROM nginx:alpine
+RUN ls -la /app/dist
 
-# Nginx 설정 파일 복사 (필요한 경우)
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Deployment 단계
+FROM node:20
+
+WORKDIR /app
+
+RUN npm install -g serve
 
 # 빌드된 파일을 Nginx의 서비스 디렉토리로 복사
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/dist /app/dist
 
 # 포트 노출 (기본값: 80)
-EXPOSE 80
+EXPOSE 5173
 
-# Nginx 실행
-CMD ["nginx", "-g", "daemon off;"]
+# 실행
+CMD ["serve", "-s", "dist", "-l", "5173"]
