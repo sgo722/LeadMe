@@ -42,8 +42,13 @@ public class UserService {
 
     public User findById(Long id) {
 
-        return userRepository.findById(id)
+        User findUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.USER_NOT_EXISTS));
+
+        findUser.getToFollowList().size();
+        findUser.getFromFollowList().size();
+
+        return findUser;
     }
 
     public User findByEmail(String email) {
