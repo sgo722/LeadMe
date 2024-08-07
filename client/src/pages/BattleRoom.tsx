@@ -84,19 +84,19 @@ export const BattleRoom: React.FC = () => {
     // 클린업
     return () => {
       // 세션 연결 끊기
-      setSession((currentSession) => {
+      setSession((currentSession: Session | null) => {
         if (currentSession) currentSession.disconnect();
         return null;
       });
       // 모든 구독자의 WebRTC 피어 연결 정리
-      setSubscribers((currentSubscribers) => {
+      setSubscribers((currentSubscribers: Subscriber[]) => {
         currentSubscribers.forEach((subscriber) =>
           subscriber.stream.disposeWebRtcPeer()
         );
         return [];
       });
       // 발행자가 있으면 그 WebRTC 피어 연결도 정리
-      setPublisher((currentPublisher) => {
+      setPublisher((currentPublisher: Publisher | null) => {
         if (currentPublisher) currentPublisher.stream.disposeWebRtcPeer();
         return null;
       });
