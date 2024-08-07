@@ -4,12 +4,14 @@ import com.ssafy.withme.domain.BaseEntity;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.comment.Comment;
 import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.domain.userchallengeLike.UserChallengeLike;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static jakarta.persistence.FetchType.LAZY;
@@ -21,6 +23,7 @@ public class UserChallenge extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_challenge_id")
     private Long id;
 
     private String fileName;
@@ -39,6 +42,9 @@ public class UserChallenge extends BaseEntity {
 
     @OneToMany(mappedBy = "userChallenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Comment> comments;
+
+    @OneToMany(mappedBy = "userChallenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<UserChallengeLike> userChallengeLikeList = new ArrayList<>();
 
     private String access;
 

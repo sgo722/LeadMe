@@ -17,6 +17,7 @@ public class Competition {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "competition_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

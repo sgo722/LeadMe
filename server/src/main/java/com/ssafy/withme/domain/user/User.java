@@ -4,6 +4,7 @@ import com.ssafy.withme.domain.BaseEntity;
 import com.ssafy.withme.domain.chat.ChatRoom;
 import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
+import com.ssafy.withme.domain.userchallengeLike.UserChallengeLike;
 import jakarta.persistence.*;
 import lombok.*;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ public class User extends BaseEntity implements UserDetails {
     private static final Logger log = LoggerFactory.getLogger(User.class);
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     private String name;
@@ -58,6 +60,9 @@ public class User extends BaseEntity implements UserDetails {
 
     @OneToMany(mappedBy = "fromUser", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Follow> fromFollowList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<UserChallengeLike> userChallengeLikeList = new ArrayList<>();
 
     public User update(String name) {
         this.name = name;
