@@ -13,7 +13,6 @@ import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
 
 interface FeedProps {
-  userId: number;
   userChallengeId: number;
   title: string;
   thumbnail: string;
