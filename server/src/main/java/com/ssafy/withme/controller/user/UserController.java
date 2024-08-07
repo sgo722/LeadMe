@@ -54,7 +54,7 @@ public class UserController {
     @GetMapping("/user/info/{id}")
     public SuccessResponse<?> getUserInfo(@PathVariable("id") Long id) {
 
-        User findUser = userService.find\ById(id);
+        User findUser = userService.findById(id);
 
         UserInfoDto userInfo = UserInfoDto.from(findUser);
 
