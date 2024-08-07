@@ -19,6 +19,13 @@ interface FeedProps {
   thumbnail: string;
 }
 
+interface PropsData {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: FeedProps[];
+}
+
 const Mypage: React.FC = () => {
   const [feed, setFeed] = useState<FeedProps[] | null>();
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -58,12 +65,12 @@ const Mypage: React.FC = () => {
   });
 
   const mutationFeed = useMutation<
-    FeedProps[],
+    PropsData,
     Error,
     { value: string; page: number }
   >({
     mutationFn: async ({ value, page }) => {
-      const response = await axios.get<ResponseData<FeedProps[]>>(
+      const response = await axios.get<ResponseData<PropsData>>(
         `${baseUrl}/api/v1/userChallenge/${value}`,
         {
           headers: { Authorization: `Bearer ${accessToken}` },
@@ -73,7 +80,7 @@ const Mypage: React.FC = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
-      setFeed(data);
+      setFeed(data.content);
       console.log("feed", data);
     },
     onError: (error: Error) => {
