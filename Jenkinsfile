@@ -127,13 +127,12 @@ pipeline {
                                         docker pull ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
                                         docker stop ${DOCKERHUB_NAME} || true
                                         docker rm ${DOCKERHUB_NAME} || true
-                                        // docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
-                                        docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD} -D${VM_OPTIONS_MONGODB_USERNAME}=${MONGO_USERNAME} -D${VM_OPTIONS_MONGODB_PASSWORD}=${MONGO_PASSWORD}" -v /home/ubuntu:/host ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
+                                        docker run --name ${DOCKERHUB_NAME} -d --network my-network -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD} -D${VM_OPTIONS_MONGODB_USERNAME}=${MONGO_USERNAME} -D${VM_OPTIONS_MONGODB_PASSWORD}=${MONGO_PASSWORD}" -v /home/ubuntu:/host ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
 
                                         docker pull ${DOCKERHUB_USERNAME}/client-image:latest
                                         docker stop client || true
                                         docker rm client || true
-                                        docker run --name client -d -p 5173:5173 ${DOCKERHUB_USERNAME}/client-image:latest
+                                        docker run --name client -d --network my-network -p 5173:5173  ${DOCKERHUB_USERNAME}/client-image:latest
 
                                         docker image prune -f
                                         """,
