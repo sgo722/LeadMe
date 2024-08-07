@@ -18,6 +18,7 @@ public class Challenge extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "challenge_id")
     private Long id;
 
     private String youtubeId;

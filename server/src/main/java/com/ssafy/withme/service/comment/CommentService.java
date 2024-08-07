@@ -12,7 +12,7 @@ import com.ssafy.withme.controller.comment.request.CommentDeleteRequest;
 import com.ssafy.withme.domain.comment.Comment;
 import com.ssafy.withme.domain.userchallenge.UserChallenge;
 import com.ssafy.withme.repository.comment.CommentRepository;
-import com.ssafy.withme.repository.userchallenge.UserChallengeRepository;
+import com.ssafy.withme.repository.userChallenge.UserChallengeRepository;
 import com.ssafy.withme.service.comment.response.CommentCreateResponse;
 import com.ssafy.withme.service.comment.response.CommentUpdateResponse;
 import com.ssafy.withme.service.comment.response.CommentViewResponse;
@@ -20,9 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service

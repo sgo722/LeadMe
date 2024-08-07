@@ -3,13 +3,11 @@ package com.ssafy.withme.service.challege;
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.landmark.Landmark;
-import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
-import com.ssafy.withme.service.userchellenge.response.LandmarkResponse;
-import jakarta.annotation.PostConstruct;
+import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
