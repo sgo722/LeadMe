@@ -9,6 +9,8 @@ COPY . .
 
 RUN npm run build
 
+RUN apt-get update && apt-get install nginx -y
+
 # Deployment 단계
 #FROM nginx:alpine
 
@@ -16,23 +18,23 @@ RUN npm run build
 # COPY nginx.conf /etc/nginx/nginx.conf
 
 # 빌드된 파일을 Nginx의 서비스 디렉토리로 복사
-#COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 
 # 포트 노출 (기본값: 80)
-#EXPOSE 80
-
-# Nginx 실행
-#CMD ["nginx", "-g", "daemon off;"]
-
-# 실행 단계
-FROM node:20 AS run
-WORKDIR /app
-
-# 빌드된 파일을 복사
-COPY --from=build /app .
-
-# 포트 노출 (기본값: 3000)
 EXPOSE 80
 
+# Nginx 실행
+# CMD ["nginx", "-g", "daemon off;"]
+
+# 실행 단계
+# FROM node:20 AS run
+# WORKDIR /app
+
+# 빌드된 파일을 복사
+# COPY --from=build /app .
+
+# 포트 노출 (기본값: 3000)
+# EXPOSE 80
+
 # 애플리케이션 실행
-CMD ["npm", "run", "start"]
+
