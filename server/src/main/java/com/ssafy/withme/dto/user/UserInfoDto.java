@@ -34,6 +34,10 @@ public class UserInfoDto {
 
     private String profileComment;
 
+    private Integer follower;
+
+    private Integer following;
+
     private LocalDateTime loginDateTime;
 
     @Enumerated(EnumType.STRING)
@@ -50,6 +54,8 @@ public class UserInfoDto {
                 .gender(user.getGender())
                 .profileImg(user.getProfileImg())
                 .profileComment(user.getProfileComment())
+                .follower(user.getFromFollowList().size())
+                .following(user.getToFollowList().size())
                 .loginDateTime(user.getLoginDateTime())
                 .userStatus(user.getUserStatus())
                 .roleType(user.getRoleType())
