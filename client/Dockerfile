@@ -39,7 +39,7 @@ RUN apt-get update && apt-get install nginx -y
 # # 애플리케이션 실행
 
 # 로컬에서 빌드한 결과물을 /usr/share/nginx/html 으로 복사합니다.
-COPY ./dist /var/www/html
+COPY ./dist /usr/share/nginx/html
 
 # 기본 nginx 설정 파일을 삭제합니다. (custom 설정과 충돌 방지)
 # RUN rm /etc/nginx/conf.d/default.conf
