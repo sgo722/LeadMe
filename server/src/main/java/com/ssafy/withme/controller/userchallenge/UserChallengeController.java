@@ -5,6 +5,7 @@ import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequ
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.annotation.CurrentUser;
+import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.global.response.ApiResponse;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.userchellenge.UserChallengeService;
@@ -83,11 +84,13 @@ public class UserChallengeController {
         return SuccessResponse.empty();
     }
 
-    @GetMapping("/api/v1/userChallenge")
-    public SuccessResponse<Page<UserChallengeMyPageResponse>> getUserChallengeByUser(
+    @GetMapping("/api/v1/userChallenge/{viewUserId}")
+    public SuccessResponse<Page<UserChallengeMyPageResponse>> getUserMyPageFeed(
             @PageableDefault(size = 8) Pageable pageable,
-            @CurrentUser User user){
-        return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user.getId()));
+            @CurrentUser User user,
+            @PathVariable("viewUserId") Long viewUserId
+    ){
+        return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user, viewUserId));
     }
 
 }

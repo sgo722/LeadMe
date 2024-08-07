@@ -16,4 +16,6 @@ public interface UserChallengeRepository extends JpaRepository<UserChallenge, Lo
     Page<UserChallenge> findByAccessOrderByCreatedDateDesc(String access, Pageable pageable);
 
     Page<UserChallenge> findByUserIdOrderByCreatedDateDesc(Long userId, Pageable pageable);
+
+    Page<UserChallenge> findByUserIdAndAccessOrderByCreatedDateDesc(Long userId, String access, Pageable pageable);
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
+import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.service.userchellenge.response.UserChallengeFeedResponse;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
@@ -413,18 +414,38 @@ public class UserChallengeService {
         return thumbnailPath.toString();
     }
 
-    public Page<UserChallengeMyPageResponse> getUserChallengeByUser(Pageable pageable, Long userId) {
-        Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdOrderByCreatedDateDesc(userId, pageable);
+    public Page<UserChallengeMyPageResponse> getUserChallengeByUser(Pageable pageable, User user, Long viewUserId) {
+        User findUser = userRepository.findById(viewUserId)
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_EXISTS));
 
-        return userChallengeByPaging
-                .map(userChallenge -> {
-                    try {
-                        Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
-                        byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
-                        return UserChallengeMyPageResponse.responseOf(userChallenge, thumbnailBytes);
-                    } catch (IOException e) {
-                        throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
-                    }
-                });
+
+        if(findUser.equals(user)){
+            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdOrderByCreatedDateDesc(user.getId(), pageable);
+            return userChallengeByPaging
+                    .map(userChallenge -> {
+                        try {
+                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
+                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
+                            return UserChallengeMyPageResponse.responseOf(userChallenge, thumbnailBytes);
+                        } catch (IOException e) {
+                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
+                        }
+                    });
+        }
+        if(!findUser.equals(user)){
+            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdAndAccessOrderByCreatedDateDesc(findUser.getId(), "public", pageable);
+            return userChallengeByPaging
+                    .map(userChallenge -> {
+                        try {
+                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
+                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
+                            return UserChallengeMyPageResponse.responseOf(userChallenge, thumbnailBytes);
+                        } catch (IOException e) {
+                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
+                        }
+                    });
+
+        }
+        return null;
     }
 }
