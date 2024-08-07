@@ -35,4 +35,4 @@ COPY --from=build /app .
 EXPOSE 80
 
 # 애플리케이션 실행
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]
