@@ -34,6 +34,8 @@ export interface UserProfile {
   roleType: string;
   profileImg: string;
   profileComment: string | null;
+  follower: number;
+  following: number;
   loginDateTime: string | null;
   userStatus: string;
 }
