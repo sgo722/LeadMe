@@ -65,21 +65,21 @@ public class RedisConfig {
         return new MessageListenerAdapter(subscriber, "sendMessage");
     }
 
-//    @Bean
-//    public RedisMessageListenerContainer redisMessageListenerRoomList (
-//            MessageListenerAdapter listenerAdapterChatRoomList,
-//            ChannelTopic channelTopic
-//    ) {
-//        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-//        container.setConnectionFactory(redisConnectionFactory());
-//        container.addMessageListener(listenerAdapterChatRoomList, channelTopic);
-//        return container;
-//    }
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerRoomList (
+            MessageListenerAdapter listenerAdapterChatRoomList,
+            ChannelTopic channelTopic
+    ) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(redisConnectionFactory());
+        container.addMessageListener(listenerAdapterChatRoomList, channelTopic);
+        return container;
+    }
 
-//    @Bean
-//    public MessageListenerAdapter listenerAdapterChatRoomList(RedisSubscriber subscriber) {
-//        return new MessageListenerAdapter(subscriber, "sendRoomList");
-//    }
+    @Bean
+    public MessageListenerAdapter listenerAdapterChatRoomList(RedisSubscriber subscriber) {
+        return new MessageListenerAdapter(subscriber, "sendRoomList");
+    }
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
