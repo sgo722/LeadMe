@@ -57,13 +57,17 @@ const Mypage: React.FC = () => {
     },
   });
 
-  const mutationFeed = useMutation<FeedProps[], Error, number>({
-    mutationFn: async (value: number) => {
+  const mutationFeed = useMutation<
+    FeedProps[],
+    Error,
+    { value: string; page: number }
+  >({
+    mutationFn: async ({ value, page }) => {
       const response = await axios.get<ResponseData<FeedProps[]>>(
-        `${baseUrl}/api/v1/userChallenge`,
+        `${baseUrl}/api/v1/userChallenge/${value}`,
         {
           headers: { Authorization: `Bearer ${accessToken}` },
-          params: { page: value },
+          params: { page },
         }
       );
       return response.data.data;
@@ -84,7 +88,7 @@ const Mypage: React.FC = () => {
 
     if (value && user === null) {
       mutationProfile.mutate(value);
-      mutationFeed.mutate(1);
+      mutationFeed.mutate({ value, page: 1 });
     }
   }, [location.pathname]);
 
