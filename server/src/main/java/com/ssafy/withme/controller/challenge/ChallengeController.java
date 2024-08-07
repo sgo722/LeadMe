@@ -2,13 +2,11 @@ package com.ssafy.withme.controller.challenge;
 
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.BaseEntity;
-import com.ssafy.withme.domain.landmark.Landmark;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.challege.ChallengeService;
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
-import com.ssafy.withme.service.userchellenge.response.LandmarkResponse;
+import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor

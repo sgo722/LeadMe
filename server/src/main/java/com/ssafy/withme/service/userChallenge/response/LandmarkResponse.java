@@ -1,4 +1,4 @@
-package com.ssafy.withme.service.userchellenge.response;
+package com.ssafy.withme.service.userChallenge.response;
 
 import com.ssafy.withme.domain.landmark.Landmark;
 import lombok.Builder;
