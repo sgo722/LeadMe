@@ -36,6 +36,12 @@ pipeline {
                         
                         sh './gradlew clean build -x test'
                     }
+                    
+                    // 클라이언트 빌드
+                    dir('S11P12C109/client') {
+                        sh 'npm install'  
+                        sh 'npm run build'  
+                    }
                 }
             }
         }
@@ -127,7 +133,7 @@ pipeline {
                                         docker pull ${DOCKERHUB_USERNAME}/client-image:latest
                                         docker stop client || true
                                         docker rm client || true
-                                        docker run --name client -d -p 5173:80 ${DOCKERHUB_USERNAME}/client-image:latest
+                                        docker run --name client -d -p 5173:5173 ${DOCKERHUB_USERNAME}/client-image:latest
 
                                         docker image prune -f
                                         """,
