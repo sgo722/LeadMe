@@ -76,10 +76,10 @@ public class RedisConfig {
         return container;
     }
 
-    @Bean
-    public MessageListenerAdapter listenerAdapterChatRoomList(RedisSubscriber subscriber) {
-        return new MessageListenerAdapter(subscriber, "sendRoomList");
-    }
+//    @Bean
+//    public MessageListenerAdapter listenerAdapterChatRoomList(RedisSubscriber subscriber) {
+//        return new MessageListenerAdapter(subscriber, "sendRoomList");
+//    }
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
