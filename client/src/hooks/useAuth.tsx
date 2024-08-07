@@ -48,6 +48,8 @@ const useAuth = () => {
     sessionStorage.removeItem("refresh_token");
     sessionStorage.removeItem("refresh_token_expire_time");
     sessionStorage.removeItem("timer_started");
+    sessionStorage.removeItem("user_profile");
+
     if (timerId) {
       clearTimeout(timerId);
       setTimerId(null);
