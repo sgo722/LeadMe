@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install nginx -y
 
 # # 애플리케이션 실행
 
-# 로컬에서 빌드한 결과물을 /usr/share/nginx/html 으로 복사합니다.
+# 로컬에서 빌드한 결과물을 /var/www/html 으로 복사합니다.
 COPY ./dist /var/www/html
 
 RUN rm /etc/nginx/sites-enabled/default
