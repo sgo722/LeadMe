@@ -132,7 +132,7 @@ pipeline {
                                         docker pull ${DOCKERHUB_USERNAME}/client-image:latest
                                         docker stop client || true
                                         docker rm client || true
-                                        docker run --name client -d -p 5173:5173  ${DOCKERHUB_USERNAME}/client-image:latest
+                                        docker run --name client -d -p 5173:80  ${DOCKERHUB_USERNAME}/client-image:latest
 
                                         docker image prune -f
                                         """,
