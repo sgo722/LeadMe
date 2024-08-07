@@ -5,6 +5,11 @@ from pymongo import MongoClient
 # mongodb_URI = "mongodb://localhost:27017/"
 # client = MongoClient(mongodb_URI)
 
-client = MongoClient(host='i11c109.p.ssafy.io', port=27017)
-
+client = MongoClient(
+    host='localhost',
+    port=27017,
+    username='leadme',
+    password='leadmessafy11',
+    authSource='admin'  # 인증할 데이터베이스를 지정합니다. 기본적으로 'admin'을 사용합니다.
+)
 print(client.list_database_names())
