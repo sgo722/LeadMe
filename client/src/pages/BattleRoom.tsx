@@ -113,7 +113,6 @@ export const BattleRoom: React.FC = () => {
       <h1>{roomName}</h1>
       <BattleArea>
         <WebcamBox>
-          <p>상대방</p>
           {subscribers[0] ? (
             <video
               autoPlay={true}
@@ -124,10 +123,22 @@ export const BattleRoom: React.FC = () => {
           )}
         </WebcamBox>
         <CenterBox>
-          <BoxPlaceholder>추가 내용을 위한 빈 박스</BoxPlaceholder>
+          <YouTubeWrapper>
+            <SearchUrl>
+              <Title>참고 영상을 첨부하세요</Title>
+              <SubTitle>
+                <span>방법 1</span>
+              </SubTitle>
+              <SearchButton>영상 검색하러 가기</SearchButton>
+              <SubTitle>
+                <span>방법 2</span>
+              </SubTitle>
+              <SearchInput placeholder="숏츠 영상 url을 입력하세요" />
+              <SearchButton>url 영상 불러오기</SearchButton>
+            </SearchUrl>
+          </YouTubeWrapper>
         </CenterBox>
         <WebcamBox>
-          <p>내 비디오</p>
           {publisher ? (
             <video
               autoPlay={true}
@@ -168,11 +179,6 @@ const WebcamBox = styled.div`
   border-radius: 15px;
   overflow: hidden;
 
-  p {
-    text-align: center;
-    margin: 10px 0;
-  }
-
   video {
     width: 100%;
     height: calc(100% - 40px);
@@ -185,18 +191,6 @@ const CenterBox = styled.div`
   height: 100%;
 `;
 
-const BoxPlaceholder = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  background-color: #e0e0e0;
-  border-radius: 15px;
-  font-size: 18px;
-  color: #666;
-`;
-
 const EmptyBoxContent = styled.div`
   display: flex;
   justify-content: center;
@@ -205,4 +199,74 @@ const EmptyBoxContent = styled.div`
   height: calc(100% - 40px);
   font-size: 18px;
   color: #666;
+`;
+
+const YouTubeWrapper = styled.div`
+  margin-right: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const SearchUrl = styled.div`
+  width: 309px;
+  height: 550px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 8px 8px 4px 0px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  gap: 25px;
+`;
+
+const Title = styled.div`
+  color: #b4b4b4;
+  font-size: 18px;
+  font-weight: 500;
+`;
+
+const SubTitle = styled.div`
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #b4b4b4;
+  font-size: 14px;
+  width: 100%;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #cecece;
+  }
+
+  & > span {
+    padding: 0 10px;
+  }
+`;
+
+const SearchButton = styled.button`
+  border-radius: 4px;
+  background: #f7f7f7;
+  box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.15);
+  border: none;
+  color: #ee5050;
+  cursor: pointer;
+  width: 250px;
+  height: 44px;
+  font-size: 18px;
+  font-weight: 500;
+`;
+
+const SearchInput = styled.input`
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.15);
+  border: none;
+  width: 250px;
+  height: 44px;
+  outline: none;
+  padding-left: 15px;
 `;
