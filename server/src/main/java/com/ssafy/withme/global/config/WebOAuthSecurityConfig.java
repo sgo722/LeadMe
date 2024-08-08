@@ -77,7 +77,7 @@ public class WebOAuthSecurityConfig {
                         .loginPage("/login")
                         .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint.baseUri("/oauth2/authorization")
                                 .authorizationRequestRepository(oAuth2AuthorizationRequestBasedOnCookieRepository()))
-                        //.redirectionEndpoint(endpoint -> endpoint.baseUri("/*/oauth2/code/*"))
+//                        .redirectionEndpoint(endpoint -> endpoint.baseUri("/*/oauth2/code/*"))
                         .userInfoEndpoint(userInfoEndPoint -> userInfoEndPoint.userService(oAuth2UserCustomService))
                         .successHandler(oAuth2SuccessHandler()) // 인증 성공 시 실행할 핸들러
                         .failureHandler(oAuth2FailureHandler()) // 인증 실패 시 실행할 핸들러
