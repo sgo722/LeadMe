@@ -72,6 +72,9 @@ public class CompetitionController {
         int publisherCount = connection.getPublishers().size();
         int subscriberCount = connection.getSubscribers().size();
 
+        log.info(String.valueOf(publisherCount  + "publisher "));
+        log.info(String.valueOf(subscriberCount  + "subscriber "));
+
         if(publisherCount + subscriberCount >= 2) {
             response.put("isFulled",  true);
             return SuccessResponse.of(response);
