@@ -37,7 +37,16 @@ def download_video(url, youtube_id, output_dir=PERMANENT_DIRECTORY_CHALLENGE):
         'quiet': True,
         'external_downloader': 'aria2c',  # 빠른 다운로드를 위한 외부 다운로더 사용
         'external_downloader_args': ['-x', '16', '-k', '1M'],  # 병렬 연결 수와 단위 설정
-        'cookiefile': '/app/cookies.txt'  # 쿠키 파일 경로 설정
+        'cookiefile': '/app/cookies.txt',  # 쿠키 파일 경로 설정
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://www.youtube.com/',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Accept-Encoding': 'gzip, deflate, br'
+        }
     }
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
