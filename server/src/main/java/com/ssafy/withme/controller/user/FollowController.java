@@ -54,8 +54,11 @@ public class FollowController {
     @GetMapping("/user/following/check/{userId}")
     public SuccessResponse<String> checkFollowing(@PathVariable Long userId, @RequestHeader("Authorization") String authorization) {
 
+        log.info("Authorization at Follow Check: {}", authorization);
+
         String accessToken = authorization.split(" ")[1];
 
+        log.info("AccessToken at Follow Check: {}", accessToken);
         Boolean following = followService.isFollowing(userService.findUserIdByToken(accessToken).getId(), userId);
 
         if (following)
