@@ -48,8 +48,9 @@ EXPOSE 4567
 # # 애플리케이션 시작 명령
 # CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "4567", "--reload"]
 
-# 애플리케이션 시작 명령
 
+# 애플리케이션 시작 명령
 CMD ["sh", "-c", "openvpn --config /etc/openvpn/myvpn.ovpn & \
     until ifconfig tun0 2>/dev/null; do sleep 1; done && \
+    curl -s http://ipinfo.io > /tmp/vpn_ip.txt && \
     uvicorn main:app --host 0.0.0.0 --port 4567 --reload"]
