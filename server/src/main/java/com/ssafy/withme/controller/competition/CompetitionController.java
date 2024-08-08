@@ -66,8 +66,17 @@ public class CompetitionController {
         }
 
         Connection connection = session.createConnection();
-
         HashMap<String, Object> response = new HashMap<>();
+
+
+        int publisherCount = connection.getPublishers().size();
+        int subscriberCount = connection.getSubscribers().size();
+
+        if(publisherCount + subscriberCount >= 2) {
+            response.put("isFulled",  true);
+            return SuccessResponse.of(response);
+        }
+
         // 비밀번호가 설정된 경쟁전에 참여하는 경우
         if(request != null) {
             if(competitionService.verifyCompetitionsPassword(request)) {
