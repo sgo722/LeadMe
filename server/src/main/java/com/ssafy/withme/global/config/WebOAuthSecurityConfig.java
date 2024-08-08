@@ -75,7 +75,7 @@ public class WebOAuthSecurityConfig {
                 // OAuth 로그인 후 쿠키 세팅 및 유저 레포지토리에 반영
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
-                        .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint.baseUri("/api/oauth2/authorization")
+                        .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint.baseUri("/oauth2/authorization")
                                 .authorizationRequestRepository(oAuth2AuthorizationRequestBasedOnCookieRepository()))
                         //.redirectionEndpoint(endpoint -> endpoint.baseUri("/*/oauth2/code/*"))
                         .userInfoEndpoint(userInfoEndPoint -> userInfoEndPoint.userService(oAuth2UserCustomService))
