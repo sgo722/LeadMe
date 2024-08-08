@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     # OpenGL 라이브러리 추가
     libgl1-mesa-glx \
     libglib2.0-0 \  
+    openVPN \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -21,13 +22,16 @@ RUN pip3 install tensorflow
 
 
 # 필요한 디렉토리 생성 (데이터 저장용)
-RUN mkdir -p /home/ubuntu/python/video/temporary /home/ubuntu/python/video/user /home/ubuntu/python/video/challenge /home/ubuntu/python/video/challenge/audio /home/ubuntu/python/video/user/thumbnail
+RUN mkdir -p /home/ubuntu/python/video/temporary /home/ubuntu/python/video/user /home/ubuntu/python/video/challenge /home/ubuntu/python/video/challenge/audio /home/ubuntu/python/video/temporary/thumnail
+
+# OpenVPN 설정 파일 복사
+COPY myvpn.ovpn /etc/openvpn/myvpn.ovpn
 
 # 애플리케이션 코드 복사
 COPY . .
 
 # 지속적인 데이터 저장을 위해 볼륨 설정
-VOLUME ["/home/ubuntu/python/video/temporary", "/home/ubuntu/python/video/user","/home/ubuntu/python/video/challenge","/home/ubuntu/python/video/challenge/audio", "/home/ubuntu/python/video/user/thumbnail"]
+VOLUME ["/home/ubuntu/python/video/temporary", "/home/ubuntu/python/video/user","/home/ubuntu/python/video/challenge","/home/ubuntu/python/video/challenge/audio", "/home/ubuntu/python/video/temporary/thumnail"]
 
 
 # ffmpeg 다운로드
@@ -41,5 +45,8 @@ ENV FILE_STORAGE_PATH=/home/ubuntu/python/video
 # 포트 설정
 EXPOSE 4567
 
+# # 애플리케이션 시작 명령
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "4567", "--reload"]
+
 # 애플리케이션 시작 명령
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "4567", "--reload"]
+CMD ["sh", "-c", "openvpn --config /etc/openvpn/myvpn.ovpn & uvicorn main:app --host 0.0.0.0 --port 4567 --reload"]
