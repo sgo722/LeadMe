@@ -102,6 +102,7 @@ pipeline {
                                 -v /home/ubuntu/python/video/temporary:/home/ubuntu/python/video/temporary \
                                 -v /home/ubuntu/python/video/user:/home/ubuntu/python/video/user \
                                 -v /home/ubuntu/python/video/challenge:/home/ubuntu/python/video/challenge \
+                                -v /home/ubuntu/python/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
                                 -v /home/ubuntu/python/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
                                 ${DOCKERHUB_USERNAME}/python-image:latest
                         '''
