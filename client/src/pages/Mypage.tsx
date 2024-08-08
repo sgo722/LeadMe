@@ -294,11 +294,6 @@ const Tr = styled.tr`
   text-align: left;
 `;
 
-const TrCursor = styled.tr`
-  text-align: left;
-  cursor: pointer;
-`;
-
 const Th = styled.th`
   font-size: 14px;
   color: #a7a7a7;
@@ -400,6 +395,16 @@ const None = styled.div`
 
   & > div {
     margin-top: 12px;
+  }
+`;
+
+const TrCursor = styled.tr`
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
   }
 `;
 
