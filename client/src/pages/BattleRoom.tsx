@@ -111,30 +111,32 @@ export const BattleRoom: React.FC = () => {
   return (
     <Container>
       <h1>{roomName}</h1>
-      <BattleArea $hasOpponent={subscribers.length > 0}>
-        {publisher && (
-          <WebcamBox $isShrunk={subscribers.length > 0}>
-            <p>내 비디오</p>
-            <video
-              autoPlay={true}
-              ref={(video) => video && publisher.addVideoElement(video)}
-            />
-          </WebcamBox>
-        )}
-        <CenterBox>
-          <BoxPlaceholder>추가 내용을 위한 빈 박스</BoxPlaceholder>
-        </CenterBox>
-        {subscribers.length > 0 ? (
-          <WebcamBox>
-            <p>상대방</p>
+      <BattleArea>
+        <WebcamBox>
+          <p>상대방</p>
+          {subscribers[0] ? (
             <video
               autoPlay={true}
               ref={(video) => video && subscribers[0].addVideoElement(video)}
             />
-          </WebcamBox>
-        ) : (
-          <EmptyBox />
-        )}
+          ) : (
+            <EmptyBoxContent>대기중...</EmptyBoxContent>
+          )}
+        </WebcamBox>
+        <CenterBox>
+          <BoxPlaceholder>추가 내용을 위한 빈 박스</BoxPlaceholder>
+        </CenterBox>
+        <WebcamBox>
+          <p>내 비디오</p>
+          {publisher ? (
+            <video
+              autoPlay={true}
+              ref={(video) => video && publisher.addVideoElement(video)}
+            />
+          ) : (
+            <EmptyBoxContent>연결중...</EmptyBoxContent>
+          )}
+        </WebcamBox>
       </BattleArea>
     </Container>
   );
@@ -150,31 +152,21 @@ const Container = styled.div`
   gap: 30px;
 `;
 
-const BattleArea = styled.div<{ $hasOpponent: boolean }>`
+const BattleArea = styled.div`
   display: grid;
-  grid-template-columns: ${(props) =>
-    props.$hasOpponent ? "1fr 1fr 1fr" : "1fr 1fr"};
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
   width: 100%;
   max-width: 1080px;
   height: 80vh;
-  transition: all 0.5s ease-in-out;
 `;
 
-const WebcamBox = styled.div<{ $isShrunk?: boolean }>`
+const WebcamBox = styled.div`
   width: 100%;
   height: 100%;
   background-color: #ddd;
   border-radius: 15px;
   overflow: hidden;
-  transition: all 0.5s ease-in-out;
-
-  ${(props) =>
-    props.$isShrunk &&
-    `
-    transform: scale(0.9);
-    transform-origin: left center;
-  `}
 
   p {
     text-align: center;
@@ -205,8 +197,12 @@ const BoxPlaceholder = styled.div`
   color: #666;
 `;
 
-const EmptyBox = styled.div`
+const EmptyBoxContent = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
-  height: 100%;
-  background-color: transparent;
+  height: calc(100% - 40px);
+  font-size: 18px;
+  color: #666;
 `;
