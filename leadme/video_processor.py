@@ -14,7 +14,13 @@ pose = mp_pose.Pose()
 PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
 
 # MongoDB 연결 설정
-client = MongoClient('mongodb://i11c109.p.ssafy.io:27017/')
+client = MongoClient(
+    host='localhost',
+    port=27070,
+    username='leadme',
+    password='leadmessafy11',
+    authSource='admin'  # 인증할 데이터베이스를 지정합니다. 기본적으로 'admin'을 사용합니다.
+)
 db = client['local']  # 'local' 데이터베이스 이름 설정
 collection = db['landmarks']  # 'landmarks' 컬렉션 이름 설정
 
@@ -31,7 +37,7 @@ def download_video(url, youtube_id, output_dir=PERMANENT_DIRECTORY_CHALLENGE):
         'quiet': True,
         'external_downloader': 'aria2c',  # 빠른 다운로드를 위한 외부 다운로더 사용
         'external_downloader_args': ['-x', '16', '-k', '1M'],  # 병렬 연결 수와 단위 설정
-        'cookiefile': 'cookies.txt'  # 쿠키 파일 경로 설정
+        'cookiefile': '/app/cookies.txt'  # 쿠키 파일 경로 설정
     }
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
