@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
+import styled from "styled-components";
 import type {
   Publisher,
   Session,
@@ -108,26 +109,104 @@ export const BattleRoom: React.FC = () => {
   }
 
   return (
-    <div>
+    <Container>
       <h1>{roomName}</h1>
-      {publisher && (
-        <div id="publisher">
-          <p>내 비디오</p>
-          <video
-            autoPlay={true}
-            ref={(video) => video && publisher.addVideoElement(video)}
-          />
-        </div>
-      )}
-      {subscribers.map((sub, index) => (
-        <div key={index} id={`subscriber-${index}`}>
-          <p>참가자 {index + 1}</p>
-          <video
-            autoPlay={true}
-            ref={(video) => video && sub.addVideoElement(video)}
-          />
-        </div>
-      ))}
-    </div>
+      <BattleArea $hasOpponent={subscribers.length > 0}>
+        {publisher && (
+          <WebcamBox $isShrunk={subscribers.length > 0}>
+            <p>내 비디오</p>
+            <video
+              autoPlay={true}
+              ref={(video) => video && publisher.addVideoElement(video)}
+            />
+          </WebcamBox>
+        )}
+        <CenterBox>
+          <BoxPlaceholder>추가 내용을 위한 빈 박스</BoxPlaceholder>
+        </CenterBox>
+        {subscribers.length > 0 ? (
+          <WebcamBox>
+            <p>상대방</p>
+            <video
+              autoPlay={true}
+              ref={(video) => video && subscribers[0].addVideoElement(video)}
+            />
+          </WebcamBox>
+        ) : (
+          <EmptyBox />
+        )}
+      </BattleArea>
+    </Container>
   );
 };
+
+const Container = styled.div`
+  min-width: 1120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 50px auto;
+  flex-direction: column;
+  gap: 30px;
+`;
+
+const BattleArea = styled.div<{ $hasOpponent: boolean }>`
+  display: grid;
+  grid-template-columns: ${(props) =>
+    props.$hasOpponent ? "1fr 1fr 1fr" : "1fr 1fr"};
+  gap: 20px;
+  width: 100%;
+  max-width: 1080px;
+  height: 80vh;
+  transition: all 0.5s ease-in-out;
+`;
+
+const WebcamBox = styled.div<{ $isShrunk?: boolean }>`
+  width: 100%;
+  height: 100%;
+  background-color: #ddd;
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.5s ease-in-out;
+
+  ${(props) =>
+    props.$isShrunk &&
+    `
+    transform: scale(0.9);
+    transform-origin: left center;
+  `}
+
+  p {
+    text-align: center;
+    margin: 10px 0;
+  }
+
+  video {
+    width: 100%;
+    height: calc(100% - 40px);
+    object-fit: cover;
+  }
+`;
+
+const CenterBox = styled.div`
+  width: 100%;
+  height: 100%;
+`;
+
+const BoxPlaceholder = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: #e0e0e0;
+  border-radius: 15px;
+  font-size: 18px;
+  color: #666;
+`;
+
+const EmptyBox = styled.div`
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+`;
