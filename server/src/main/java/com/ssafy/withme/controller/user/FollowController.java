@@ -7,6 +7,7 @@ import com.ssafy.withme.dto.user.UserInfoDto;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.FollowService;
+import com.ssafy.withme.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import java.util.List;
 public class FollowController {
 
     private final FollowService followService;
+    private final UserService userService;
 
     /**
      * Follower 목록 조회
@@ -50,9 +52,13 @@ public class FollowController {
     }
 
     @GetMapping("/user/following/check/{userId}")
-    public SuccessResponse<String> checkFollowing(@PathVariable Long userId, @CurrentUser User user) {
+    public SuccessResponse<String> checkFollowing(@PathVariable Long userId, @RequestHeader("Authorization") String authorization) {
 
-        List<Follow> findList = user.getFromFollowList().stream()
+        String accessToken = authorization.split(" ")[1];
+
+        User findUser = userService.findUserIdByToken(accessToken);
+
+        List<Follow> findList = findUser.getFromFollowList().stream()
                 .filter(f -> f.getToUser().getId().equals(userId)).toList();
 
         if (findList.isEmpty())
