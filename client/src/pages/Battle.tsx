@@ -104,6 +104,7 @@ export const Battle: React.FC = () => {
     mutationFn: (room: Room) =>
       axiosInstance.post(`api/v1/sessions/${room.sessionId}/connections`),
     onSuccess: (data, room) => {
+      console.log("이거봐야돼:", data);
       console.log("공개 방 토근 발급 성공", data.data.data.token);
       console.log("세션아이디:", room.sessionId);
       console.log("방이름:", room.roomName);
@@ -129,6 +130,7 @@ export const Battle: React.FC = () => {
       }),
     onSuccess: (data, { room }) => {
       if (data.data.data.validation) {
+        console.log("이거봐야돼:", data);
         console.log("비공개방 토큰 발급 성공", data.data.data.token);
         setShowInputPasswordModal(false);
         setIsPasswordError(false);

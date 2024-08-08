@@ -51,6 +51,7 @@ const Mypage: React.FC = () => {
       return response.data.data;
     },
     onSuccess: (data: UserProfile) => {
+      console.log("data", data);
       if (sessionUser) {
         if (data.id === sessionUser.id) {
           setIsMine(true);
@@ -80,7 +81,8 @@ const Mypage: React.FC = () => {
     },
     onSuccess: (data) => {
       setFeed(data.content);
-      console.log("feed", data);
+      console.log("feed", data.content);
+      console.log(feed);
     },
     onError: (error: Error) => {
       console.error("Error fetching user data:", error);
@@ -192,7 +194,7 @@ const Mypage: React.FC = () => {
         <MainSection>
           <FeedTitle>Feed</FeedTitle>
           <FeedContainer>
-            {feed ? (
+            {feed && feed.length > 0 ? (
               feed.map((item) => (
                 <OneFeed key={item.userChallengeId}>
                   <OneImg
@@ -290,11 +292,6 @@ const ProfileImg = styled.img`
 
 const Tr = styled.tr`
   text-align: left;
-`;
-
-const TrCursor = styled.tr`
-  text-align: left;
-  cursor: pointer;
 `;
 
 const Th = styled.th`
@@ -398,6 +395,16 @@ const None = styled.div`
 
   & > div {
     margin-top: 12px;
+  }
+`;
+
+const TrCursor = styled.tr`
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
   }
 `;
 

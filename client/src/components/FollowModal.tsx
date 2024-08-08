@@ -5,6 +5,7 @@ import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { ResponseData } from "types";
 import { baseUrl } from "axiosInstance/constants";
+import { useNavigate } from "react-router-dom";
 
 interface FollowModalProps {
   onClose: () => void;
@@ -18,6 +19,8 @@ interface PeopleProps {
 }
 
 const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
+  const navigate = useNavigate();
+
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -40,13 +43,17 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
     },
   });
 
-  const [people, setPeople] = useState<PeopleProps[]>();
+  const [people, setPeople] = useState<PeopleProps[]>([]);
 
   useEffect(() => {
     if (type) {
       mutationFollow.mutate(type);
     }
-  }, []);
+  }, [type]);
+
+  const handleSend = (user: PeopleProps) => {
+    navigate("/chat", { state: user });
+  };
 
   return (
     <Overlay onClick={handleOverlayClick}>
@@ -54,21 +61,19 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>{type === "follower" ? "Follower" : "Following"}</Title>
         <OverContainer>
-          {people ? (
+          {people && people.length > 0 ? (
             people.map((user) => (
               <UserRow key={user.id}>
                 <UserImg src={user.profileImg} alt={`${user.nickname}`} />
                 <UserId>{user.nickname}</UserId>
-                <MessageButton>
+                <MessageButton onClick={() => handleSend(user)}>
                   <StyledIoIosSend />
                   send
                 </MessageButton>
               </UserRow>
             ))
           ) : (
-            <>
-              <div>No {type}</div>
-            </>
+            <None>No {type}</None>
           )}
         </OverContainer>
       </Container>
@@ -78,7 +83,7 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
 
 const StyledIoIosSend = styled(IoIosSend)`
   margin-top: 2px;
-  margin-right: 4px; /* 원하는 스타일 추가 */
+  margin-right: 4px;
   color: #ee5050;
 `;
 
@@ -156,7 +161,11 @@ const UserRow = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e6e6e6;
+
+  &:last-child {
+    border: none;
+  }
 `;
 
 const UserImg = styled.img`
@@ -179,6 +188,7 @@ const MessageButton = styled.button`
   background-color: #ffffff;
   color: #ee5050;
   border: none;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.15);
   border-radius: 4px;
   padding: 6px 12px;
   cursor: pointer;
@@ -186,6 +196,13 @@ const MessageButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: space-between;
+`;
+
+const None = styled.div`
+  margin-top: 128px;
+  font-size: 20px;
+  text-align: center;
+  color: #dadada;
 `;
 
 export default FollowModal;

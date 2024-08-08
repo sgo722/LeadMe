@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useRecoilValue } from "recoil";
-import { accessTokenState, userProfileState } from "stores/authAtom";
+import { accessTokenState } from "stores/authAtom";
 import styled from "styled-components";
 import { FaTiktok } from "react-icons/fa6";
 import { FaYoutube } from "react-icons/fa";
 import { LoginModal } from "components/LoginModal";
 import useAuth from "hooks/useAuth";
+import { UserProfile } from "types";
 
 interface HeaderProps {
   stickyOnly?: boolean;
@@ -17,9 +18,14 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
   const [loginModal, setLoginModal] = useState<boolean>(false);
 
   const accessToken = useRecoilValue(accessTokenState);
-  const userProfile = useRecoilValue(userProfileState);
-  const currentUserId = userProfile?.id;
   const isLogin = !!accessToken;
+
+  const fetchSessionUserData = () => {
+    const userData = sessionStorage.getItem("user_profile");
+    return userData ? (JSON.parse(userData) as UserProfile) : null;
+  };
+
+  const sessionUser = fetchSessionUserData();
 
   const { logout } = useAuth();
 
@@ -83,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
                 mypage
                 <Fake>
                   <LeftHoverBox>
-                    <HoverLink to={`/mypage/${currentUserId}`}>
+                    <HoverLink to={`/mypage/${sessionUser?.id}`}>
                       마이페이지
                     </HoverLink>
                     <Hr />
