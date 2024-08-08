@@ -1,12 +1,21 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useRecoilValue } from "recoil";
-import { accessTokenState } from "stores/authAtom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  accessTokenState,
+  accessTokenExpireTimeState,
+  refreshTokenState,
+  refreshTokenExpireTimeState,
+  userProfileState,
+} from "stores/authAtom";
 import styled from "styled-components";
 import { FaTiktok } from "react-icons/fa6";
 import { FaYoutube } from "react-icons/fa";
 import { LoginModal } from "components/LoginModal";
 import useAuth from "hooks/useAuth";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { baseUrl } from "axiosInstance/constants";
 import { UserProfile } from "types";
 
 interface HeaderProps {
@@ -15,17 +24,108 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [loginModal, setLoginModal] = useState<boolean>(false);
+  const [sessionUser, setSessionUser] = useRecoilState(userProfileState);
+
+  const setAccessToken = useSetRecoilState(accessTokenState);
+  const setAccessTokenExpireTime = useSetRecoilState(
+    accessTokenExpireTimeState
+  );
+  const setRefreshToken = useSetRecoilState(refreshTokenState);
+  const setRefreshTokenExpireTime = useSetRecoilState(
+    refreshTokenExpireTimeState
+  );
 
   const accessToken = useRecoilValue(accessTokenState);
   const isLogin = !!accessToken;
+
+  const mutation = useMutation<UserProfile, Error, string>({
+    mutationFn: async (token: string): Promise<UserProfile> => {
+      const response = await axios.get<{ data: UserProfile }>(
+        `${baseUrl}/api/v1/user/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: UserProfile) => {
+      setSessionUser(data); // 성공 시 유저 프로필 저장
+      sessionStorage.setItem("user_profile", JSON.stringify(data)); // 세션 스토리지에 유저 프로필 저장
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching data:", error);
+    },
+  });
+
+  const initialFetchRef = useRef(false);
+
+  useEffect(() => {
+    if (initialFetchRef.current) return;
+
+    const params = new URLSearchParams(location.search);
+    const accessToken = params.get("accessToken");
+    const accessTokenExpireTime = params.get("accessTokenExpireTime");
+    const refreshToken = params.get("refreshToken");
+    const refreshTokenExpireTime = params.get("refreshTokenExpireTime");
+
+    if (accessToken) {
+      // URL에서 토큰 관련 데이터 추출 후 세션 스토리지에 저장
+      sessionStorage.setItem("access_token", accessToken);
+      sessionStorage.setItem(
+        "access_token_expire_time",
+        accessTokenExpireTime || ""
+      );
+      sessionStorage.setItem("refresh_token", refreshToken || "");
+      sessionStorage.setItem(
+        "refresh_token_expire_time",
+        refreshTokenExpireTime || ""
+      );
+
+      setAccessToken(accessToken);
+      setAccessTokenExpireTime(accessTokenExpireTime || "");
+      setRefreshToken(refreshToken || "");
+      setRefreshTokenExpireTime(refreshTokenExpireTime || "");
+
+      params.delete("accessToken");
+      params.delete("accessTokenExpireTime");
+      params.delete("refreshToken");
+      params.delete("refreshTokenExpireTime");
+
+      navigate(
+        {
+          pathname: location.pathname,
+          search: params.toString(),
+        },
+        { replace: true }
+      );
+
+      mutation.mutate(accessToken);
+      initialFetchRef.current = true; // 중복 실행 방지용
+    }
+  }, [
+    location,
+    navigate,
+    setAccessToken,
+    setAccessTokenExpireTime,
+    setRefreshToken,
+    setRefreshTokenExpireTime,
+  ]);
+
+  useEffect(() => {
+    if (isLogin) {
+      const user = fetchSessionUserData();
+      setSessionUser(user);
+    } else {
+      setSessionUser(null);
+    }
+  }, [isLogin]);
 
   const fetchSessionUserData = () => {
     const userData = sessionStorage.getItem("user_profile");
     return userData ? (JSON.parse(userData) as UserProfile) : null;
   };
-
-  const sessionUser = fetchSessionUserData();
 
   const { logout } = useAuth();
 
@@ -83,13 +183,13 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
           <StyledLink to="/battle">battle</StyledLink>
           <StyledLink to="/challenge">challenge</StyledLink>
           <StyledLink to="/rank">rank</StyledLink>
-          {isLogin ? (
+          {isLogin && sessionUser ? (
             <LeftContainer>
               <Mypage>
                 mypage
                 <Fake>
                   <LeftHoverBox>
-                    <HoverLink to={`/mypage/${sessionUser?.id}`}>
+                    <HoverLink to={`/mypage/${sessionUser.id}`}>
                       마이페이지
                     </HoverLink>
                     <Hr />
@@ -97,7 +197,13 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
                   </LeftHoverBox>
                 </Fake>
               </Mypage>
-              <LeftBtn onClick={logout}>logout</LeftBtn>
+              <LeftBtn
+                onClick={() => {
+                  logout();
+                }}
+              >
+                logout
+              </LeftBtn>
             </LeftContainer>
           ) : (
             <LeftContainer>
