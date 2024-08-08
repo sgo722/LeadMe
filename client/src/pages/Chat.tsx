@@ -9,6 +9,7 @@ import { useRecoilState } from "recoil";
 import axios from "axios";
 import useWebSocket from "utils/useWebSocket";
 import { baseUrl } from "axiosInstance/constants";
+import { useLocation } from "react-router-dom";
 
 interface ChatRoomGetResponse {
   roomId: number;
@@ -40,6 +41,7 @@ interface ResponseData<T> {
 }
 
 export const Chat: React.FC = () => {
+  const location = useLocation();
   const [selectedNickname, setSelectedNickname] = useState<string | null>(null);
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
     null
@@ -60,6 +62,19 @@ export const Chat: React.FC = () => {
       setUserProfile(JSON.parse(savedUserProfile));
     }
   }, [setUserProfile]);
+
+  useEffect(() => {
+    if (location.state) {
+      const { id, nickname, profileImg } = location.state as {
+        id: number;
+        nickname: string;
+        profileImg: string;
+      };
+      setSelectedNickname(nickname);
+      setSelectedPartnerId(id);
+      setSelectedProfile(profileImg);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (currentUserId) {
