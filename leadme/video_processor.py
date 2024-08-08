@@ -30,7 +30,8 @@ def download_video(url, youtube_id, output_dir=PERMANENT_DIRECTORY_CHALLENGE):
         'outtmpl': output_path,  # 출력 파일명 설정
         'quiet': True,
         'external_downloader': 'aria2c',  # 빠른 다운로드를 위한 외부 다운로더 사용
-        'external_downloader_args': ['-x', '16', '-k', '1M']  # 병렬 연결 수와 단위 설정
+        'external_downloader_args': ['-x', '16', '-k', '1M'],  # 병렬 연결 수와 단위 설정
+        'cookiefile': 'path/to/cookies.txt'  # 쿠키 파일 경로 설정
     }
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
