@@ -26,7 +26,7 @@ interface PropsData {
 }
 
 const Mypage: React.FC = () => {
-  const [feed, setFeed] = useState<FeedProps[] | null>();
+  const [feed, setFeed] = useState<FeedProps[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
@@ -34,6 +34,7 @@ const Mypage: React.FC = () => {
   const [followModalType, setFollowModalType] = useState<
     "follower" | "following" | null
   >(null);
+  const [isFollowing, setIsFollowing] = useState<string>("unfollow");
   const navigate = useNavigate();
   const fetchSessionUserData = () => {
     const userData = sessionStorage.getItem("user_profile");
@@ -60,7 +61,7 @@ const Mypage: React.FC = () => {
       setUser(data);
     },
     onError: (error: Error) => {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching user Profile:", error);
     },
   });
 
@@ -82,10 +83,43 @@ const Mypage: React.FC = () => {
     onSuccess: (data) => {
       setFeed(data.content);
       console.log("feed", data.content);
-      console.log(feed);
     },
     onError: (error: Error) => {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching user Feed:", error);
+    },
+  });
+
+  const mutationCheckFollow = useMutation<string, Error, string>({
+    mutationFn: async (value: string): Promise<string> => {
+      const response = await axios.get<ResponseData<string>>(
+        `${baseUrl}/api/v1/user/following/check/${value}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: string) => {
+      setIsFollowing(data.toLowerCase());
+    },
+    onError: (error: Error) => {
+      console.error("Error checking follow status:", error);
+    },
+  });
+
+  const mutationToggleFollow = useMutation<void, Error, number>({
+    mutationFn: async (userId: number) => {
+      await axios.post<ResponseData<boolean>>(
+        `${baseUrl}/api/v1/user/${isFollowing}/${userId}`
+      );
+    },
+    onSuccess: () => {
+      isFollowing === "follow"
+        ? setIsFollowing("unfollow")
+        : setIsFollowing("follow");
+    },
+    onError: (error: Error) => {
+      console.error("Error toggling follow status:", error);
     },
   });
 
@@ -97,6 +131,7 @@ const Mypage: React.FC = () => {
     if (value && user === null) {
       mutationProfile.mutate(value);
       mutationFeed.mutate({ value, page: 1 });
+      mutationCheckFollow.mutate(value);
     }
   }, [location.pathname]);
 
@@ -117,9 +152,15 @@ const Mypage: React.FC = () => {
     setIsFollowModalOpen(false);
   };
 
-  const handleMessagesClick = () => {
+  const handleSendMessageClick = () => {
     if (user) {
-      navigate(`/chat`);
+      navigate("/chat", { state: user });
+    }
+  };
+
+  const handleToggleFollowClick = () => {
+    if (user) {
+      mutationToggleFollow.mutate(user.id);
     }
   };
 
@@ -179,13 +220,15 @@ const Mypage: React.FC = () => {
             <BtnContainer>
               {isMine ? (
                 <>
-                  <Btn onClick={handleMessagesClick}>메세지 목록</Btn>
+                  <Btn onClick={handleSendMessageClick}>메세지 목록</Btn>
                   <Btn onClick={handleOpenProfileModal}>프로필 편집</Btn>
                 </>
               ) : (
                 <>
-                  <Btn>메세지 보내기</Btn>
-                  <Btn>팔로우</Btn>
+                  <Btn onClick={handleSendMessageClick}>메세지 보내기</Btn>
+                  <Btn onClick={handleToggleFollowClick}>
+                    {isFollowing === "follow" ? "언팔로우" : "팔로우"}
+                  </Btn>
                 </>
               )}
             </BtnContainer>
