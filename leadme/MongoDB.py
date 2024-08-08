@@ -7,7 +7,7 @@ from pymongo import MongoClient
 
 client = MongoClient(
     host='localhost',
-    port=27017,
+    port=27070,
     username='leadme',
     password='leadmessafy11',
     authSource='admin'  # 인증할 데이터베이스를 지정합니다. 기본적으로 'admin'을 사용합니다.
