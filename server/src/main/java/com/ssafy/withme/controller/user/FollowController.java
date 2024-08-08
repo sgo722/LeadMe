@@ -1,5 +1,6 @@
 package com.ssafy.withme.controller.user;
 
+import com.ssafy.withme.domain.user.Follow;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.dto.user.FollowDto;
 import com.ssafy.withme.dto.user.UserInfoDto;
@@ -46,6 +47,18 @@ public class FollowController {
         List<FollowDto> followings = followService.findFollowing(user.getId());
 
         return SuccessResponse.of(followings);
+    }
+
+    @GetMapping("/user/following/check/{userId}")
+    public SuccessResponse<String> checkFollowing(@PathVariable Long userId, @CurrentUser User user) {
+
+        List<Follow> findList = user.getFromFollowList().stream()
+                .filter(f -> f.getToUser().getId().equals(userId)).toList();
+
+        if (findList.isEmpty())
+            return SuccessResponse.of("UNFOLLOW");
+
+        return SuccessResponse.of("FOLLOW");
     }
 
     /**
