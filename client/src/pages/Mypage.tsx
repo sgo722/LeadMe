@@ -144,14 +144,33 @@ const Mypage: React.FC = () => {
                     <Th>한 줄 소개</Th>
                     <Td>{user.profileComment}</Td>
                   </Tr>
-                  <Tr onClick={() => handleOpenFollowModal("follower")}>
-                    <Th>팔로워</Th>
-                    <Td>{user.follower}</Td>
-                  </Tr>
-                  <Tr onClick={() => handleOpenFollowModal("following")}>
-                    <Th>팔로잉</Th>
-                    <Td>{user.following}</Td>
-                  </Tr>
+                  {isMine ? (
+                    <>
+                      <TrCursor
+                        onClick={() => handleOpenFollowModal("follower")}
+                      >
+                        <Th>팔로워</Th>
+                        <Td>{user.follower}</Td>
+                      </TrCursor>
+                      <TrCursor
+                        onClick={() => handleOpenFollowModal("following")}
+                      >
+                        <Th>팔로잉</Th>
+                        <Td>{user.following}</Td>
+                      </TrCursor>
+                    </>
+                  ) : (
+                    <>
+                      <Tr>
+                        <Th>팔로워</Th>
+                        <Td>{user.follower}</Td>
+                      </Tr>
+                      <Tr>
+                        <Th>팔로잉</Th>
+                        <Td>{user.following}</Td>
+                      </Tr>
+                    </>
+                  )}
                 </tbody>
               </table>
             </Flex>
@@ -271,10 +290,11 @@ const ProfileImg = styled.img`
 
 const Tr = styled.tr`
   text-align: left;
+`;
 
-  &:nth-child(n + 3) {
-    cursor: pointer;
-  }
+const TrCursor = styled.tr`
+  text-align: left;
+  cursor: pointer;
 `;
 
 const Th = styled.th`

@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { IoIosSend } from "react-icons/io";
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
+import { ResponseData } from "types";
+import { baseUrl } from "axiosInstance/constants";
 
 interface FollowModalProps {
   onClose: () => void;
-  type: "follower" | "following";
+  type: string;
+}
+
+interface PeopleProps {
+  id: number;
+  nickname: string;
+  profileImg: string;
 }
 
 const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
@@ -14,17 +24,29 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
     }
   };
 
-  const userData = [
-    { id: "클릭시 유저 페이지로 이동" },
-    { id: "userId2" },
-    { id: "userId3" },
-    { id: "userId4" },
-    { id: "userId5" },
-    { id: "userId6" },
-    { id: "userId7" },
-    { id: "userId8" },
-    { id: "userId9" },
-  ];
+  const mutationFollow = useMutation<PeopleProps[], Error, string>({
+    mutationFn: async (value: string) => {
+      const response = await axios.get<ResponseData<PeopleProps[]>>(
+        `${baseUrl}/api/v1/user/${value}/list`
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: PeopleProps[]) => {
+      console.log(data);
+      setPeople(data);
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching user data:", error);
+    },
+  });
+
+  const [people, setPeople] = useState<PeopleProps[]>();
+
+  useEffect(() => {
+    if (type) {
+      mutationFollow.mutate(type);
+    }
+  }, []);
 
   return (
     <Overlay onClick={handleOverlayClick}>
@@ -32,16 +54,22 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>{type === "follower" ? "Follower" : "Following"}</Title>
         <OverContainer>
-          {userData.map((user) => (
-            <UserRow key={user.id}>
-              <UserImg />
-              <UserId>{user.id}</UserId>
-              <MessageButton>
-                <StyledIoIosSend />
-                send
-              </MessageButton>
-            </UserRow>
-          ))}
+          {people ? (
+            people.map((user) => (
+              <UserRow key={user.id}>
+                <UserImg src={user.profileImg} alt={`${user.nickname}`} />
+                <UserId>{user.nickname}</UserId>
+                <MessageButton>
+                  <StyledIoIosSend />
+                  send
+                </MessageButton>
+              </UserRow>
+            ))
+          ) : (
+            <>
+              <div>No {type}</div>
+            </>
+          )}
         </OverContainer>
       </Container>
     </Overlay>
@@ -131,7 +159,7 @@ const UserRow = styled.div`
   border-bottom: 1px solid #e0e0e0;
 `;
 
-const UserImg = styled.div`
+const UserImg = styled.img`
   width: 40px;
   height: 40px;
   background-color: #ebebeb;
