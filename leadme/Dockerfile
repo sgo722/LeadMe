@@ -6,7 +6,6 @@ WORKDIR /app
 
 # 시스템 의존성 설치
 RUN apt-get update && apt-get install -y \
-    aria2 \
     build-essential \
     # OpenGL 라이브러리 추가
     libgl1-mesa-glx \
@@ -33,9 +32,6 @@ VOLUME ["/home/ubuntu/python/video/temporary", "/home/ubuntu/python/video/user",
 
 # ffmpeg 다운로드
 RUN apt-get update && apt-get install -y ffmpeg
-
-# yl-dlp 다운로드
-RUN pip install --upgrade yt-dlp
 
 # 필요한 디렉토리 생성 및 권한 설정
 ENV ENV=prod
