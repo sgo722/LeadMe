@@ -51,6 +51,7 @@ const Mypage: React.FC = () => {
       return response.data.data;
     },
     onSuccess: (data: UserProfile) => {
+      console.log("data", data);
       if (sessionUser) {
         if (data.id === sessionUser.id) {
           setIsMine(true);
@@ -80,7 +81,8 @@ const Mypage: React.FC = () => {
     },
     onSuccess: (data) => {
       setFeed(data.content);
-      console.log("feed", data);
+      console.log("feed", data.content);
+      console.log(feed);
     },
     onError: (error: Error) => {
       console.error("Error fetching user data:", error);
@@ -192,7 +194,7 @@ const Mypage: React.FC = () => {
         <MainSection>
           <FeedTitle>Feed</FeedTitle>
           <FeedContainer>
-            {feed ? (
+            {feed && feed.length > 0 ? (
               feed.map((item) => (
                 <OneFeed key={item.userChallengeId}>
                   <OneImg
