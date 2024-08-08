@@ -45,6 +45,11 @@ public class FollowService {
                 .toList();
     }
 
+    public Boolean isFollowing(Long fromUserId, Long toUserId) {
+
+        return followRepository.existsByFromUserIdAndToUserId(fromUserId, toUserId);
+    }
+
     @Transactional
     public void following(Long toId, Long fromId) {
 

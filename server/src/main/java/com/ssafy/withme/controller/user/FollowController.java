@@ -56,15 +56,12 @@ public class FollowController {
 
         String accessToken = authorization.split(" ")[1];
 
-        User findUser = userService.findUserIdByToken(accessToken);
+        Boolean following = followService.isFollowing(userService.findUserIdByToken(accessToken).getId(), userId);
 
-        List<Follow> findList = findUser.getFromFollowList().stream()
-                .filter(f -> f.getToUser().getId().equals(userId)).toList();
+        if (following)
+            return SuccessResponse.of("FOLLOW");
 
-        if (findList.isEmpty())
-            return SuccessResponse.of("UNFOLLOW");
-
-        return SuccessResponse.of("FOLLOW");
+        return SuccessResponse.of("UNFOLLOW");
     }
 
     /**

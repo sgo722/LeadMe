@@ -6,5 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface FollowRepository extends JpaRepository<Follow, Long>, FollowRepositoryCustom {
 
     @Override
+    Boolean existsByFromUserIdAndToUserId(Long fromUserId, Long toUserId);
+
+    @Override
     Long unfollow(Long toId, Long fromId);
 }
