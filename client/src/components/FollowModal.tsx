@@ -54,7 +54,7 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>{type === "follower" ? "Follower" : "Following"}</Title>
         <OverContainer>
-          {people ? (
+          {people && people.length > 0 ? (
             people.map((user) => (
               <UserRow key={user.id}>
                 <UserImg src={user.profileImg} alt={`${user.nickname}`} />
@@ -66,9 +66,7 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
               </UserRow>
             ))
           ) : (
-            <>
-              <div>No {type}</div>
-            </>
+            <None>No {type}</None>
           )}
         </OverContainer>
       </Container>
@@ -78,7 +76,7 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
 
 const StyledIoIosSend = styled(IoIosSend)`
   margin-top: 2px;
-  margin-right: 4px; /* 원하는 스타일 추가 */
+  margin-right: 4px;
   color: #ee5050;
 `;
 
@@ -157,6 +155,10 @@ const UserRow = styled.div`
   justify-content: space-between;
   padding: 10px 0;
   border-bottom: 1px solid #e0e0e0;
+
+  &:last-child {
+    border: none;
+  }
 `;
 
 const UserImg = styled.img`
@@ -186,6 +188,13 @@ const MessageButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: space-between;
+`;
+
+const None = styled.div`
+  margin-top: 128px;
+  font-size: 20px;
+  text-align: center;
+  color: #dadada;
 `;
 
 export default FollowModal;
