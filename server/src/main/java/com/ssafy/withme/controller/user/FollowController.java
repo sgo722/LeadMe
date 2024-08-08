@@ -1,6 +1,7 @@
 package com.ssafy.withme.controller.user;
 
 import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.dto.user.FollowDto;
 import com.ssafy.withme.dto.user.UserInfoDto;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.SuccessResponse;
@@ -27,7 +28,7 @@ public class FollowController {
     @GetMapping("/user/follower/list")
     public SuccessResponse<?> getFollowers(@CurrentUser User user) {
 
-        List<UserInfoDto> followers = followService.findFollowers(user.getId());
+        List<FollowDto> followers = followService.findFollowers(user.getId());
 
         return SuccessResponse.of(followers);
     }
@@ -42,7 +43,7 @@ public class FollowController {
 
         log.info("user: {}", user);
 
-        List<UserInfoDto> followings = followService.findFollowing(user.getId());
+        List<FollowDto> followings = followService.findFollowing(user.getId());
 
         return SuccessResponse.of(followings);
     }

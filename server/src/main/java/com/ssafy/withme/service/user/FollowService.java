@@ -2,6 +2,7 @@ package com.ssafy.withme.service.user;
 
 import com.ssafy.withme.domain.user.Follow;
 import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.dto.user.FollowDto;
 import com.ssafy.withme.dto.user.UserInfoDto;
 import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.BusinessException;
@@ -23,29 +24,25 @@ public class FollowService {
 
 
     // 팔로잉 리스트 조회
-    public List<UserInfoDto> findFollowing(Long userId) {
+    public List<FollowDto> findFollowing(Long userId) {
 
         User findUser = userService.findById(userId);
 
-        List<UserInfoDto> findFollowingList = findUser.getFromFollowList().stream()
+        return findUser.getFromFollowList().stream()
                 .map(Follow::getToUser)
-                .map(UserInfoDto::from)
+                .map(FollowDto::from)
                 .toList();
-
-        return findFollowingList;
     }
 
     // 팔로워 리스트 조회
-    public List<UserInfoDto> findFollowers(Long userId) {
+    public List<FollowDto> findFollowers(Long userId) {
 
         User findUser = userService.findById(userId);
 
-        List<UserInfoDto> findFollowerList = findUser.getToFollowList().stream()
+        return findUser.getToFollowList().stream()
                 .map(Follow::getFromUser)
-                .map(UserInfoDto::from)
+                .map(FollowDto::from)
                 .toList();
-
-        return findFollowerList;
     }
 
     @Transactional
