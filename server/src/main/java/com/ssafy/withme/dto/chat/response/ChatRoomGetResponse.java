@@ -7,6 +7,8 @@ import com.ssafy.withme.domain.chat.ChatRoom;
 import com.ssafy.withme.dto.chat.ChatMessageDto;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Builder
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -29,6 +31,12 @@ public class ChatRoomGetResponse {
 
     private ChatMessageDto lastChatMessageDto;
 
+    // user 마지막으로 채팅방에서 나온 시각 기록
+    private LocalDateTime userLastChatLeaveTime;
+
+    // partner 마지막으로 채팅방에서 나온 시각 기록
+    private LocalDateTime partnerLastChatLeaveTime;
+
     public void updateChatMessageDto(ChatMessageDto chatMessageDto) {
         this.lastChatMessageDto = chatMessageDto;
     }
@@ -43,6 +51,8 @@ public class ChatRoomGetResponse {
                 .partnerNickname(chatRoom.getPartner().getNickname())
                 .partnerId(chatRoom.getPartner().getId())
                 .partnerImageUrl(chatRoom.getPartner().getProfileImg())
+                .userLastChatLeaveTime(chatRoom.getUserLeaveTime())
+                .partnerLastChatLeaveTime(chatRoom.getPartnerLeaveTime())
                 .build();
     }
 }

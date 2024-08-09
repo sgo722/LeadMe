@@ -28,6 +28,7 @@ public enum ErrorCode {
     USERNAME_IS_NULL(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "Username이 null 입니다."),
     FAILED_UNFOLLOW(HttpStatus.FORBIDDEN, HttpStatus.FORBIDDEN.value(), "Unfollow할 컬럼이 존재하지 않거나, Unfollow를 실패했습니다."),
     NOT_AUTHORIZATION(HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.value(), "해당 권한이 없는 사용자입니다."),
+    NOT_EXISTS_FOLLOW(HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.value(), "해당하는 팔로잉 관계가 없습니다."),
 
     // 챌린지
     NOT_EXISTS_CHALLENGE(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당 챌린지 영상은 존재하지 않습니다."),

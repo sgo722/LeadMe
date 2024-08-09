@@ -1,28 +1,56 @@
-FROM node:20 AS build
-WORKDIR /app
+FROM node:20
+# WORKDIR /app
 
-COPY package.json package-lock.json ./
-
-RUN npm i
+WORKDIR /
 
 COPY . .
 
+RUN npm i
+
 RUN npm run build
 
-RUN ls -la /app/dist
+RUN apt-get update && apt-get install nginx -y
 
-# Deployment 단계
-FROM node:20
+# # Deployment 단계
+# #FROM nginx:alpine
 
-WORKDIR /app
+# # Nginx 설정 파일 복사 (필요한 경우)
+# # COPY nginx.conf /etc/nginx/nginx.conf
 
-RUN npm install -g serve
+# # 빌드된 파일을 Nginx의 서비스 디렉토리로 복사
+# COPY dist /usr/share/nginx/html
 
-# 빌드된 파일을 Nginx의 서비스 디렉토리로 복사
-COPY --from=build /app/dist /app/dist
+# # 포트 노출 (기본값: 80)
+# EXPOSE 80
 
-# 포트 노출 (기본값: 80)
-EXPOSE 5173
+# # Nginx 실행
+# # CMD ["nginx", "-g", "daemon off;"]
 
-# 실행
-CMD ["serve", "-s", "dist", "-l", "5173"]
+# # 실행 단계
+# # FROM node:20 AS run
+# # WORKDIR /app
+
+# # 빌드된 파일을 복사
+# # COPY --from=build /app .
+
+# # 포트 노출 (기본값: 3000)
+# # EXPOSE 80
+
+# # 애플리케이션 실행
+
+# 로컬에서 빌드한 결과물을 /var/www/html 으로 복사합니다.
+COPY ./dist /var/www/html
+
+RUN rm /etc/nginx/sites-enabled/default
+COPY nginx/default /etc/nginx/sites-available/default
+RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+# 기본 nginx 설정 파일을 삭제합니다. (custom 설정과 충돌 방지)
+# RUN rm /etc/nginx/conf.d/default.conf
+
+# custom 설정파일을 컨테이너 내부로 복사합니다.
+
+# 컨테이너의 80번 포트를 열어줍니다.
+EXPOSE 80
+
+# nginx 서버를 실행하고 백그라운드로 동작하도록 합니다.
+CMD ["nginx", "-g", "daemon off;"]

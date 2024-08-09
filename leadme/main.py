@@ -62,10 +62,11 @@ async def read_root():
 @app.post("/videoUrl")
 async def saveVideoData(video: Video):
     start_time = time.time()
-    video_path = await asyncio.to_thread(download_video, video.url, video.youtubeId)
+    #video_path = await asyncio.to_thread(download_video, video.url, video.youtubeId)
+    
+    video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{video.youtubeId}.mp4")
     
     # 비디오 처리 실행 및 결과 대기
-    
     keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(video.youtubeId, video_path)))
     
     total_time = time.time() - start_time

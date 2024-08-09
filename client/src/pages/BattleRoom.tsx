@@ -1,12 +1,36 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
+import styled from "styled-components";
+import YouTube from "react-youtube";
 import type {
   Publisher,
   Session,
   Subscriber,
   StreamEvent,
+  SignalEvent,
 } from "openvidu-browser";
+
+interface DummyDataItem {
+  id: number;
+  title: string;
+  videoId: string;
+}
+
+const dummyData: DummyDataItem[] = [
+  { id: 1, title: "마라탕후루", videoId: "COwRJMCCWL0" },
+  { id: 2, title: "킥드베", videoId: "Fpmqa_ldQS0" },
+  { id: 3, title: "채소 댄스", videoId: "rspqaUYy56M" },
+  { id: 4, title: "띵띵땅땅", videoId: "Niob9m3ccGY" },
+  { id: 6, title: "Tell me", videoId: "LYnhkVVXGIU" },
+  { id: 7, title: "최애의아이", videoId: "KsE_jurZDYs" },
+  { id: 8, title: "립제이", videoId: "gKoBOP8rSpo" },
+  { id: 9, title: "bluecheck", videoId: "rct6LjDypqY" },
+  { id: 10, title: "supernatural", videoId: "y7mmUrlYCOM" },
+  { id: 11, title: "Land of Lola", videoId: "yoeduVglPUQ" },
+  { id: 12, title: "도토리 주우러 갈래?", videoId: "ZM5ioaMqD5g" },
+  { id: 13, title: "How Sweet", videoId: "ZtoItsp4DHA" },
+];
 
 // 세션 : 화상 회의 가상 공간
 // 발행자(publisher) : 자신의 오디오/비디오 스트림을 세션에 전송하는 참가자
@@ -24,7 +48,168 @@ export const BattleRoom: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null); //OpenVidu 세션 상태 관리
   const [publisher, setPublisher] = useState<Publisher | null>(null); // 로컬 비디오 스트림 발행자 상태 관리
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]); // 원격 비디오 스트림 구독자 목록 상태 관리
-  const [error, setError] = useState<string | null>(null); // 에러 상태 관리
+  const [selectedVideo, setSelectedVideo] = useState<DummyDataItem | null>(
+    null
+  );
+  const [isVideoConfirmed, setIsVideoConfirmed] = useState<boolean>(false);
+
+  const [isReady, setIsReady] = useState<boolean>(false); // 자신의 준비 state
+  const [peerReady, setPeerReady] = useState<boolean>(false); // 상대방의 준비 state
+  const [isHost, setIsHost] = useState<boolean>(false); // 방장 여부를 확인하는 state
+
+  // 방장 설정(세션에 제일 먼저 들어온 참가자)
+  useEffect(() => {
+    if (session && publisher) {
+      const connection = publisher.stream.connection;
+      const sessionConnection = session.connection;
+
+      if (sessionConnection) {
+        const isFirstParticipant =
+          connection.connectionId === sessionConnection.connectionId;
+        setIsHost(isFirstParticipant);
+        console.log("방장 여부:", isFirstParticipant);
+      }
+    }
+  }, [session, publisher]);
+
+  // 비디오 아이템 클릭 핸들러
+  const handleItemClick = (id: number) => {
+    const video = dummyData.find((item) => item.id === id);
+    setSelectedVideo(video || null);
+    setIsVideoConfirmed(false);
+    // 선택된 비디오 정보를 다른 참가자에게 전송
+    if (session && video) {
+      session.signal({
+        data: JSON.stringify({ selectedVideoId: video.id }),
+        type: "video-selected",
+      });
+    }
+  };
+
+  // 비디오 선택 취소 핸들러
+  const handleClose = () => {
+    setSelectedVideo(null);
+    setIsVideoConfirmed(false);
+
+    // 비디오 선택 취소 정보를 다른 참가자에게 전송
+    if (session) {
+      session.signal({
+        data: JSON.stringify({ selectedVideoId: null }),
+        type: "video-selected",
+      });
+    }
+  };
+
+  // 비디오 선택 확인 핸들러
+  const handleConfirm = () => {
+    setIsVideoConfirmed(true);
+
+    // 비디오 선택 확인 정보를 다른 참가자에게 전송
+    if (session) {
+      session.signal({
+        data: JSON.stringify({ isVideoConfirmed: true }),
+        type: "video-confirmed",
+      });
+    }
+  };
+
+  // 비디오 선택 취소 및 초기화 핸들러
+  const handleCancel = () => {
+    setIsVideoConfirmed(false);
+    setSelectedVideo(null);
+
+    // 비디오 선택 취소 및 초기화 정보를 다른 참가자에게 전송
+    if (session) {
+      session.signal({
+        data: JSON.stringify({
+          isVideoConfirmed: false,
+          selectedVideoId: null,
+        }),
+        type: "video-cancelled",
+      });
+    }
+  };
+
+  // 준비 버튼 클릭 시 상태를 변경하고 다른참가자에게 신호를 보내는 함수
+  const toggleReady = () => {
+    const newReadyState = !isReady;
+    setIsReady(newReadyState);
+    if (session) {
+      session.signal({
+        data: JSON.stringify({ ready: newReadyState }),
+        type: "user-ready",
+      });
+    }
+  };
+
+  // 신호 처리를 위한 useEffect
+  useEffect(() => {
+    if (session) {
+      const handleSignal = (event: SignalEvent) => {
+        console.log("Received signal:", event); // 디버깅을 위한 로그
+
+        const signalType = event.type.replace("signal:", "");
+        let signalData: any;
+
+        try {
+          signalData =
+            typeof event.data === "string"
+              ? JSON.parse(event.data)
+              : event.data;
+        } catch (error) {
+          console.error("Signal data parsing error:", error);
+          return;
+        }
+
+        switch (signalType) {
+          case "user-ready":
+            if (typeof signalData.ready === "boolean") {
+              setPeerReady(signalData.ready);
+              console.log("상대방 준비 상태:", signalData.ready);
+            }
+            break;
+          case "video-selected":
+            console.log("비디오 선택됨:", signalData);
+            if (signalData.selectedVideoId !== null) {
+              const video = dummyData.find(
+                (item) => item.id === signalData.selectedVideoId
+              );
+              setSelectedVideo(video || null);
+            } else {
+              setSelectedVideo(null);
+            }
+            setIsVideoConfirmed(false);
+            break;
+          case "video-confirmed":
+            console.log("비디오 확인됨:", signalData);
+            setIsVideoConfirmed(signalData.isVideoConfirmed);
+            break;
+          case "video-cancelled":
+            console.log("비디오 취소됨");
+            setIsVideoConfirmed(false);
+            setSelectedVideo(null);
+            break;
+          default:
+            console.log("알 수 없는 시그널 타입:", signalType);
+        }
+      };
+
+      session.on("signal", handleSignal);
+
+      return () => {
+        session.off("signal", handleSignal);
+      };
+    }
+  }, [session]);
+
+  // 배틀 시작 함수
+  const handleStart = () => {
+    if (isHost && isReady && peerReady) {
+      console.log("배틀 시작!");
+    } else {
+      alert("모든 참가자가 준비되지 않았습니다.");
+    }
+  };
 
   // 걍 임시로 썻음 빌드할때 에러나서
   useEffect(() => {
@@ -75,7 +260,7 @@ export const BattleRoom: React.FC = () => {
         setPublisher(publisher);
       } catch (error) {
         console.error("Error initializing session:", error);
-        setError("세션 초기화 중 오류가 발생했습니다.");
+        // setError("세션 초기화 중 오류가 발생했습니다.");
       }
     };
     // 세션 초기화 함수 실행
@@ -103,31 +288,389 @@ export const BattleRoom: React.FC = () => {
     };
   }, [token, roomName]);
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
   return (
-    <div>
-      <h1>{roomName}</h1>
-      {publisher && (
-        <div id="publisher">
-          <p>내 비디오</p>
-          <video
-            autoPlay={true}
-            ref={(video) => video && publisher.addVideoElement(video)}
-          />
-        </div>
-      )}
-      {subscribers.map((sub, index) => (
-        <div key={index} id={`subscriber-${index}`}>
-          <p>참가자 {index + 1}</p>
-          <video
-            autoPlay={true}
-            ref={(video) => video && sub.addVideoElement(video)}
-          />
-        </div>
-      ))}
-    </div>
+    <Container>
+      <BattleArea>
+        <LeftWebcamBox $isSmall={selectedVideo !== null && !isVideoConfirmed}>
+          {subscribers[0] ? (
+            <>
+              <video
+                autoPlay={true}
+                ref={(video) => video && subscribers[0].addVideoElement(video)}
+              />
+              {peerReady && <ReadyOverlay>READY</ReadyOverlay>}
+            </>
+          ) : (
+            <EmptyBoxContent>대기중...</EmptyBoxContent>
+          )}
+        </LeftWebcamBox>
+        <DataBox
+          $isShifted={selectedVideo !== null && !isVideoConfirmed}
+          $isSelected={isVideoConfirmed && selectedVideo !== null}
+        >
+          {isVideoConfirmed && selectedVideo ? (
+            <FullScreenYouTubeContainer>
+              <BackIcon onClick={handleCancel}>&larr;</BackIcon>
+              <YouTube
+                videoId={selectedVideo.videoId}
+                opts={{
+                  height: "622",
+                  width: "350",
+                  playerVars: { autoplay: 1 },
+                }}
+              />
+            </FullScreenYouTubeContainer>
+          ) : (
+            <>
+              <Title>Battle!</Title>
+              <ScrollableList>
+                {dummyData.map((item) => (
+                  <ListItem
+                    key={item.id}
+                    onClick={() => handleItemClick(item.id)}
+                    $isSelected={selectedVideo?.id === item.id}
+                  >
+                    {item.title}
+                  </ListItem>
+                ))}
+              </ScrollableList>
+            </>
+          )}
+        </DataBox>
+        {selectedVideo && !isVideoConfirmed && (
+          <YouTubeBox $isVisible={true}>
+            <CloseButton onClick={handleClose}>×</CloseButton>
+            <YouTubeContainer>
+              <YouTube
+                videoId={selectedVideo.videoId}
+                opts={{
+                  height: "480",
+                  width: "270",
+                  playerVars: { autoplay: 1 },
+                }}
+              />
+            </YouTubeContainer>
+            <StartButton onClick={handleConfirm}>select</StartButton>
+          </YouTubeBox>
+        )}
+        <RightWebcamBox $isSmall={selectedVideo !== null && !isVideoConfirmed}>
+          {publisher ? (
+            <video
+              autoPlay={true}
+              ref={(video) => video && publisher.addVideoElement(video)}
+            />
+          ) : (
+            <EmptyBoxContent>연결중...</EmptyBoxContent>
+          )}
+        </RightWebcamBox>
+
+        {(!selectedVideo || isVideoConfirmed) && (
+          <ButtonContainer>
+            {isVideoConfirmed && selectedVideo ? (
+              <>
+                {isHost && isReady && peerReady && (
+                  <ActionButton
+                    onClick={handleStart}
+                    disabled={!(isReady && peerReady)}
+                  >
+                    시작
+                  </ActionButton>
+                )}
+                <ActionButton onClick={toggleReady}>
+                  {isReady ? "준비 취소" : "준비"}
+                </ActionButton>
+                <ActionButton onClick={() => console.log("나가기")}>
+                  나가기
+                </ActionButton>
+              </>
+            ) : (
+              <ActionButton onClick={() => console.log("나가기")}>
+                나가기
+              </ActionButton>
+            )}
+          </ButtonContainer>
+        )}
+      </BattleArea>
+    </Container>
   );
 };
+
+const Container = styled.div`
+  min-width: 1120px;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+`;
+
+const BattleArea = styled.div`
+  min-width: 1080px;
+  width: 90vw;
+  margin: 20px 20px;
+  min-height: 85vh;
+  border-radius: 20px;
+  background: linear-gradient(
+    108deg,
+    rgba(255, 255, 255, 0.26) 0%,
+    rgba(255, 255, 255, 0.07) 100%
+  );
+
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(15px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 30px;
+`;
+
+const EmptyBoxContent = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: calc(100% - 40px);
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 18px;
+  color: #a1a1a1;
+`;
+
+const LeftWebcamBox = styled.div<{ $isSmall: boolean }>`
+  width: ${(props) => (props.$isSmall ? "220px" : "350px")};
+  height: ${(props) => (props.$isSmall ? "391px" : "622px")};
+  border-radius: 15px;
+  border: 1px #fff;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease-in-out;
+  position: absolute;
+  left: ${(props) => (props.$isSmall ? "30px" : "calc(50% - 575px)")};
+  bottom: ${(props) => (props.$isSmall ? "20px" : "50%")};
+  transform: ${(props) => (props.$isSmall ? "none" : "translateY(50%)")};
+  overflow: hidden;
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+`;
+
+const ReadyOverlay = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(0, 255, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+`;
+
+const RightWebcamBox = styled.div<{ $isSmall: boolean }>`
+  width: ${(props) => (props.$isSmall ? "220px" : "350px")};
+  height: ${(props) => (props.$isSmall ? "391px" : "622px")};
+  border-radius: 15px;
+  border: 1px #fff;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease-in-out;
+  position: absolute;
+  right: ${(props) => (props.$isSmall ? "30px" : "calc(50% - 575px)")};
+  bottom: ${(props) => (props.$isSmall ? "20px" : "50%")};
+  transform: ${(props) => (props.$isSmall ? "none" : "translateY(50%)")};
+  overflow: hidden;
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+`;
+const DataBox = styled.div<{ $isShifted: boolean; $isSelected: boolean }>`
+  width: 350px;
+  height: 622px;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 8px 8px 4px 0px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  transition: all 0.3s ease-in-out;
+  padding: ${(props) => (props.$isSelected ? "0" : "20px 10px")};
+  position: ${(props) => (props.$isShifted ? "absolut" : "relative")};
+  left: ${(props) => (props.$isShifted ? "50%" : "auto")};
+  top: ${(props) => (props.$isShifted ? "50%" : "auto")};
+  transform: ${(props) => (props.$isShifted ? "translate(-55%, 0%)" : "none")};
+`;
+
+const YouTubeBox = styled.div<{ $isVisible: boolean }>`
+  width: 350px;
+  height: 622px;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  padding: 20px 10px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 8px 8px 4px 0px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%)
+    translateX(${(props) => (props.$isVisible ? "190px" : "0")});
+  opacity: ${(props) => (props.$isVisible ? 1 : 0)};
+  transition: all 0.3s ease-in-out;
+  z-index: ${(props) => (props.$isVisible ? 2 : 0)};
+  pointer-events: ${(props) => (props.$isVisible ? "auto" : "none")};
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+`;
+
+const YouTubeContainer = styled.div`
+  border-radius: 15px;
+  overflow: hidden;
+  margin-top: 30px;
+`;
+
+const StartButton = styled.button`
+  border-radius: 8px;
+  background: #f7f7f7;
+  box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.15);
+  border: none;
+  color: #ee5050;
+  cursor: pointer;
+  width: 280px;
+  height: 44px;
+  padding-top: 4px;
+  font-size: 24px;
+  font-weight: 600;
+  font-family: "Rajdhani", sans-serif;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 30px;
+  cursor: pointer;
+  color: #ee5050;
+`;
+
+const Title = styled.h1`
+  color: #ee5050;
+  font-family: Rajdhani;
+  font-size: 60px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: -0.6px;
+`;
+
+const ScrollableList = styled.div`
+  flex-grow: 1;
+  border-radius: 10px;
+  padding: 10px;
+
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 15px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #dfdfdf;
+    border-radius: 10px;
+    border: 4px solid rgba(0, 0, 0, 0);
+    background-clip: padding-box;
+    cursor: pointer;
+  }
+`;
+
+const ListItem = styled.div<{ $isSelected: boolean }>`
+  padding: 15px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-radius: 8px;
+  background: ${(props) =>
+    props.$isSelected
+      ? "linear-gradient(90deg, #f3e7e7 0%, #ffd6e7 100%)"
+      : "linear-gradient(90deg, #f7f7f7 0%, #ffedf6 100%)"};
+
+  &:last-child {
+    margin: 0;
+  }
+`;
+
+const FullScreenYouTubeContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+`;
+
+const BackIcon = styled.button`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.7);
+  }
+`;
+
+const ButtonContainer = styled.div`
+  position: absolute;
+  bottom: 20px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+`;
+
+const ActionButton = styled.button`
+  border-radius: 8px;
+  background: #f7f7f7;
+  box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.15);
+  border: none;
+  color: #ee5050;
+  cursor: pointer;
+  padding: 10px 15px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: "Rajdhani", sans-serif;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+`;

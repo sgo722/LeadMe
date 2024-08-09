@@ -17,6 +17,7 @@ import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -137,7 +138,6 @@ public class ChatRoomService {
         );
     }
 
-
     @Transactional
     public ChatRoom createChatRoom(ChatRoomCreateRequest chatRoomCreateRequest) {
 
@@ -153,6 +153,33 @@ public class ChatRoomService {
         chatRoomRepository.save(chatRoom);
 
         return chatRoom;
+    }
+
+    /**
+     * 채팅방 떠날때의 시각 기록
+     */
+    @Transactional
+    public LocalDateTime leaveChatRoom(Long userId, Long roomId) {
+        ChatRoom chatRoom = chatRoomRepository.findByUserIdAndRoomId(userId, roomId);
+
+        if (chatRoom == null) {
+            throw new IllegalArgumentException(("유저 또는 해당 채팅방을 찾을 수 없습니다."));
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (chatRoom.getUser().getId().equals(userId)) {
+            chatRoom.setUserLeaveTime(now);
+        } else if (chatRoom.getPartner().getId().equals(userId)) {
+            chatRoom.setPartnerLeaveTime(now);
+        } else {
+            throw new IllegalArgumentException("유저는 채팅방의 구성인원이 아닙니다.");
+        }
+
+        //@Tranactional로 변경감지
+//        chatRoomRepository.save(chatRoom);
+
+        return now;
     }
 
 }

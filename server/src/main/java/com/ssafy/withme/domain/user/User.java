@@ -64,6 +64,8 @@ public class User extends BaseEntity implements UserDetails {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<UserChallengeLike> userChallengeLikeList = new ArrayList<>();
 
+    private Long userLikeCnt;
+
     public User update(String name) {
         this.name = name;
         return this;
@@ -77,7 +79,7 @@ public class User extends BaseEntity implements UserDetails {
 //    }
 
     @Builder
-    public User(Long id, String name, String password, String nickname, String email, String gender, String age, RoleType roleType, String profileImg, String profileComment, UserStatus userStatus) {
+    public User(Long id, String name, String password, String nickname, String email, String gender, String age, RoleType roleType, String profileImg, String profileComment, UserStatus userStatus, Long userLikeCnt) {
         this.id = id;
         this.name = name;
         this.password = password;
@@ -89,6 +91,11 @@ public class User extends BaseEntity implements UserDetails {
         this.profileImg = profileImg;
         this.profileComment = profileComment;
         this.userStatus = userStatus;
+        this.userLikeCnt = userLikeCnt;
+    }
+
+    public void setUserLikeCnt(Long userLikeCnt) {
+        this.userLikeCnt = userLikeCnt;
     }
 
     public void updateLoginTime() {

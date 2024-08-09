@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import Header from "components/Header";
 import styled from "styled-components";
-import { ChatModal } from "features/Chat/ChatModal";
+import { ChatModal } from "features/chat/ChatModal";
 import { IoIosSend } from "react-icons/io";
-import FindModal from "features/Chat/FindeModal";
+import FindModal from "features/chat/FindeModal";
 import { userProfileState } from "stores/authAtom";
 import { useRecoilState } from "recoil";
 import axios from "axios";
 import useWebSocket from "utils/useWebSocket";
 import { baseUrl } from "axiosInstance/constants";
+import { useLocation } from "react-router-dom";
 
 interface ChatRoomGetResponse {
   roomId: number;
@@ -40,6 +41,7 @@ interface ResponseData<T> {
 }
 
 export const Chat: React.FC = () => {
+  const location = useLocation();
   const [selectedNickname, setSelectedNickname] = useState<string | null>(null);
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
     null
@@ -52,7 +54,6 @@ export const Chat: React.FC = () => {
   const currentNickname = userProfile?.nickname || "defaultUser"; // 로그인한 유저의 닉네임
   const { connectWebSocket, subscribeToChannel } = useWebSocket();
 
-  // 세션 스토리지에서 유저 프로필 데이터를 불러와 Recoil 상태 초기화
   useEffect(() => {
     const savedUserProfile = sessionStorage.getItem("user_profile");
 
@@ -60,6 +61,24 @@ export const Chat: React.FC = () => {
       setUserProfile(JSON.parse(savedUserProfile));
     }
   }, [setUserProfile]);
+
+  useEffect(() => {
+    if (location.state) {
+      const { id, nickname, profileImg } = location.state as {
+        id: number;
+        nickname: string;
+        profileImg: string;
+      };
+      setSelectedNickname(nickname);
+      setSelectedPartnerId(id);
+      setSelectedProfile(profileImg);
+    } else {
+      // 상태가 전달되지 않았을 때 모달을 닫기 위한 처리
+      setSelectedNickname(null);
+      setSelectedPartnerId(null);
+      setSelectedProfile(null);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (currentUserId) {
