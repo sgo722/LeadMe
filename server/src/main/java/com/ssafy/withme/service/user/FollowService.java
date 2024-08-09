@@ -49,20 +49,21 @@ public class FollowService {
 
         return followRepository.existsByFromUserIdAndToUserId(fromUserId, toUserId);
     }
-
-    @Transactional
-    public void following(Long toId, Long fromId) {
-
-        User toUser = userService.findById(toId); // 요청 받는 사람
-        User fromUser = userService.findById(fromId); // 요청 보내는 사람
-
-        Follow newFollow = Follow.builder()
-                .toUser(toUser)
-                .fromUser(fromUser)
-                .build();
-
-        followRepository.save(newFollow);
-    }
+//
+//    @Transactional
+//    public void following(Long toId, Long fromId) {
+//
+//
+//        User toUser = userService.findById(toId); // 요청 받는 사람
+//        User fromUser = userService.findById(fromId); // 요청 보내는 사람
+//
+//        Follow newFollow = Follow.builder()
+//                .toUser(toUser)
+//                .fromUser(fromUser)
+//                .build();
+//
+//        followRepository.save(newFollow);
+//    }
 
     @Transactional
     public void unfollowing(Long toId, Long fromId) {
