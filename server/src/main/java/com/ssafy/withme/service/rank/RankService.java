@@ -30,16 +30,18 @@ public class RankService {
         long itemsPerPage = 10;
         long start = (pageNo - 1) * itemsPerPage;
         long end = start + itemsPerPage - 1;
-        
+
         // 페이지 번호에 따라 랭킹 출력
         Set<ZSetOperations.TypedTuple<String>> typedTuples = zSetOperations.reverseRangeWithScores(key, start, end);
         log.info("start : {}, end : {}", start, end);
         return typedTuples.stream()
                 .map(tuple -> new RankResponseDto(
+                        userRepository.findByNickname(tuple.getValue()).get().getId(),
                         tuple.getValue(), // userNickname
                         tuple.getScore().longValue(), // liked
                         // followers (필요시 다른 데이터 소스에서 가져오기) -> RDBMS에 찌르는게 맞나?
-                        (long) userRepository.findByNickname(tuple.getValue()).get().getFromFollowList().size()
+                        (long) userRepository.findByNickname(tuple.getValue()).get().getFromFollowList().size(),
+                        userRepository.findByNickname(tuple.getValue()).get().getProfileImg()
                 ))
                 .collect(Collectors.toList());
     }

@@ -3,6 +3,7 @@ package com.ssafy.withme.controller.rank;
 import com.ssafy.withme.dto.rank.RankResponseDto;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.rank.RankService;
+import com.ssafy.withme.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

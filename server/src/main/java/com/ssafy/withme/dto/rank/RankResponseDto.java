@@ -7,7 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public class RankResponseDto {
 
+    private Long userId;
     private String userNickname;
     private Long liked;
     private Long followers;
+    private String profileImg;
 }

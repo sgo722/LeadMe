@@ -61,9 +61,11 @@ public class ChatMongoService {
                 .limit(pageable.getPageSize());
 
         query.addCriteria(Criteria.where("roomId").is(roomId));
+        log.info("roomId: {}", roomId);
 
         List<ChatMessage> filteredChatMessage = mongoTemplate.find(query, ChatMessage.class, "chat");
         Collections.sort(filteredChatMessage, Comparator.comparing(ChatMessage::getTime));
+        log.info("들어오냐?");
         return PageableExecutionUtils.getPage(
                 filteredChatMessage,
                 pageable,
