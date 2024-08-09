@@ -73,12 +73,11 @@ public class CompetitionController {
         Long activeConnectionSize = competitionService.getSessionCount(sessionId);
         log.info("Current number of connections in session " + sessionId + ": " + activeConnectionSize);
 
-        if(activeConnectionSize >= 2) {
+        // 해당 세션 인원 1 증가하며 2명 이상인 경우에는 꽉 찼다고 반환한다.
+        if(!competitionService.incrementIfLessThenTwo(sessionId)) {
             response.put("isFulled",  true);
             return SuccessResponse.of(response);
         }
-        // 2명 이상이 아닌 경우에는 1명을 증가시켜준다.
-        competitionService.incrementSessionCount(sessionId);
 
         // 비밀번호가 설정된 경쟁전에 참여하는 경우
         if(request != null) {
