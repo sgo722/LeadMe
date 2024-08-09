@@ -6,6 +6,7 @@ import com.ssafy.withme.dto.user.FollowDto;
 import com.ssafy.withme.dto.user.UserInfoDto;
 import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.BusinessException;
+import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.user.FollowRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -68,9 +69,9 @@ public class FollowService {
     @Transactional
     public void unfollowing(Long toId, Long fromId) {
 
-        Long unfollow = followRepository.unfollow(toId, fromId);
+        Follow follow = followRepository.findByFromUserIdAndToUserId(fromId, toId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.USER_NOT_EXISTS));
 
-        if (unfollow <= 0)
-            throw new BusinessException(ErrorCode.FAILED_UNFOLLOW);
+        followRepository.delete(follow);
     }
 }
