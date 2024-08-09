@@ -70,16 +70,15 @@ public class CompetitionController {
         Connection connection = session.createConnection();
         HashMap<String, Object> response = new HashMap<>();
 
-        Thread.sleep(1000);  // 1초 대기
-        session.fetch();
-
-        int activeConnectionSize = session.getActiveConnections().size();
+        Long activeConnectionSize = competitionService.getSessionCount(sessionId);
         log.info("Current number of connections in session " + sessionId + ": " + activeConnectionSize);
 
         if(activeConnectionSize >= 2) {
             response.put("isFulled",  true);
             return SuccessResponse.of(response);
         }
+        // 2명 이상이 아닌 경우에는 1명을 증가시켜준다.
+        competitionService.incrementSessionCount(sessionId);
 
         // 비밀번호가 설정된 경쟁전에 참여하는 경우
         if(request != null) {
