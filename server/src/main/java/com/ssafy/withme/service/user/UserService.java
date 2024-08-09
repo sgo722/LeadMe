@@ -87,11 +87,11 @@ public class UserService {
         return list;
     }
 
-    public User findUserIdByToken(String token) {
+    public Long findUserIdByToken(String token) {
 
         Long userId = tokenProvider.getUserId(token);
 
-        return findById(userId);
+        return userId;
     }
 
     @Transactional

@@ -21,7 +21,7 @@ public class RankController {
     @GetMapping("/rank")
     public SuccessResponse<?> getRanking(@RequestParam("pageNo") Long pageNo) {
 
-        List<RankResponseDto> rank = rankService.rankList();
+        List<RankResponseDto> rank = rankService.rankList(pageNo);
 
         return SuccessResponse.of(rank);
     }

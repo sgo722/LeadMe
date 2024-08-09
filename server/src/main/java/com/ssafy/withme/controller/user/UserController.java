@@ -40,7 +40,9 @@ public class UserController {
 //            String token = authorization.substring("Bearer ".length());
             String accessToken = authorization.split(" ")[1];
 
-            userInfo = userService.findUserIdByToken(accessToken);
+            Long userId = userService.findUserIdByToken(accessToken);
+
+            userInfo = userService.findById(userId);
         }
         UserInfoDto userDto = UserInfoDto.from(userInfo);
 
