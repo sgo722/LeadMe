@@ -22,8 +22,7 @@ import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -102,6 +101,11 @@ public class ChallengeService {
         });
         body.add("youtubeId", request.getYoutubeId());
 
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        // Fast API 반환값
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
         Challenge challenge = request.toEntity();
         Challenge savedChallenge = challengeRepository.save(challenge);
