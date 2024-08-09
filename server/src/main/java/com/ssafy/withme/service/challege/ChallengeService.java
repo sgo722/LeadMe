@@ -11,6 +11,7 @@ import com.ssafy.withme.repository.challengeHashtag.ChallengeHashtagRepository;
 import com.ssafy.withme.repository.hashtag.HashtagRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
+import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ import org.springframework.beans.factory.annotation.Value;
 
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -34,8 +37,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELETON_DATA;
@@ -112,11 +117,12 @@ public class ChallengeService {
 
 
         try{
-            String finalFileName = request.getYoutubeId() + ".mp4";
+            String finalFileName = request.getYoutubeId() + ".png";
             Path permanentVideoPath = Paths.get(CHALLENGE_DIRECTORY, finalFileName);
 
-            String challengeVideoPath = extractThumbnail(permanentVideoPath, request.getYoutubeId());
-            savedChallenge.setVideoPath(challengeVideoPath);
+            String challengeThumbnail = extractThumbnail(permanentVideoPath, request.getYoutubeId());
+            savedChallenge.setThumbnail(challengeThumbnail);
+            challengeRepository.save(savedChallenge);
         }catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -141,6 +147,40 @@ public class ChallengeService {
         // youtubeId로 몽고디비로부터 스켈레톤 데이터를 조회합니다.
         Landmark findLandmarkByYoutubeId = landmarkRepository.findByYoutubeId(youtubeId);
         return LandmarkResponse.ofResponse(findLandmarkByYoutubeId, challenge.getId());
+    }
+
+
+    public List<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
+        Page<Challenge> findChallengeByPaging = challengeRepository.findAllByPaging(pageable);
+        return findChallengeByPaging.stream()
+                .map(challenge -> {
+                    try {
+                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
+                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
+                    } catch (Exception e) {
+                        // 예외 처리 로직을 여기에 추가
+                        e.printStackTrace();
+                        return null; // 또는 다른 적절한 예외 처리 방법
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    public List<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String searchTitle) {
+        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitle(pageable, searchTitle);
+        return searchChallengeByPaging.stream()
+                .map(challenge -> {
+                    try {
+                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
+                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
+                    } catch (Exception e) {
+                        // 예외 처리 로직을 여기에 추가
+                        e.printStackTrace();
+                        return null; // 또는 다른 적절한 예외 처리 방법
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
 
