@@ -9,10 +9,10 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
     /**
      * 유튜브 ID로 챌린지 조회
-    */
+     */
     Challenge findByYoutubeId(String youtubeId);
 
-    Page<Challenge> findAllByPaging(Pageable pageable);
+    Page<Challenge> findAll(Pageable pageable);
 
     Page<Challenge> findByTitle(Pageable pageable, String title);
 }
