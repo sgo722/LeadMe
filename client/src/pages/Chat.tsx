@@ -54,7 +54,6 @@ export const Chat: React.FC = () => {
   const currentNickname = userProfile?.nickname || "defaultUser"; // 로그인한 유저의 닉네임
   const { connectWebSocket, subscribeToChannel } = useWebSocket();
 
-  // 세션 스토리지에서 유저 프로필 데이터를 불러와 Recoil 상태 초기화
   useEffect(() => {
     const savedUserProfile = sessionStorage.getItem("user_profile");
 
@@ -73,6 +72,11 @@ export const Chat: React.FC = () => {
       setSelectedNickname(nickname);
       setSelectedPartnerId(id);
       setSelectedProfile(profileImg);
+    } else {
+      // 상태가 전달되지 않았을 때 모달을 닫기 위한 처리
+      setSelectedNickname(null);
+      setSelectedPartnerId(null);
+      setSelectedProfile(null);
     }
   }, [location.state]);
 

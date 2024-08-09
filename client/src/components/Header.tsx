@@ -193,7 +193,9 @@ const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
                       마이페이지
                     </HoverLink>
                     <Hr />
-                    <HoverLink to="/chat">메세지 목록</HoverLink>
+                    <HoverDiv onClick={() => navigate("/chat")}>
+                      메세지 목록
+                    </HoverDiv>
                   </LeftHoverBox>
                 </Fake>
               </Mypage>
@@ -349,6 +351,17 @@ const LeftHoverBox = styled.div`
 `;
 
 const HoverLink = styled(Link)`
+  display: block;
+  color: #ee5050;
+  text-align: center;
+  font-size: 15px;
+  font-family: "Noto Sans KR", sans-serif;
+  text-decoration: none;
+  padding: 8px;
+  margin: 6px;
+`;
+
+const HoverDiv = styled.div`
   display: block;
   color: #ee5050;
   text-align: center;
