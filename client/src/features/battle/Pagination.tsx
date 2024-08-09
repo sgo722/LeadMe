@@ -11,6 +11,22 @@ export const Pagination: React.FC<PaginationProps> = ({
   totalPages,
   onPageChange,
 }) => {
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxPagesToShow = 5;
+    const startPage = Math.max(
+      0,
+      Math.min(currentPage - 2, totalPages - maxPagesToShow)
+    );
+    const endPage = Math.min(startPage + maxPagesToShow - 1, totalPages - 1);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    return pageNumbers;
+  };
+
   return (
     <PaginationWrapper>
       <PageButton
@@ -19,13 +35,13 @@ export const Pagination: React.FC<PaginationProps> = ({
       >
         {"<"}
       </PageButton>
-      {[...Array(totalPages)].map((_, index) => (
+      {getPageNumbers().map((pageNumber) => (
         <PageButton
-          key={index}
-          onClick={() => onPageChange(index)}
-          $active={currentPage === index}
+          key={pageNumber}
+          onClick={() => onPageChange(pageNumber)}
+          $active={currentPage === pageNumber}
         >
-          {index + 1}
+          {pageNumber + 1}
         </PageButton>
       ))}
       <PageButton

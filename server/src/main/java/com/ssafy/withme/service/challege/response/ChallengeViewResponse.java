@@ -1,16 +1,15 @@
 package com.ssafy.withme.service.challege.response;
 
 import com.ssafy.withme.domain.challenge.Challenge;
-import com.ssafy.withme.domain.userchallenge.UserChallenge;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Getter
-public class ChallengeCreateResponse {
+public class ChallengeViewResponse {
 
     private Long challengeId;
 
@@ -20,17 +19,21 @@ public class ChallengeCreateResponse {
 
     private String title;
 
+    private byte[] thumbnail;
+
     @Builder
-    private ChallengeCreateResponse(Long challengeId, String youtubeId, String url, String title) {
+    private ChallengeViewResponse(Long challengeId, String youtubeId, String url, String title, byte[] thumbnail) {
         this.challengeId = challengeId;
         this.youtubeId = youtubeId;
         this.url = url;
+        this.thumbnail = thumbnail;
         this.title = title;
     }
 
-    public static ChallengeCreateResponse toResponse(Challenge challenge){
-        return ChallengeCreateResponse.builder()
+    public static ChallengeViewResponse ofResponse(Challenge challenge, byte[] thumbnail) {
+        return ChallengeViewResponse.builder()
                 .challengeId(challenge.getId())
+                .thumbnail(thumbnail)
                 .url(challenge.getUrl())
                 .youtubeId(challenge.getYoutubeId())
                 .title(challenge.getTitle())

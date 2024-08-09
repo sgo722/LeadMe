@@ -8,8 +8,9 @@ import { InputPasswordModal } from "features/battle/InputPasswordModal";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pagination } from "features/battle/Pagination";
-import { AxiosResponse } from "axios";
 import { useNavigate } from "react-router-dom";
+import { AxiosResponse } from "axios";
+import { getJWTHeader } from "axiosInstance/apiClient";
 // 로딩 새로고침
 // 타입 제대로 지정 꼼꼼히
 // 비밀번호 로직 추가
@@ -87,7 +88,9 @@ export const Battle: React.FC = () => {
       isPublic: boolean;
       password?: string;
     }): Promise<AxiosResponse> =>
-      axiosInstance.post("/api/v1/sessions", roomData),
+      axiosInstance.post("/api/v1/sessions", roomData, {
+        headers: getJWTHeader(),
+      }),
     onSuccess: () => {
       // 쿼리무효화로 방목록 최신화
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
@@ -216,6 +219,11 @@ export const Battle: React.FC = () => {
               </Room>
             ))}
           </RoomContainer>
+          <CreateRoomButtonContainer>
+            <CreateRoomButton onClick={() => setShowCreateRoomModal(true)}>
+              방생성
+            </CreateRoomButton>
+          </CreateRoomButtonContainer>
         </MainSection>
         <Footer>
           <PaginationContainer>
@@ -225,11 +233,6 @@ export const Battle: React.FC = () => {
               onPageChange={handlePageChange}
             />
           </PaginationContainer>
-          <CreateRoomButtonContainer>
-            <CreateRoomButton onClick={() => setShowCreateRoomModal(true)}>
-              방만들기
-            </CreateRoomButton>
-          </CreateRoomButtonContainer>
         </Footer>
       </Container>
       {showCreateRoomModal && (
@@ -276,7 +279,7 @@ const MainSection = styled.div`
   display: flex;
   flex-direction: column;
   padding: 35px;
-  gap: 35px;
+  gap: 30px;
 `;
 
 const RoomContainer = styled.div`
@@ -371,14 +374,17 @@ const CreateRoomButtonContainer = styled.div`
 `;
 
 const CreateRoomButton = styled.button`
-  width: 96px;
-  height: 31px;
+  width: 80px;
+  height: 30px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.55);
-  border: none;
+  background: #f7f7f7;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.15);
-  color: #ee5050;
-  font-size: 16px;
-  font-weight: 400;
+  border: none;
   cursor: pointer;
+  color: #ee5050;
+  text-align: center;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 23px;
 `;

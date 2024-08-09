@@ -70,13 +70,11 @@ public class CompetitionController {
         Connection connection = session.createConnection();
         HashMap<String, Object> response = new HashMap<>();
 
-        Thread.sleep(1000);  // 1초 대기
-        session.fetch();
-
-        int activeConnectionSize = session.getActiveConnections().size();
+        Long activeConnectionSize = competitionService.getSessionCount(sessionId);
         log.info("Current number of connections in session " + sessionId + ": " + activeConnectionSize);
 
-        if(activeConnectionSize >= 2) {
+        // 해당 세션 인원 1 증가하며 2명 이상인 경우에는 꽉 찼다고 반환한다.
+        if(!competitionService.incrementIfLessThenTwo(sessionId)) {
             response.put("isFulled",  true);
             return SuccessResponse.of(response);
         }

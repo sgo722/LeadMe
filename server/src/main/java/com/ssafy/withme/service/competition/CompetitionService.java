@@ -13,10 +13,14 @@ import com.ssafy.withme.repository.user.UserRepository;
 import com.ssafy.withme.service.competition.response.CompetitionResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +34,9 @@ import static com.ssafy.withme.global.error.ErrorCode.USER_NOT_EXISTS;
 public class CompetitionService {
     private final CompetitionRepository competitionRepository;
     private final UserRepository userRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    private static final String SESSION_KEY_PREFIX = "session:";
 
     /**
      * 세션 생성
@@ -41,6 +48,9 @@ public class CompetitionService {
 
         log.info("세션 생성 : 유저 아아디" + user.getId() + " 유저 이메일 : " + user.getEmail());
 
+        // 해당 세션으로 레디스 데이터 생성
+        setSessionCount(sessionId, 0L);
+
         Competition competition = Competition.builder()
                                 .user(user)
                                 .roomName(request.getRoomName())
@@ -50,6 +60,9 @@ public class CompetitionService {
                                 .build();
 
         competitionRepository.save(competition);
+
+
+
     }
 
     /**
@@ -101,5 +114,61 @@ public class CompetitionService {
 
         Competition competition = competitionRepository.findBySessionId(sessionId);
         return competition.getCreateUser().getId();
+    }
+
+    /**
+     * 레디스 트랜잭션을 활용한 sessionId 인원수 체크 및 증가
+     * @param sessionId
+     * @return
+     */
+    public boolean incrementIfLessThenTwo(String sessionId) {
+        String key = SESSION_KEY_PREFIX + sessionId+":count";
+        // 값이 2 미만일 경우 트랜잭션 시작, 여기부터 모든 명령어는 큐에 쌓이다.
+        // 트랜잭션 끝 results 가 null이 아니면 성공
+        // 값이 2 이상인 경우 감시 해제
+        return Boolean.TRUE.equals(redisTemplate.execute(new SessionCallback<Boolean>() {
+            @Override
+            public <K, V> Boolean execute(RedisOperations<K, V> operations) throws DataAccessException {
+                operations.watch((K) key);
+
+                String value = redisTemplate.opsForValue().get(key);
+                int count = (value == null) ? 0 : Integer.parseInt(value);
+
+                if (count < 2) {
+                    // 값이 2 미만일 경우 트랜잭션 시작, 여기부터 모든 명령어는 큐에 쌓이다.
+                    operations.multi();
+                    operations.opsForValue().increment((K) key);
+
+                    // 트랜잭션 끝 results 가 null이 아니면 성공
+                    List<Object> results = operations.exec();
+                    return results != null;
+                } else {
+                    // 값이 2 이상인 경우 감시 해제
+                    operations.unwatch();
+                    return false;
+                }
+            }
+        }));
+    }
+
+    public Long decrementSessionCount(String sessionId) {
+        String key = SESSION_KEY_PREFIX + sessionId + ":count";
+        return redisTemplate.opsForValue().decrement(key);
+    }
+
+    public Long getSessionCount(String sessionId) {
+        String key = SESSION_KEY_PREFIX + sessionId + ":count";
+        String count = redisTemplate.opsForValue().get(key);
+        return count != null ? Long.valueOf(count) : 0L;
+    }
+
+    public void setSessionCount(String sessionId, Long count) {
+        String key = SESSION_KEY_PREFIX + sessionId + ":count";
+        redisTemplate.opsForValue().set(key, String.valueOf(count));
+    }
+
+    public void deleteSessionCount(String sessionId) {
+        String key = SESSION_KEY_PREFIX + sessionId + ":count";
+        redisTemplate.delete(key);
     }
 }

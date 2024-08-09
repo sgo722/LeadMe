@@ -5,6 +5,7 @@ import com.ssafy.withme.dto.user.SearchUserDto;
 import com.ssafy.withme.dto.user.UserInfoDto;
 import com.ssafy.withme.dto.user.UserUpdateDto;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
+import com.ssafy.withme.global.listener.SessionListener;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ public class UserController {
 
     private final UserService userService;
     private final TokenProvider tokenProvider;
+    private final SessionListener sessionListener;
 
     @GetMapping("/user/me")
     public SuccessResponse<?> getInfo(HttpServletRequest request) {
@@ -106,5 +108,11 @@ public class UserController {
         userService.updateUser(accessToken, userUpdateDto);
 
         return SuccessResponse.of("OK");
+    }
+
+    @GetMapping("/user/active/count")
+    public Long getActiveUserCount() {
+
+        return sessionListener.getActiveUserCount();
     }
 }
