@@ -89,4 +89,14 @@ public class CompetitionService {
         return competition.getPassword().equals(SHA256Util.hashString(request.getPassword()));
     }
 
+    /**
+     * 세션 아이디를 활용해 유저 아이디 반환
+     * @param sessionId
+     * @return
+     */
+    public Long getCreateUserId(String sessionId) {
+
+        Competition competition = competitionRepository.findBySessionId(sessionId);
+        return competition.getCreateUser().getId();
+    }
 }
