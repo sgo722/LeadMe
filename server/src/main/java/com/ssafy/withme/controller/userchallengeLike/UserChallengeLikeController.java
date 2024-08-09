@@ -36,7 +36,7 @@ public class UserChallengeLikeController {
     // 유저가 받은 좋아요 수 스케쥴링
     @Scheduled(fixedRate = 1000 * 60 * 5) // 5분마다 실행
     public void updateLikesToRDBMS() {
-        log.info("5분마다 새로고침");
+        log.info("5분마다 유저 좋아요 수 새로고침");
         userChallengeLikeService.updateLikesFromRedisToRDBMS();
     }
 }
