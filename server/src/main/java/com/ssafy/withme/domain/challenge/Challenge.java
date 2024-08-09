@@ -38,6 +38,7 @@ public class Challenge extends BaseEntity {
         this.youtubeId = youtubeId;
         this.url = url;
         this.userChallenges = new ArrayList<>();
+        this.title = title;
     }
 
     public void setThumbnail(String thumbnailPath){
