@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/userChallenge")
+@RequestMapping("/api/v1")
 public class UserChallengeLikeController {
 
     private static final Logger log = LoggerFactory.getLogger(UserChallengeLikeController.class);
@@ -20,7 +20,7 @@ public class UserChallengeLikeController {
     private final TokenProvider tokenProvider;
 
     // 유저 게시글 좋아요 기능
-    @PostMapping("/like")
+    @PostMapping("/userChallenge/like")
     public SuccessResponse<?> likeUserChallenge(
             @RequestHeader("Authorization") String authorization,
             @RequestParam("userChallengeId") Long userChallengeId
