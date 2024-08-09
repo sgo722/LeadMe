@@ -5,6 +5,7 @@ import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.hashtag.Hashtag;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -26,5 +27,10 @@ public class ChallengeHashTag {
     @JoinColumn(name = "hashtag_id")
     private Hashtag hashtag;
 
+    @Builder
+    private ChallengeHashTag(Challenge challenge, Hashtag hashtag) {
+        this.challenge = challenge;
+        this.hashtag = hashtag;
+    }
 
 }

@@ -2,9 +2,13 @@ package com.ssafy.withme.service.challege;
 
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
+import com.ssafy.withme.domain.challengeHashtag.ChallengeHashTag;
+import com.ssafy.withme.domain.hashtag.Hashtag;
 import com.ssafy.withme.domain.landmark.Landmark;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
+import com.ssafy.withme.repository.challengeHashtag.ChallengeHashtagRepository;
+import com.ssafy.withme.repository.hashtag.HashtagRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
@@ -15,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -25,7 +28,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELETON_DATA;
@@ -35,12 +38,15 @@ import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELE
 @Service
 public class ChallengeService {
 
+    private final HashtagRepository hashtagRepository;
     @Value("${python-server.url}")
     String FAST_API_URL;
 
     private final ChallengeRepository challengeRepository;
 
     private final LandmarkRepository landmarkRepository;
+
+    private final ChallengeHashtagRepository challengeHashTagRepository;
 
 
     private final RestTemplate restTemplate;
@@ -62,7 +68,7 @@ public class ChallengeService {
             return ChallengeCreateResponse.toResponse(challengeByYoutubeId);
         }
 
-        String url = FAST_API_URL + "/upload/userFile";
+        String url = FAST_API_URL + "/challenge/upload";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -72,15 +78,19 @@ public class ChallengeService {
                 return videoFile.getOriginalFilename();
             }
         });
-        body.add("youtubeId", challenge.getYoutubeId());
 
 
         Challenge challenge = request.toEntity();
-
-        System.out.println(challenge);
         Challenge savedChallenge = challengeRepository.save(challenge);
-        System.out.println(savedChallenge);
-
+        ArrayList<String> hashtags = request.getHashtags();
+        for(String hashtag : hashtags){
+            Hashtag savedHashtag = hashtagRepository.save(new Hashtag(hashtag));
+            ChallengeHashTag challengeHashTag = ChallengeHashTag.builder()
+                    .challenge(savedChallenge)
+                    .hashtag(savedHashtag)
+                    .build();
+            challengeHashTagRepository.save(challengeHashTag);
+        }
 
         
         return ChallengeCreateResponse.toResponse(savedChallenge);
