@@ -320,9 +320,22 @@ const Title = styled.h1`
 
 const ScrollableList = styled.div`
   flex-grow: 1;
-  overflow-y: auto;
   border-radius: 10px;
   padding: 10px;
+
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 15px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #dfdfdf;
+    border-radius: 10px;
+    border: 4px solid rgba(0, 0, 0, 0);
+    background-clip: padding-box;
+    cursor: pointer;
+  }
 `;
 
 const ListItem = styled.div<{ $isSelected: boolean }>`
