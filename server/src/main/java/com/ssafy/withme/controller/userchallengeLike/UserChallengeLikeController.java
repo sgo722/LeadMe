@@ -16,6 +16,7 @@ public class UserChallengeLikeController {
     private final UserChallengeLikeService userChallengeLikeService;
     private final TokenProvider tokenProvider;
 
+
     // 유저 게시글 좋아요 기능
     @PostMapping("/like")
     public SuccessResponse<?> likeUserChallenge(
