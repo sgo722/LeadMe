@@ -24,6 +24,7 @@ import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_FOUND_COMPETITION;
 import static com.ssafy.withme.global.error.ErrorCode.USER_NOT_EXISTS;
@@ -75,13 +76,22 @@ public class CompetitionService {
     public List<CompetitionResponse> getCompetitions(int pageNo, String criteria, int size, String searchKeyword) {
 
         Pageable pageable = PageRequest.of(pageNo, size, Sort.by(Sort.Direction.DESC, criteria));
-        Page<CompetitionResponse> page;
+        Page<Competition> page;
         if(searchKeyword == null || searchKeyword.isEmpty()) {
-            page = competitionRepository.findByStatus(CompetitionStatus.OPEN, pageable).map(CompetitionResponse :: toResponse);
+            page = competitionRepository.findByStatus(CompetitionStatus.OPEN, pageable);
         } else {
-            page = competitionRepository.findByStatusAndRoomNameContains(CompetitionStatus.OPEN, searchKeyword, pageable).map(CompetitionResponse :: toResponse);
+            page = competitionRepository.findByStatusAndRoomNameContains(CompetitionStatus.OPEN, searchKeyword, pageable);
         }
-        return page.getContent();
+
+        List<Competition> competitions = page.getContent();
+
+        if (!competitions.isEmpty()) {
+            competitionRepository.fetchWithUser(competitions);
+        }
+
+        return competitions.stream()
+                .map(CompetitionResponse::toResponse)
+                .collect(Collectors.toList());
     }
 
     /**
