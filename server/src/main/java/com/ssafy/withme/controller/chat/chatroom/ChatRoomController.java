@@ -71,7 +71,7 @@ public class ChatRoomController {
 
     @PostMapping("/create")
     public SuccessResponse<Long> createChatRoom(
-            @RequestHeader("Authorization") String accessToken,
+            @RequestHeader("Authorization") String authorization,
             @RequestBody ChatRoomCreateRequest chatRoomCreateRequest
     ) {
         ChatRoom chatRoom = chatRoomService.createChatRoom(chatRoomCreateRequest);
