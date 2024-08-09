@@ -7,6 +7,8 @@ import com.ssafy.withme.repository.user.UserRepository;
 import com.ssafy.withme.repository.userChallenge.UserChallengeRepository;
 import com.ssafy.withme.repository.userChallengeLike.UserChallengeLikeRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserChallengeLikeService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserChallengeLikeService.class);
     private final UserRepository userRepository;
     private final UserChallengeRepository userChallengeRepository;
     private final UserChallengeLikeRepository userChallengeLikeRepository;
@@ -37,6 +40,7 @@ public class UserChallengeLikeService {
         // 해당 유저 챌린지 좋아요가 테이블내에 존재하고 현재 좋아요 상태이면
         boolean isLikeBefore = userChallengeLikeOptional.isPresent() && userChallengeLikeOptional.get().getIsLike();
 
+        log.info("여기까지옴?");
         // 좋아요 상태 변경
         userChallengeLikeOptional.ifPresentOrElse(
                 UserChallengeLike::updateLike,
@@ -54,6 +58,7 @@ public class UserChallengeLikeService {
         ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
         String key = "user_likes";
 
+        log.info("여기는?");
         if(isLikeBefore) {
             // 좋아요 취소 -> redis에 저장된 유저 좋아요 수 감소
             zSetOperations.incrementScore(key, user.getNickname(), -1);
@@ -62,8 +67,6 @@ public class UserChallengeLikeService {
             // 좋아요 -> redis에 저장된 유저 좋아요 수 증가
             zSetOperations.incrementScore(key, user.getNickname(), 1);
         }
-
-
 
     }
 

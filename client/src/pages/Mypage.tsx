@@ -52,10 +52,11 @@ const Mypage: React.FC = () => {
       return response.data.data;
     },
     onSuccess: (data: UserProfile) => {
-      console.log("data", data);
       if (sessionUser) {
         if (data.id === sessionUser.id) {
           setIsMine(true);
+        } else {
+          setIsMine(false);
         }
       }
       setUser(data);
@@ -107,33 +108,70 @@ const Mypage: React.FC = () => {
     },
   });
 
-  const mutationToggleFollow = useMutation<void, Error, number>({
+  const followUser = useMutation<void, Error, number>({
     mutationFn: async (userId: number) => {
       await axios.post<ResponseData<boolean>>(
-        `${baseUrl}/api/v1/user/${isFollowing}/${userId}`
+        `${baseUrl}/api/v1/user/following/send/${userId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
       );
     },
     onSuccess: () => {
-      isFollowing === "follow"
-        ? setIsFollowing("unfollow")
-        : setIsFollowing("follow");
+      console.log("팔로우 요청 성공");
+      setIsFollowing("follow");
+      if (user) {
+        setUser((prevUser) =>
+          prevUser ? { ...prevUser, following: prevUser.following + 1 } : null
+        );
+      }
     },
     onError: (error: Error) => {
-      console.error("Error toggling follow status:", error);
+      console.error("Error following user:", error);
     },
   });
+
+  const unfollowUser = useMutation<void, Error, number>({
+    mutationFn: async (userId: number) => {
+      await axios.delete<ResponseData<boolean>>(
+        `${baseUrl}/api/v1/user/following/unfollow/${userId}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+    },
+    onSuccess: () => {
+      console.log("언팔로우 요청 성공");
+      setIsFollowing("unfollow");
+      if (user) {
+        setUser((prevUser) =>
+          prevUser ? { ...prevUser, following: prevUser.following - 1 } : null
+        );
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Error unfollowing user:", error);
+    },
+  });
+
+  const [localAccessToken, setLocalAccessToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalAccessToken(accessToken);
+  }, [accessToken]);
 
   useEffect(() => {
     const urlSegments = location.pathname.split("/");
     const mypageIndex = urlSegments.indexOf("mypage");
     const value = mypageIndex !== -1 ? urlSegments[mypageIndex + 1] : "";
 
-    if (value && user === null) {
+    if (value && localAccessToken) {
       mutationProfile.mutate(value);
       mutationFeed.mutate({ value, page: 1 });
       mutationCheckFollow.mutate(value);
     }
-  }, [location.pathname]);
+  }, [location.pathname, localAccessToken]);
 
   const handleOpenProfileModal = () => {
     setIsProfileModalOpen(true);
@@ -152,6 +190,12 @@ const Mypage: React.FC = () => {
     setIsFollowModalOpen(false);
   };
 
+  const handleNavigateChat = () => {
+    if (user) {
+      navigate("/chat");
+    }
+  };
+
   const handleSendMessageClick = () => {
     if (user) {
       navigate("/chat", { state: user });
@@ -160,7 +204,11 @@ const Mypage: React.FC = () => {
 
   const handleToggleFollowClick = () => {
     if (user) {
-      mutationToggleFollow.mutate(user.id);
+      if (isFollowing === "follow") {
+        unfollowUser.mutate(user.id);
+      } else {
+        followUser.mutate(user.id);
+      }
     }
   };
 
@@ -193,24 +241,24 @@ const Mypage: React.FC = () => {
                         onClick={() => handleOpenFollowModal("follower")}
                       >
                         <Th>팔로워</Th>
-                        <Td>{user.follower}</Td>
+                        <Td>{user.following}</Td>
                       </TrCursor>
                       <TrCursor
                         onClick={() => handleOpenFollowModal("following")}
                       >
                         <Th>팔로잉</Th>
-                        <Td>{user.following}</Td>
+                        <Td>{user.follower}</Td>
                       </TrCursor>
                     </>
                   ) : (
                     <>
                       <Tr>
                         <Th>팔로워</Th>
-                        <Td>{user.follower}</Td>
+                        <Td>{user.following}</Td>
                       </Tr>
                       <Tr>
                         <Th>팔로잉</Th>
-                        <Td>{user.following}</Td>
+                        <Td>{user.follower}</Td>
                       </Tr>
                     </>
                   )}
@@ -220,7 +268,7 @@ const Mypage: React.FC = () => {
             <BtnContainer>
               {isMine ? (
                 <>
-                  <Btn onClick={handleSendMessageClick}>메세지 목록</Btn>
+                  <Btn onClick={handleNavigateChat}>메세지 목록</Btn>
                   <Btn onClick={handleOpenProfileModal}>프로필 편집</Btn>
                 </>
               ) : (
