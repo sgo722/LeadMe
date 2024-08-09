@@ -161,6 +161,26 @@ public class CompetitionService {
         }));
     }
 
+    /**
+     * 세션에서 나간 경우 세션 삭제 또는 커넥트 카운트 감소
+     * @param sessionId
+     * @param user
+     */
+    public void deleteSession(String sessionId, User user) {
+
+        // 호스트인 경우
+        if(getCreateUserId(sessionId).equals(user.getId())) {
+            deleteSessionCount(sessionId);
+
+            Competition competition = competitionRepository.findBySessionId(sessionId);
+            competitionRepository.delete(competition);
+        }
+        // 호스트가 아닌 경우
+        else {
+            deleteSessionCount(sessionId);
+        }
+    }
+
     public Long decrementSessionCount(String sessionId) {
         String key = SESSION_KEY_PREFIX + sessionId + ":count";
         return redisTemplate.opsForValue().decrement(key);
@@ -181,4 +201,6 @@ public class CompetitionService {
         String key = SESSION_KEY_PREFIX + sessionId + ":count";
         redisTemplate.delete(key);
     }
+
+
 }

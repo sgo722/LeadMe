@@ -142,6 +142,16 @@ public class CompetitionController {
         return SuccessResponse.of(competitionService.getCreateUserId(sessionId));
     }
 
+    /**
+     * 세션에서 나간 경우 세션 삭제 또는 커넥트 카운트 감소
+     * @param sessionId
+     * @param user
+     */
+    @DeleteMapping("api/v1/session/{sessionId}")
+    public void deleteSession(@PathVariable String sessionId, @CurrentUser User user) {
+        competitionService.deleteSession(sessionId, user);
+    }
+
 }
 
 
