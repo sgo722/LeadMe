@@ -19,7 +19,7 @@ import Mypage from "pages/Mypage";
 import Feed from "pages/Feed";
 import { Battle } from "pages/Battle";
 import { BattleRoom } from "pages/BattleRoom";
-import { Test } from "pages/Test";
+
 const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
@@ -47,7 +47,6 @@ const App: React.FC = () => {
         <Route path="/feed" element={<Feed />}></Route>
         <Route path="/battle" element={<Battle />}></Route>
         <Route path="/battleRoom/:sessionId" element={<BattleRoom />} />
-        <Route path="/test" element={<Test />} />
       </Routes>
       <ShortsModal />
     </ThemeProvider>
