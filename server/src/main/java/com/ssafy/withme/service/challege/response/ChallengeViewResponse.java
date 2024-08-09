@@ -17,14 +17,17 @@ public class ChallengeViewResponse {
 
     private String url;
 
+    private String title;
+
     private byte[] thumbnail;
 
     @Builder
-    private ChallengeViewResponse(Long challengeId, String youtubeId, String url, byte[] thumbnail) {
+    private ChallengeViewResponse(Long challengeId, String youtubeId, String url, String title, byte[] thumbnail) {
         this.challengeId = challengeId;
         this.youtubeId = youtubeId;
         this.url = url;
         this.thumbnail = thumbnail;
+        this.title = title;
     }
 
     public static ChallengeViewResponse ofResponse(Challenge challenge, byte[] thumbnail) {
@@ -33,6 +36,7 @@ public class ChallengeViewResponse {
                 .thumbnail(thumbnail)
                 .url(challenge.getUrl())
                 .youtubeId(challenge.getYoutubeId())
+                .title(challenge.getTitle())
                 .build();
     }
 }
