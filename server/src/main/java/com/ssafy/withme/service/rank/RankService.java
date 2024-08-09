@@ -5,12 +5,15 @@ import com.ssafy.withme.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,10 +38,33 @@ public class RankService {
         // 해당 페이지에 해당하는 상위 10명의 유저 정보 가져오기
         Set<ZSetOperations.TypedTuple<String>> typedTuples = zSetOperations.reverseRangeWithScores(key, start, end);
 
+        // Redis에 유저 정보 X
         if (typedTuples == null || typedTuples.isEmpty()) {
-            return List.of(); // 결과가 없을 경우 빈 리스트 반환
+            log.warn("Redis에 데이터가 없어 RDBMS에서 정보를 가져옵니다.");
+
+            // RDBMS에서 유저를 좋아요 순으로 가져오기
+            Pageable pageable = PageRequest.of(pageNo.intValue() - 1, (int) itemsPerPage);
+
+            List<RankResponseDto> rankResponseDtoList = userRepository.findTopUsersByLikes(pageable).stream()
+                    .map(user -> new RankResponseDto(
+                            user.getId(),
+                            user.getNickname(),
+                            user.getUserLikeCnt(),
+                            (long) user.getFromFollowList().size(),
+                            user.getProfileImg()
+                    ))
+                    .collect(Collectors.toList());
+
+            // RDBMS -> Redis로 저장
+            // Redis의 정보가 휘발될 경우를 대비
+            rankResponseDtoList.forEach(rankResponseDto -> {
+                zSetOperations.add(key, rankResponseDto.getUserNickname(), rankResponseDto.getLiked());
+            });
+
+            return rankResponseDtoList;
         }
-        
+
+        // Redis에 유저 정보 O
         // 유저 정보를 리스트로 변환
         return typedTuples.stream()
                 .map(tuple -> {

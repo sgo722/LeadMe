@@ -1,6 +1,7 @@
 package com.ssafy.withme.repository.user;
 
 import com.ssafy.withme.domain.user.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +23,8 @@ public interface UserRepository extends JpaRepository<User,Long>, UserRepository
     List<User> findByNicknameContaining(String nickname);
 
     Optional<User> findByNickname(String nickname);
+
+    // 유저를 좋아요 순으로 정렬하고 페이징 적용하여 가져오기
+    @Query("SELECT u FROM users u ORDER BY u.userLikeCnt DESC")
+    List<User> findTopUsersByLikes(Pageable pageable);
 }
