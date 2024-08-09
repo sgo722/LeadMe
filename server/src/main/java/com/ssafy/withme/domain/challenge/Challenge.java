@@ -25,20 +25,23 @@ public class Challenge extends BaseEntity {
 
     private String url;
 
-    private String videoPath;
+    private String title;
+
+    private String thumbnailPath;
+
 
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<UserChallenge> userChallenges;
 
     @Builder
-    private Challenge(String youtubeId, String url) {
+    private Challenge(String youtubeId, String url, String title) {
         this.youtubeId = youtubeId;
         this.url = url;
         this.userChallenges = new ArrayList<>();
     }
 
-    public void setVideoPath(String videoPath){
-        this.videoPath = videoPath;
+    public void setThumbnail(String thumbnailPath){
+        this.thumbnailPath = thumbnailPath;
     }
 
 

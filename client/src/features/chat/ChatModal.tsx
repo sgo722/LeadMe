@@ -308,5 +308,3 @@ const MessageInput = styled.input`
     font-size: 12px;
   }
 `;
-
-export default ChatModal;

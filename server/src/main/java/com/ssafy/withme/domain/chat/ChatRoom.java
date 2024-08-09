@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.cglib.core.Local;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -29,6 +32,9 @@ public class ChatRoom {
 
     private String roomName; // 방 이름
 
+    private LocalDateTime userLeaveTime;
+    private LocalDateTime partnerLeaveTime;
+
     public static ChatRoom create(User user, User partner) {
         String roomName = user.getId() + "-" + partner.getId();
 
@@ -37,5 +43,13 @@ public class ChatRoom {
                 .partner(partner)
                 .roomName(roomName)
                 .build();
+    }
+
+    public void setUserLeaveTime(LocalDateTime time) {
+        this.userLeaveTime = time;
+    }
+
+    public void setPartnerLeaveTime(LocalDateTime time) {
+        this.partnerLeaveTime = time;
     }
 }

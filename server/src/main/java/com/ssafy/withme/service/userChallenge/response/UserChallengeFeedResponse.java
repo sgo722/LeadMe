@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public class UserChallengeFeedResponse {
 
-    private String fileName;
+    private String title;
 
     private Long userChallengeId;
 
@@ -15,15 +15,15 @@ public class UserChallengeFeedResponse {
 
 
     @Builder
-    private UserChallengeFeedResponse(String fileName, Long userChallengeId, byte[] thumbnail) {
-        this.fileName = fileName;
+    private UserChallengeFeedResponse(String title, Long userChallengeId, byte[] thumbnail) {
+        this.title = title;
         this.userChallengeId = userChallengeId;
         this.thumbnail = thumbnail;
     }
 
     public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, byte[] thumbnail){
         return UserChallengeFeedResponse.builder()
-                .fileName(userChallenge.getFileName())
+                .title(userChallenge.getFileName())
                 .userChallengeId(userChallenge.getId())
                 .thumbnail(thumbnail)
                 .build();

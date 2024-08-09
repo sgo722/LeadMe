@@ -10,6 +10,7 @@ import com.ssafy.withme.service.chat.message.ChatMongoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -26,6 +27,7 @@ public class ChatRoomController {
     /**
      * 현재 유저가 들어가있는 채팅방 리스트를 조회하는 API
      * - 토큰 확인 로직 수정
+     * - 해당 유저가 마지막으로 채팅방에 진입한 시각도 함께 return
      * @param authorization
      * @return
      */
@@ -49,18 +51,6 @@ public class ChatRoomController {
      * @param roomId
      * @return
      */
-//    @GetMapping("/info")
-//    public ChatRoomGetResponse getChatRoom(
-//            @RequestHeader("Authorization") String authorization,
-//            @RequestParam(name = "roomId") String roomId
-//    ) {
-//        String accessToken = authorization.split(" ")[1];
-//
-//        Long userId = tokenProvider.getUserId(accessToken);
-//
-//        return chatRoomService.getChatRoomInfo(userId, roomId);
-//    }
-
     @GetMapping("/message/list")
     public SuccessResponse<?> roomFindInfo(
             @RequestParam(name = "roomId") Long roomId,
@@ -77,6 +67,20 @@ public class ChatRoomController {
         ChatRoom chatRoom = chatRoomService.createChatRoom(chatRoomCreateRequest);
 
         return SuccessResponse.of(chatRoom.getId());
+    }
+
+    @PostMapping("/leave")
+    public SuccessResponse<?> leaveRoom(
+            @RequestHeader("Authorization") String authorization,
+            @RequestParam("roomId") Long roomId
+    ) {
+
+        String accessToken = authorization.split(" ")[1];
+
+        Long userId = tokenProvider.getUserId(accessToken);
+        LocalDateTime now = chatRoomService.leaveChatRoom(userId, roomId);
+
+        return SuccessResponse.of(now);
     }
 
 }
