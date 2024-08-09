@@ -84,7 +84,7 @@ public class UserChallengeLikeService {
                             .orElseThrow(() -> new RuntimeException("User not found"));
 
                     user.setUserLikeCnt(likes.longValue());
-                    userRepository.save(user);
+                    userRepository.save(user); // @Transactional 이긴 하지만 그래도 명시적으로 걸어둠
                 }
             }
         }
