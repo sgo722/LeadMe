@@ -168,6 +168,9 @@ public class CompetitionService {
      */
     public void deleteSession(String sessionId, User user) {
 
+        log.info("입장한 user id : " + user.getId());
+        log.info("세션 user id : " + getCreateUserId(sessionId));
+
         // 호스트인 경우
         if(getCreateUserId(sessionId).equals(user.getId())) {
             deleteSessionCount(sessionId);

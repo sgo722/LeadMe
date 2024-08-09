@@ -41,13 +41,18 @@ public class CompetitionController {
     @PostMapping("/api/v1/sessions")
     public SuccessResponse<?> initializeSession(@RequestBody(required = false) CompetitionCreateRequest request, @CurrentUser User user) throws OpenViduJavaClientException, OpenViduHttpException {
 
-        String userId = "test";
         //SessionProperties properties = SessionProperties.fromJson().build();
         Session session = openVidu.createSession();
 
         competitionService.create(request, session.getSessionId(), user);
 
-        return SuccessResponse.of(session.getSessionId());
+        Connection connection = session.getConnection(session.getSessionId());
+
+        HashMap<String, Object> response = new HashMap<>();
+        response.put("sessionId", session.getSessionId());
+        response.put("token", connection.getToken());
+
+        return SuccessResponse.of(response);
     }
 
     /**
