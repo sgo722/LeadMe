@@ -8,6 +8,7 @@ import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.FollowService;
 import com.ssafy.withme.service.user.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -52,13 +53,14 @@ public class FollowController {
     }
 
     @GetMapping("/user/following/check/{userId}")
-    public SuccessResponse<String> checkFollowing(@PathVariable Long userId, @RequestHeader("Authorization") String authorization) {
+    public SuccessResponse<String> checkFollowing(@PathVariable Long userId, HttpServletRequest request) {
 
+        String authorization = request.getHeader("Authorization");
         log.info("Authorization at Follow Check: {}", authorization);
 
         String accessToken = authorization.split(" ")[1];
-
         log.info("AccessToken at Follow Check: {}", accessToken);
+
         Boolean following = followService.isFollowing(userService.findUserIdByToken(accessToken).getId(), userId);
 
         if (following)
