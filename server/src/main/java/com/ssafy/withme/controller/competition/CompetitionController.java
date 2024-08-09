@@ -131,6 +131,16 @@ public class CompetitionController {
         return SuccessResponse.of(response);
     }
 
+    /**
+     * 세션 아이디를 활용해 유저 아이디 반환
+     * @param sessionId
+     * @return
+     */
+    @GetMapping("api/v1/sessions/{sessionId}/host")
+    public SuccessResponse<?> getCreateUserId(@PathVariable String sessionId) {
+        return SuccessResponse.of(competitionService.getCreateUserId(sessionId));
+    }
+
 }
 
 
