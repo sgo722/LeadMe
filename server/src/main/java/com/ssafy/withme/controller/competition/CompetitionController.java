@@ -2,6 +2,8 @@ package com.ssafy.withme.controller.competition;
 
 import com.ssafy.withme.controller.competition.request.CompetitionCreateRequest;
 import com.ssafy.withme.controller.competition.request.PasswordVerificationRequest;
+import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.SessionNotFoundException;
 import com.ssafy.withme.global.response.SuccessResponse;
@@ -37,13 +39,13 @@ public class CompetitionController {
      * @throws OpenViduHttpException
      */
     @PostMapping("/api/v1/sessions")
-    public SuccessResponse<?> initializeSession(@RequestBody(required = false) CompetitionCreateRequest request) throws OpenViduJavaClientException, OpenViduHttpException {
+    public SuccessResponse<?> initializeSession(@RequestBody(required = false) CompetitionCreateRequest request, @CurrentUser User user) throws OpenViduJavaClientException, OpenViduHttpException {
 
         String userId = "test";
         //SessionProperties properties = SessionProperties.fromJson().build();
         Session session = openVidu.createSession();
 
-        competitionService.create(request, session.getSessionId(), userId);
+        competitionService.create(request, session.getSessionId(), user);
 
         return SuccessResponse.of(session.getSessionId());
     }
@@ -130,6 +132,16 @@ public class CompetitionController {
         response.put("pageNo", pageNo);
 
         return SuccessResponse.of(response);
+    }
+
+    /**
+     * 세션 아이디를 활용해 유저 아이디 반환
+     * @param sessionId
+     * @return
+     */
+    @GetMapping("api/v1/sessions/{sessionId}/host")
+    public SuccessResponse<?> getCreateUserId(@PathVariable String sessionId) {
+        return SuccessResponse.of(competitionService.getCreateUserId(sessionId));
     }
 
 }

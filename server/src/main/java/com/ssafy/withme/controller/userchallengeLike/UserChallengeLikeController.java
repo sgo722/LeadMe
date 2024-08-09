@@ -4,7 +4,6 @@ import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.userChallengeLike.UserChallengeLikeService;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.http.parser.Authorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,9 +34,9 @@ public class UserChallengeLikeController {
     }
 
     // 유저가 받은 좋아요 수 스케쥴링
-    @Scheduled(fixedRate = 1000 * 60) // 1분마다 실행
+    @Scheduled(fixedRate = 1000 * 60 * 5) // 5분마다 실행
     public void updateLikesToRDBMS() {
-        log.info("1분마다 새로고침");
+        log.info("5분마다 유저 좋아요 수 새로고침");
         userChallengeLikeService.updateLikesFromRedisToRDBMS();
     }
 }

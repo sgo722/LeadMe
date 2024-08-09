@@ -70,6 +70,8 @@ public class UserChallengeLikeService {
 
     }
 
+    // 좋아요 수가 변경될때마다 RDBMS 업데이트 되면 서버에 부하가 크다
+    // -> redis에 저장했다가 일정 시간마다 RDBMS에 반영
     // 일정시간마다 redis에 저장된 유저 좋아요 수 정보 -> RDBMS에 저장
     @Transactional
     public void updateLikesFromRedisToRDBMS() {
