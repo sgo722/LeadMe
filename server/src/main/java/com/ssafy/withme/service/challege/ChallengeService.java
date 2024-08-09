@@ -14,12 +14,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
@@ -45,7 +50,7 @@ public class ChallengeService {
      * @param request
      */
     @Transactional
-    public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request){
+    public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request, MultipartFile videoFile) throws IOException {
         String youtubeId = request.getYoutubeId();
         Challenge challengeByYoutubeId = challengeRepository.findByYoutubeId(youtubeId);
         if(challengeByYoutubeId != null){
@@ -56,7 +61,22 @@ public class ChallengeService {
             }
             return ChallengeCreateResponse.toResponse(challengeByYoutubeId);
         }
+
+        String url = FAST_API_URL + "/upload/userFile";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return videoFile.getOriginalFilename();
+            }
+        });
+        body.add("youtubeId", challenge.getYoutubeId());
+
+
         Challenge challenge = request.toEntity();
+
         System.out.println(challenge);
         Challenge savedChallenge = challengeRepository.save(challenge);
         System.out.println(savedChallenge);
