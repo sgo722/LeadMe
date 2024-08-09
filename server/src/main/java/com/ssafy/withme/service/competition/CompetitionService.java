@@ -138,12 +138,11 @@ public class CompetitionService {
                     // 값이 2 미만일 경우 트랜잭션 시작, 여기부터 모든 명령어는 큐에 쌓이다.
                     operations.multi();
                     operations.opsForValue().increment((K) key);
-                    log.info(sessionId + " 1 증가");
+
                     // 트랜잭션 끝 results 가 null이 아니면 성공
                     List<Object> results = operations.exec();
                     return results != null;
                 } else {
-                    log.info(sessionId + " 2 이상임");
                     // 값이 2 이상인 경우 감시 해제
                     operations.unwatch();
                     return false;
