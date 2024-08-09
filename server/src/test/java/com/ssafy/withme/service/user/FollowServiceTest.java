@@ -3,6 +3,7 @@ package com.ssafy.withme.service.user;
 import com.ssafy.withme.domain.user.Follow;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.UserStatus;
+import com.ssafy.withme.dto.user.FollowDto;
 import com.ssafy.withme.global.exception.BusinessException;
 import com.ssafy.withme.repository.user.FollowRepository;
 import org.assertj.core.api.Assertions;
@@ -90,15 +91,11 @@ class FollowServiceTest {
                 .fromUser(user1)
                 .build();
 
-        when(followRepository.existsByFromUserIdAndToUserId(user1.getId(), user2.getId())).thenReturn(true);
-        // Assuming that deleteByFromUserIdAndToUserId is the method that you want to verify
-        doNothing().when(followRepository).delete(follow);
+        when(followRepository.findByFromUserIdAndToUserId(user1.getId(), user2.getId()))
+                .thenReturn(Optional.of(follow)); // 팔로우 관계가 존재한다고 가정
 
         // When
         followService.unfollowing(2L, 1L); // 언팔로우 메서드 호출
-
-        // Then
-        verify(followRepository).delete(follow); // delete 메서드 호출 검증
 
         // Then
         verify(followRepository).delete(follow); // delete 메서드 호출 검증
@@ -115,5 +112,16 @@ class FollowServiceTest {
                 .toUser(user2)
                 .fromUser(user1)
                 .build();
+
+        user1.getFromFollowList().add(follow);
+        user2.getToFollowList().add(follow);
+
+        // When
+        List<FollowDto> followings = followService.findFollowing(user1.getId());
+        List<FollowDto> followers = followService.findFollowers(user2.getId());
+
+        // Then
+        assertThat(followings).hasSize(1);
+        assertThat(followers).hasSize(1);
     }
 }
