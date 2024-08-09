@@ -31,11 +31,10 @@ public class ChallengeController extends BaseEntity {
 //    }
 
     @PostMapping("/api/v1/admin/challenge")
-    public ApiResponse<Void> create(@RequestPart("request") ChallengeCreateRequest request,
+    public ApiResponse<ChallengeCreateResponse> create(@RequestPart("request") ChallengeCreateRequest request,
                                     @RequestPart MultipartFile videoFile) throws IOException {
 
-        challengeService.createChallenge(request,videoFile);
-//        return SuccessResponse.of(userChallengeService.analyzeVideo(request, videoFile));
+        return SuccessResponse.of(challengeService.createChallenge(request,videoFile));
     }
 
 
