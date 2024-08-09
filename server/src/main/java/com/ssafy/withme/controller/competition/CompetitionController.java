@@ -2,6 +2,8 @@ package com.ssafy.withme.controller.competition;
 
 import com.ssafy.withme.controller.competition.request.CompetitionCreateRequest;
 import com.ssafy.withme.controller.competition.request.PasswordVerificationRequest;
+import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.SessionNotFoundException;
 import com.ssafy.withme.global.response.SuccessResponse;
@@ -37,13 +39,13 @@ public class CompetitionController {
      * @throws OpenViduHttpException
      */
     @PostMapping("/api/v1/sessions")
-    public SuccessResponse<?> initializeSession(@RequestBody(required = false) CompetitionCreateRequest request) throws OpenViduJavaClientException, OpenViduHttpException {
+    public SuccessResponse<?> initializeSession(@RequestBody(required = false) CompetitionCreateRequest request, @CurrentUser User user) throws OpenViduJavaClientException, OpenViduHttpException {
 
         String userId = "test";
         //SessionProperties properties = SessionProperties.fromJson().build();
         Session session = openVidu.createSession();
 
-        competitionService.create(request, session.getSessionId(), userId);
+        competitionService.create(request, session.getSessionId(), user);
 
         return SuccessResponse.of(session.getSessionId());
     }

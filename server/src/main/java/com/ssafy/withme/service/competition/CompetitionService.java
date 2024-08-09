@@ -5,12 +5,14 @@ import com.ssafy.withme.controller.competition.request.PasswordVerificationReque
 import com.ssafy.withme.domain.competition.Competition;
 import com.ssafy.withme.domain.competition.constant.CompetitionStatus;
 import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.global.util.SHA256Util;
 import com.ssafy.withme.repository.competition.CompetitionRepository;
 import com.ssafy.withme.repository.user.UserRepository;
 import com.ssafy.withme.service.competition.response.CompetitionResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +26,7 @@ import static com.ssafy.withme.global.error.ErrorCode.USER_NOT_EXISTS;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class CompetitionService {
     private final CompetitionRepository competitionRepository;
     private final UserRepository userRepository;
@@ -34,12 +37,12 @@ public class CompetitionService {
      * @param request
      * @param sessionId
      */
-    public void create(CompetitionCreateRequest request, String sessionId, String userId) {
+    public void create(CompetitionCreateRequest request, String sessionId, @CurrentUser User user) {
 
-//        User user = userRepository.findByEmail(userId)
-//                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_EXISTS));
+        log.info("세션 생성 : 유저 아아디" + user.getId() + " 유저 이메일 : " + user.getEmail());
+
         Competition competition = Competition.builder()
-                                //.user(user)
+                                .user(user)
                                 .roomName(request.getRoomName())
                                 .sessionId(sessionId)
                                 .isPublic(request.isPublic())
