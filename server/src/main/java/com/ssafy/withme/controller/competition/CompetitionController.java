@@ -57,7 +57,7 @@ public class CompetitionController {
      * @throws OpenViduHttpException
      */
     @PostMapping("/api/v1/sessions/{sessionId}/connections")
-    public SuccessResponse<?> createConnection(@PathVariable("sessionId") String sessionId, @RequestBody(required = false) PasswordVerificationRequest request) throws OpenViduJavaClientException, OpenViduHttpException {
+    public SuccessResponse<?> createConnection(@PathVariable("sessionId") String sessionId, @RequestBody(required = false) PasswordVerificationRequest request) throws OpenViduJavaClientException, OpenViduHttpException, InterruptedException {
 
         Session session = openVidu.getActiveSession(sessionId);
 
@@ -68,10 +68,11 @@ public class CompetitionController {
         Connection connection = session.createConnection();
         HashMap<String, Object> response = new HashMap<>();
 
+        Thread.sleep(1000);  // 1초 대기
+        session.fetch();
 
         int activeConnectionSize = session.getActiveConnections().size();
-
-        log.info(String.valueOf(activeConnectionSize  + "activeConnectionSize "));
+        log.info("Current number of connections in session " + sessionId + ": " + activeConnectionSize);
 
         if(activeConnectionSize >= 2) {
             response.put("isFulled",  true);
