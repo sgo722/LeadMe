@@ -68,7 +68,7 @@ public class ChallengeService {
             return ChallengeCreateResponse.toResponse(challengeByYoutubeId);
         }
 
-        String url = FAST_API_URL + "/challenge/upload";
+        String url = FAST_API_URL + "/admin/challenge";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -78,6 +78,7 @@ public class ChallengeService {
                 return videoFile.getOriginalFilename();
             }
         });
+        body.add("youtubeId", request.getYoutubeId());
 
 
         Challenge challenge = request.toEntity();
