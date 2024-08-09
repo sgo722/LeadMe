@@ -13,7 +13,6 @@ import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
 import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeFeedResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -154,6 +153,23 @@ public class ChallengeService {
     public List<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
         Page<Challenge> findChallengeByPaging = challengeRepository.findAllByPaging(pageable);
         return findChallengeByPaging.stream()
+                .map(challenge -> {
+                    try {
+                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
+                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
+                    } catch (Exception e) {
+                        // 예외 처리 로직을 여기에 추가
+                        e.printStackTrace();
+                        return null; // 또는 다른 적절한 예외 처리 방법
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    public List<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String searchTitle) {
+        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitle(pageable, searchTitle);
+        return searchChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
                         byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
