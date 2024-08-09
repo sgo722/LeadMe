@@ -11,6 +11,7 @@ import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.userChallenge.UserChallengeService;
 import com.ssafy.withme.service.userChallenge.response.*;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -22,6 +23,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
+@RequestMapping("/api/v1/userChallenge")
 public class UserChallengeController {
 
     private final UserChallengeService userChallengeService;
@@ -33,7 +35,7 @@ public class UserChallengeController {
      * @return
      */
 
-    @GetMapping("/api/v1/userChallenge/report/{uuid}")
+    @GetMapping("/report/{uuid}")
     public SuccessResponse<UserChallengeReportResponse> findReportByUuid(@PathVariable("uuid") String uuid) throws IOException, InterruptedException {
         return SuccessResponse.of(userChallengeService.findReportByUuid(uuid));
     }
@@ -43,7 +45,7 @@ public class UserChallengeController {
      * @param pageable
      * @return
      */
-    @GetMapping("/api/v1/userChallenge/feed")
+    @GetMapping("/feed")
     public SuccessResponse<List<UserChallengeFeedResponse>> findUserChallengeByPageable(
             @PageableDefault(size = 3) Pageable pageable) {
         return SuccessResponse.of(userChallengeService.findUserChallengeByPageable(pageable));
@@ -56,7 +58,7 @@ public class UserChallengeController {
      * @return
      * @throws IOException
      */
-    @PostMapping("/api/v1/userChallenge/analyze")
+    @PostMapping("/analyze")
     public ApiResponse<UserChallengeAnalyzeResponse> createUserChallenge(@RequestPart("request") UserChallengeAnalyzeRequest request,
                                                                          @RequestPart MultipartFile videoFile) throws IOException {
 
@@ -68,7 +70,7 @@ public class UserChallengeController {
      * @param request
      * @return
      */
-    @PostMapping("/api/v1/userChallenge/temporary/save")
+    @PostMapping("/temporary/save")
     public SuccessResponse<UserChallengeSaveResponse> saveTemporaryFile(@RequestBody UserChallengeSaveRequest request) {
         return SuccessResponse.of(userChallengeService.saveUserFile(request));
     }
@@ -78,13 +80,13 @@ public class UserChallengeController {
      * @param request
      * @return
      */
-    @PostMapping("/api/v1/userChallenge/temporary/delete")
+    @PostMapping("/temporary/delete")
     public SuccessResponse<Void> deleteTemporaryFile(@RequestBody UserChallengeDeleteRequest request){
         userChallengeService.deleteUserFile(request);
         return SuccessResponse.empty();
     }
 
-    @GetMapping("/api/v1/userChallenge/{viewUserId}")
+    @GetMapping("/{viewUserId}")
     public SuccessResponse<Page<UserChallengeMyPageResponse>> getUserMyPageFeed(
             @PageableDefault(size = 8) Pageable pageable,
             @CurrentUser User user,
