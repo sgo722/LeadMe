@@ -14,12 +14,15 @@ public class ChallengeCreateRequest {
 
     private String url;
 
+    private String title;
+
     private ArrayList<String> hashtags;
 
     public Challenge toEntity() {
         return Challenge.builder()
                 .youtubeId(youtubeId)
                 .url(url)
+                .title(title)
                 .build();
 
     }

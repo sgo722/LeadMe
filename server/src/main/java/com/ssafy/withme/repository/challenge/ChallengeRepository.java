@@ -12,7 +12,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     */
     Challenge findByYoutubeId(String youtubeId);
 
-    Page<Challenge> findAllByPaging(Pageable pageable);
+    Page<Challenge> findAll(Pageable pageable);
 
     Page<Challenge> findByTitle(Pageable pageable, String title);
 }

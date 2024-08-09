@@ -151,7 +151,7 @@ public class ChallengeService {
 
 
     public List<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
-        Page<Challenge> findChallengeByPaging = challengeRepository.findAllByPaging(pageable);
+        Page<Challenge> findChallengeByPaging = challengeRepository.findAll(pageable);
         return findChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
