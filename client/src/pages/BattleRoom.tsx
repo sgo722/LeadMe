@@ -40,7 +40,6 @@ export const BattleRoom: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null); //OpenVidu 세션 상태 관리
   const [publisher, setPublisher] = useState<Publisher | null>(null); // 로컬 비디오 스트림 발행자 상태 관리
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]); // 원격 비디오 스트림 구독자 목록 상태 관리
-  const [error, setError] = useState<string | null>(null); // 에러 상태 관리
 
   const [selectedItem, setSelectedItem] = useState<number | null>(null);
 
@@ -128,10 +127,6 @@ export const BattleRoom: React.FC = () => {
       });
     };
   }, [token, roomName]);
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
 
   return (
     <Container>
