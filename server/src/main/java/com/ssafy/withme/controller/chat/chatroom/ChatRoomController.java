@@ -51,18 +51,6 @@ public class ChatRoomController {
      * @param roomId
      * @return
      */
-//    @GetMapping("/info")
-//    public ChatRoomGetResponse getChatRoom(
-//            @RequestHeader("Authorization") String authorization,
-//            @RequestParam(name = "roomId") String roomId
-//    ) {
-//        String accessToken = authorization.split(" ")[1];
-//
-//        Long userId = tokenProvider.getUserId(accessToken);
-//
-//        return chatRoomService.getChatRoomInfo(userId, roomId);
-//    }
-
     @GetMapping("/message/list")
     public SuccessResponse<?> roomFindInfo(
             @RequestParam(name = "roomId") Long roomId,
