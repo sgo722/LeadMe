@@ -2,9 +2,13 @@ package com.ssafy.withme.service.challege;
 
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
+import com.ssafy.withme.domain.challengeHashtag.ChallengeHashTag;
+import com.ssafy.withme.domain.hashtag.Hashtag;
 import com.ssafy.withme.domain.landmark.Landmark;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
+import com.ssafy.withme.repository.challengeHashtag.ChallengeHashtagRepository;
+import com.ssafy.withme.repository.hashtag.HashtagRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
@@ -14,13 +18,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
-import org.springframework.http.HttpEntity;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELETON_DATA;
@@ -30,12 +38,15 @@ import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELE
 @Service
 public class ChallengeService {
 
+    private final HashtagRepository hashtagRepository;
     @Value("${python-server.url}")
     String FAST_API_URL;
 
     private final ChallengeRepository challengeRepository;
 
     private final LandmarkRepository landmarkRepository;
+
+    private final ChallengeHashtagRepository challengeHashTagRepository;
 
 
     private final RestTemplate restTemplate;
@@ -45,7 +56,7 @@ public class ChallengeService {
      * @param request
      */
     @Transactional
-    public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request){
+    public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request, MultipartFile videoFile) throws IOException {
         String youtubeId = request.getYoutubeId();
         Challenge challengeByYoutubeId = challengeRepository.findByYoutubeId(youtubeId);
         if(challengeByYoutubeId != null){
@@ -56,24 +67,32 @@ public class ChallengeService {
             }
             return ChallengeCreateResponse.toResponse(challengeByYoutubeId);
         }
+
+        String url = FAST_API_URL + "/admin/challenge";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return videoFile.getOriginalFilename();
+            }
+        });
+        body.add("youtubeId", request.getYoutubeId());
+
+
         Challenge challenge = request.toEntity();
-        System.out.println(challenge);
         Challenge savedChallenge = challengeRepository.save(challenge);
-        System.out.println(savedChallenge);
-        // 헤더 설정
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        ArrayList<String> hashtags = request.getHashtags();
+        for(String hashtag : hashtags){
+            Hashtag savedHashtag = hashtagRepository.save(new Hashtag(hashtag));
+            ChallengeHashTag challengeHashTag = ChallengeHashTag.builder()
+                    .challenge(savedChallenge)
+                    .hashtag(savedHashtag)
+                    .build();
+            challengeHashTagRepository.save(challengeHashTag);
+        }
 
-        // 바디 설정
-        HashMap<String, String> requestBody = new HashMap<>();
-        // 유튜브 url을 바디에 넣는다.
-        requestBody.put("url", challenge.getUrl());
-        requestBody.put("youtubeId", challenge.getYoutubeId());
-
-
-        HttpEntity<HashMap<String, String>> CreateLandMarkDataRequest = new HttpEntity<>(requestBody, httpHeaders);
-        String url = FAST_API_URL + "/videoUrl";
-        restTemplate.postForEntity(url, CreateLandMarkDataRequest, String.class);
         
         return ChallengeCreateResponse.toResponse(savedChallenge);
     }
