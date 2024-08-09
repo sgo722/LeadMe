@@ -8,8 +8,9 @@ import { InputPasswordModal } from "features/battle/InputPasswordModal";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pagination } from "features/battle/Pagination";
-import { AxiosResponse } from "axios";
 import { useNavigate } from "react-router-dom";
+import { AxiosResponse } from "axios";
+import { getJWTHeader } from "axiosInstance/apiClient";
 // 로딩 새로고침
 // 타입 제대로 지정 꼼꼼히
 // 비밀번호 로직 추가
@@ -87,7 +88,9 @@ export const Battle: React.FC = () => {
       isPublic: boolean;
       password?: string;
     }): Promise<AxiosResponse> =>
-      axiosInstance.post("/api/v1/sessions", roomData),
+      axiosInstance.post("/api/v1/sessions", roomData, {
+        headers: getJWTHeader(),
+      }),
     onSuccess: () => {
       // 쿼리무효화로 방목록 최신화
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
