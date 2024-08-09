@@ -15,7 +15,7 @@ PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
 
 # MongoDB 연결 설정
 client = MongoClient(
-    host='localhost',
+    host='i11c109.p.ssafy.io',
     port=27070,
     username='leadme',
     password='leadmessafy11',

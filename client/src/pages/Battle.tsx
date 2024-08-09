@@ -91,16 +91,39 @@ export const Battle: React.FC = () => {
       axiosInstance.post("/api/v1/sessions", roomData, {
         headers: getJWTHeader(),
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       // 쿼리무효화로 방목록 최신화
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
       // 방생성 모달창 닫기
       setShowCreateRoomModal(false);
+      // 생성된 방에 바로 입장
+      const createdRoom = data.data.data;
+      console.log("이것좀보세요", createdRoom);
+      navigateToRoom(
+        createdRoom.sessionId,
+        createdRoom.token,
+        createdRoom.roomName
+      );
     },
     onError: (error) => {
       console.error("방 생성 중 요류:", error);
     },
   });
+
+  // 방 생성 후 바로 입장하는 함수
+  const navigateToRoom = (
+    sessionId: string,
+    token: string,
+    roomName: string
+  ) => {
+    nav(`/battleRoom/${sessionId}`, {
+      state: {
+        token: token,
+        sessionId: sessionId,
+        roomName: roomName,
+      },
+    });
+  };
 
   // public 방 토큰을 가져와서 입장시키는 mutation
   const enterPublicRoomMutation = useMutation({

@@ -95,7 +95,7 @@ public class ChallengeService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
             @Override
-            public String getFilename() {
+            public String  getFilename() {
                 return videoFile.getOriginalFilename();
             }
         });
