@@ -83,6 +83,8 @@ python-server:
   url: http://localhost:8000
   temp-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\temporary
   permanent-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\user
+  permanent-challenge-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\challenge
+  permanent-challenge-thumbnail-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\challenge\thumbnail
   permanent-thumbnail-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\user\thumbnail
   youtube-audio-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\challenge\audio
 
