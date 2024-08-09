@@ -25,6 +25,8 @@ public class Challenge extends BaseEntity {
 
     private String url;
 
+    private String title;
+
     private String thumbnailPath;
 
 
@@ -32,7 +34,7 @@ public class Challenge extends BaseEntity {
     private List<UserChallenge> userChallenges;
 
     @Builder
-    private Challenge(String youtubeId, String url) {
+    private Challenge(String youtubeId, String url, String title) {
         this.youtubeId = youtubeId;
         this.url = url;
         this.userChallenges = new ArrayList<>();
