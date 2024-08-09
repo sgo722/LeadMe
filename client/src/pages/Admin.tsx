@@ -19,7 +19,7 @@ const Admin = () => {
     mutationFn: async (data: FormData) => {
       console.log(data);
       const response = await axios.post<ResponseData<any>>(
-        `${baseUrl}/api/v1/upload`,
+        `${baseUrl}/api/v1/admin/challenge`,
         data,
         {
           headers: {
@@ -58,7 +58,7 @@ const Admin = () => {
     const data = new FormData();
 
     // 파일은 그대로 FormData에 추가
-    data.append("file", file as File);
+    data.append("videoFile", file as File);
 
     // 나머지 데이터를 JSON으로 변환하여 Blob으로 추가
     const jsonBlob = new Blob(
@@ -72,12 +72,12 @@ const Admin = () => {
       ],
       { type: "application/json" }
     );
-    data.append("request", jsonBlob);
+    data.append("jsonData", jsonBlob);
 
     // FormData 내용을 콘솔에 출력
     console.log("전송한 데이터 내용:");
     for (let [key, value] of data.entries()) {
-      if (value instanceof Blob && key === "request") {
+      if (value instanceof Blob && key === "jsonData") {
         const reader = new FileReader();
         reader.onload = () => {
           console.log(`${key}:`, reader.result);
