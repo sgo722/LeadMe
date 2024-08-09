@@ -60,20 +60,8 @@ public class ChallengeService {
         System.out.println(challenge);
         Challenge savedChallenge = challengeRepository.save(challenge);
         System.out.println(savedChallenge);
-        // 헤더 설정
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-        // 바디 설정
-        HashMap<String, String> requestBody = new HashMap<>();
-        // 유튜브 url을 바디에 넣는다.
-        requestBody.put("url", challenge.getUrl());
-        requestBody.put("youtubeId", challenge.getYoutubeId());
 
 
-        HttpEntity<HashMap<String, String>> CreateLandMarkDataRequest = new HttpEntity<>(requestBody, httpHeaders);
-        String url = FAST_API_URL + "/videoUrl";
-        restTemplate.postForEntity(url, CreateLandMarkDataRequest, String.class);
         
         return ChallengeCreateResponse.toResponse(savedChallenge);
     }
