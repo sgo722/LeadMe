@@ -31,8 +31,8 @@ public class CompetitionResponse {
     public static CompetitionResponse toResponse(Competition competition) {
         return CompetitionResponse.builder()
                 .competitionId(competition.getId())
-                //.nickname(competition.getCreateUser().getNickname())
-                //.profileImg(competition.getCreateUser().getProfileImg())
+                .nickname(competition.getCreateUser().getNickname())
+                .profileImg(competition.getCreateUser().getProfileImg())
                 .roomName(competition.getRoomName())
                 .sessionId(competition.getSessionId())
                 .isPublic(competition.isPublic())
