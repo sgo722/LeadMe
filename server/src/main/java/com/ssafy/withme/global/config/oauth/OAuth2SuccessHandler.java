@@ -39,8 +39,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     public static final Duration ACCESS_TOKEN_DURATION = Duration.ofHours(1);
 
     // 로그인 성공 시 리다이렉트 페이지
-    //public static final String REDIRECT_PATH = "https://i11c109.p.ssafy.io/home";
-    public static final String REDIRECT_PATH = "http://localhost:5173/home";
+    public static final String REDIRECT_PATH = "https://i11c109.p.ssafy.io/home";
+    //public static final String REDIRECT_PATH = "http://localhost:5173/home";
 
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
