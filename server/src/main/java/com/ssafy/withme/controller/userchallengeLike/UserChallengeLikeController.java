@@ -20,7 +20,7 @@ public class UserChallengeLikeController {
     private final TokenProvider tokenProvider;
 
     // 유저 게시글 좋아요 기능
-    @PostMapping("/liked")
+    @PostMapping("/like")
     public SuccessResponse<?> likeUserChallenge(
             @RequestHeader("Authorization") String authorization,
             @RequestParam("userChallengeId") Long userChallengeId
