@@ -69,13 +69,11 @@ public class CompetitionController {
         HashMap<String, Object> response = new HashMap<>();
 
 
-        int publisherCount = connection.getPublishers().size();
-        int subscriberCount = connection.getSubscribers().size();
+        int activeConnectionSize = session.getActiveConnections().size();
 
-        log.info(String.valueOf(publisherCount  + "publisher "));
-        log.info(String.valueOf(subscriberCount  + "subscriber "));
+        log.info(String.valueOf(activeConnectionSize  + "activeConnectionSize "));
 
-        if(publisherCount + subscriberCount >= 2) {
+        if(activeConnectionSize >= 2) {
             response.put("isFulled",  true);
             return SuccessResponse.of(response);
         }
