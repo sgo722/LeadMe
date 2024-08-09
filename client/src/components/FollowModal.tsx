@@ -6,6 +6,8 @@ import { useMutation } from "@tanstack/react-query";
 import { ResponseData } from "types";
 import { baseUrl } from "axiosInstance/constants";
 import { useNavigate } from "react-router-dom";
+import { useRecoilValue } from "recoil";
+import { accessTokenState } from "stores/authAtom";
 
 interface FollowModalProps {
   onClose: () => void;
@@ -20,6 +22,7 @@ interface PeopleProps {
 
 const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
   const navigate = useNavigate();
+  const accessToken = useRecoilValue(accessTokenState);
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -30,7 +33,10 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
   const mutationFollow = useMutation<PeopleProps[], Error, string>({
     mutationFn: async (value: string) => {
       const response = await axios.get<ResponseData<PeopleProps[]>>(
-        `${baseUrl}/api/v1/user/${value}/list`
+        `${baseUrl}/api/v1/user/${value}/list`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
       );
       return response.data.data;
     },
@@ -45,14 +51,29 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
 
   const [people, setPeople] = useState<PeopleProps[]>([]);
 
+  const [localAccessToken, setLocalAccessToken] = useState<string | null>(null);
+
   useEffect(() => {
-    if (type) {
+    setLocalAccessToken(accessToken);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (type && localAccessToken) {
       mutationFollow.mutate(type);
     }
-  }, [type]);
+  }, [type, localAccessToken]);
 
-  const handleSend = (user: PeopleProps) => {
+  const handleSend = (
+    user: PeopleProps,
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    e.stopPropagation();
     navigate("/chat", { state: user });
+  };
+
+  const handleNavigateMypage = (id: number) => {
+    navigate(`/mypage/${id}`);
+    onClose();
   };
 
   return (
@@ -63,10 +84,13 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
         <OverContainer>
           {people && people.length > 0 ? (
             people.map((user) => (
-              <UserRow key={user.id}>
+              <UserRow
+                key={user.id}
+                onClick={() => handleNavigateMypage(user.id)}
+              >
                 <UserImg src={user.profileImg} alt={`${user.nickname}`} />
                 <UserId>{user.nickname}</UserId>
-                <MessageButton onClick={() => handleSend(user)}>
+                <MessageButton onClick={(e) => handleSend(user, e)}>
                   <StyledIoIosSend />
                   send
                 </MessageButton>
@@ -162,9 +186,15 @@ const UserRow = styled.div`
   justify-content: space-between;
   padding: 10px 0;
   border-bottom: 1px solid #e6e6e6;
+  border-radius: 8px;
+  cursor: pointer;
 
   &:last-child {
     border: none;
+  }
+
+  &:hover {
+    background-color: #ffffff;
   }
 `;
 

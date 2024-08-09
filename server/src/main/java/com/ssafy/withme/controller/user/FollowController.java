@@ -7,6 +7,8 @@ import com.ssafy.withme.dto.user.UserInfoDto;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.FollowService;
+import com.ssafy.withme.service.user.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.List;
 public class FollowController {
 
     private final FollowService followService;
+    private final UserService userService;
 
     /**
      * Follower 목록 조회
@@ -27,9 +30,11 @@ public class FollowController {
      * @return
      */
     @GetMapping("/user/follower/list")
-    public SuccessResponse<?> getFollowers(@CurrentUser User user) {
+    public SuccessResponse<?> getFollowers(@RequestHeader("Authorization")String authorization) {
 
-        List<FollowDto> followers = followService.findFollowers(user.getId());
+        Long userId = userService.findUserIdByToken(authorization.split(" ")[1]);
+
+        List<FollowDto> followers = followService.findFollowers(userId);
 
         return SuccessResponse.of(followers);
     }
@@ -40,25 +45,27 @@ public class FollowController {
      * @return
      */
     @GetMapping("/user/following/list")
-    public SuccessResponse<?> getFollowings(@CurrentUser User user) {
+    public SuccessResponse<?> getFollowings(@RequestHeader("Authorization")String authorization) {
 
-        log.info("user: {}", user);
+        Long userId = userService.findUserIdByToken(authorization.split(" ")[1]);
 
-        List<FollowDto> followings = followService.findFollowing(user.getId());
+        List<FollowDto> followings = followService.findFollowing(userId);
 
         return SuccessResponse.of(followings);
     }
 
     @GetMapping("/user/following/check/{userId}")
-    public SuccessResponse<String> checkFollowing(@PathVariable Long userId, @CurrentUser User user) {
+    public SuccessResponse<String> checkFollowing(@PathVariable Long userId,
+                                                  @RequestHeader("Authorization")String authorization) {
 
-        List<Follow> findList = user.getFromFollowList().stream()
-                .filter(f -> f.getToUser().getId().equals(userId)).toList();
+        Long findUserId = userService.findUserIdByToken(authorization.split(" ")[1]);
 
-        if (findList.isEmpty())
-            return SuccessResponse.of("UNFOLLOW");
+        Boolean following = followService.isFollowing(findUserId, userId);
 
-        return SuccessResponse.of("FOLLOW");
+        if (following)
+            return SuccessResponse.of("FOLLOW");
+
+        return SuccessResponse.of("UNFOLLOW");
     }
 
     /**
@@ -68,9 +75,12 @@ public class FollowController {
      * @return
      */
     @PostMapping("/user/following/send/{id}")
-    public SuccessResponse<?> sendFollowing(@PathVariable("id") Long id, @CurrentUser User user) {
+    public SuccessResponse<?> sendFollowing(@PathVariable("id") Long id,
+                                            @RequestHeader("Authorization")String authorization) {
 
-        followService.following(id, user.getId());
+        Long findUserId = userService.findUserIdByToken(authorization.split(" ")[1]);
+
+        followService.following(id, findUserId);
 
         return SuccessResponse.of(true);
     }
@@ -82,9 +92,12 @@ public class FollowController {
      * @return
      */
     @DeleteMapping("/user/following/unfollow/{id}")
-    public SuccessResponse<?> unfollow(@PathVariable Long id, @CurrentUser User user) {
+    public SuccessResponse<?> unfollow(@PathVariable Long id,
+                                       @RequestHeader("Authorization")String authorization) {
 
-        followService.unfollowing(id, user.getId());
+        Long findUserId = userService.findUserIdByToken(authorization.split(" ")[1]);
+
+        followService.unfollowing(id, findUserId);
 
         return SuccessResponse.of(true);
     }
@@ -96,9 +109,12 @@ public class FollowController {
      * @return
      */
     @DeleteMapping("/user/follower/unfollow/{id}")
-    public SuccessResponse<?> deleteFollower(@PathVariable Long id, @CurrentUser User user) {
+    public SuccessResponse<?> deleteFollower(@PathVariable Long id,
+                                             @RequestHeader("Authorization")String authorization) {
 
-        followService.unfollowing(user.getId(), id);
+        Long findUserId = userService.findUserIdByToken(authorization.split(" ")[1]);
+
+        followService.unfollowing(findUserId, id);
 
         return SuccessResponse.of(true);
     }

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Header from "components/Header";
 import styled from "styled-components";
-import { ChatModal } from "features/Chat/ChatModal";
+import { ChatModal } from "features/chat/ChatModal";
 import { IoIosSend } from "react-icons/io";
-import FindModal from "features/Chat/FindeModal";
+import FindModal from "features/chat/FindeModal";
 import { userProfileState } from "stores/authAtom";
 import { useRecoilState } from "recoil";
 import axios from "axios";

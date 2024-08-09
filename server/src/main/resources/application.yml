@@ -40,9 +40,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://i11c109.p.ssafy.io:27070/local
-      username: ${mongodb.username}
-      password: ${mongodb.password}
+      uri: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@i11c109.p.ssafy.io:27070/local?authSource=admin
     redis:
       host: i11c109.p.ssafy.io
       port: 6380
