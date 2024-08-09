@@ -79,7 +79,15 @@ def process_video(youtubeId, video_path):
 
     # 고정된 FPS 설정
     target_fps = 30
+    if original_fps <= 0 or target_fps <= 0:
+        print("Error: Invalid FPS values.")
+        cap.release()
+        cv2.destroyAllWindows()
+        return keypoints_list
+
     frame_interval = int(original_fps / target_fps)
+    if frame_interval <= 0:
+        frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
 
     frame_count = 0
 
@@ -91,6 +99,9 @@ def process_video(youtubeId, video_path):
 
         # 매 `frame_interval` 번째 프레임만 처리
         if frame_count % frame_interval == 0:
+
+            
+            
             # BGR 이미지를 RGB 이미지로 변환
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -158,6 +169,15 @@ def process_video_user(video_path):
 
     # 고정된 FPS 설정
     target_fps = 30
+    if original_fps <= 0 or target_fps <= 0:
+        print("Error: Invalid FPS values.")
+        cap.release()
+        cv2.destroyAllWindows()
+        return keypoints_list
+
+    frame_interval = int(original_fps / target_fps)
+    if frame_interval <= 0:
+        frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
     frame_interval = int(original_fps / target_fps)
 
     frame_count = 0

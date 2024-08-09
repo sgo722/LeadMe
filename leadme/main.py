@@ -32,18 +32,18 @@ class Video(BaseModel):
     youtubeId : str
 
 UPLOAD_DIRECTORY = "."
-# TEMP_DIRECTORY = "video/temporary"
-# PERMANENT_DIRECTORY_USER = "video/user"
-# PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
-# PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
-# THUMBNAIL_DIRECTORY = "video/temporary/thumnail"
+TEMP_DIRECTORY = "video/temporary"
+PERMANENT_DIRECTORY_USER = "video/user"
+PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
+PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
+THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
 
 
-TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
-PERMANENT_DIRECTORY_USER = "/home/ubuntu/python/video/user"
-PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
-PERMANENT_DIRECTORY_CHALLENGE_AUDIO =  "/home/ubuntu/python/video/challenge/audio"
-THUMBNAIL_DIRECTORY = "/home/ubuntu/python/video/temporary/thumnail"
+# TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
+# PERMANENT_DIRECTORY_USER = "/home/ubuntu/python/video/user"
+# PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
+# PERMANENT_DIRECTORY_CHALLENGE_AUDIO =  "/home/ubuntu/python/video/challenge/audio"
+# THUMBNAIL_DIRECTORY = "/home/ubuntu/python/video/temporary/thumbnail"
 
 
 ## 서비스 로직 호출 부분을 Ray로 병렬 처리한다.
@@ -59,20 +59,39 @@ def ray_process_video_user(video_path):
 async def read_root():
     return "This is root path from MyAPI"
 
-@app.post("/videoUrl")
-async def saveVideoData(video: Video):
-    start_time = time.time()
-    #video_path = await asyncio.to_thread(download_video, video.url, video.youtubeId)
+# @app.post("/videoUrl")
+# async def saveVideoData(video: Video):
+#     start_time = time.time()
+#     #video_path = await asyncio.to_thread(download_video, video.url, video.youtubeId)
     
-    video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{video.youtubeId}.mp4")
+#     video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{video.youtubeId}.mp4")
     
+#     # 비디오 처리 실행 및 결과 대기
+#     keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(video.youtubeId, video_path)))
+    
+#     total_time = time.time() - start_time
+#     logger.info(f"videoUrl API - YoutubeID: {video.youtubeId}, Total Time: {total_time:.4f} seconds")
+    
+#     return {"youtubeId": video.youtubeId, "keypoints": keypoints}
+
+
+@app.post("/admin/challenge")
+async def saveChallenge(
+    videoFile: UploadFile = File(...),
+    youtubeId: str = Form(...)): 
+
+
+    video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
+    
+    with open(video_path, "wb") as buffer:
+        shutil.copyfileobj(videoFile.file, buffer)
+
     # 비디오 처리 실행 및 결과 대기
-    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(video.youtubeId, video_path)))
+    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, video_path)))
     
-    total_time = time.time() - start_time
-    logger.info(f"videoUrl API - YoutubeID: {video.youtubeId}, Total Time: {total_time:.4f} seconds")
-    
-    return {"youtubeId": video.youtubeId, "keypoints": keypoints}
+    return {"youtubeId": youtubeId}
+
+
 
 @app.post("/upload/userFile")
 async def saveVideDataByUserFile(
