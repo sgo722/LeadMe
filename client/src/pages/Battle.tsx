@@ -219,6 +219,11 @@ export const Battle: React.FC = () => {
               </Room>
             ))}
           </RoomContainer>
+          <CreateRoomButtonContainer>
+            <CreateRoomButton onClick={() => setShowCreateRoomModal(true)}>
+              방생성
+            </CreateRoomButton>
+          </CreateRoomButtonContainer>
         </MainSection>
         <Footer>
           <PaginationContainer>
@@ -228,11 +233,6 @@ export const Battle: React.FC = () => {
               onPageChange={handlePageChange}
             />
           </PaginationContainer>
-          <CreateRoomButtonContainer>
-            <CreateRoomButton onClick={() => setShowCreateRoomModal(true)}>
-              방만들기
-            </CreateRoomButton>
-          </CreateRoomButtonContainer>
         </Footer>
       </Container>
       {showCreateRoomModal && (
@@ -279,7 +279,7 @@ const MainSection = styled.div`
   display: flex;
   flex-direction: column;
   padding: 35px;
-  gap: 35px;
+  gap: 30px;
 `;
 
 const RoomContainer = styled.div`
@@ -374,14 +374,17 @@ const CreateRoomButtonContainer = styled.div`
 `;
 
 const CreateRoomButton = styled.button`
-  width: 96px;
-  height: 31px;
+  width: 80px;
+  height: 30px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.55);
-  border: none;
+  background: #f7f7f7;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.15);
-  color: #ee5050;
-  font-size: 16px;
-  font-weight: 400;
+  border: none;
   cursor: pointer;
+  color: #ee5050;
+  text-align: center;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 23px;
 `;

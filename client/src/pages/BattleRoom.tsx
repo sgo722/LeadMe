@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
+import { axiosInstance } from "axiosInstance/apiClient";
+import { useQuery } from "@tanstack/react-query";
 import styled from "styled-components";
 import YouTube from "react-youtube";
 import type {
@@ -10,6 +12,12 @@ import type {
   StreamEvent,
   SignalEvent,
 } from "openvidu-browser";
+
+interface SignalData {
+  ready?: boolean;
+  selectedVideoId?: number | null;
+  isVideoConfirmed?: boolean;
+}
 
 interface DummyDataItem {
   id: number;
@@ -39,6 +47,12 @@ const dummyData: DummyDataItem[] = [
 // 로컬 비디오 스트림 : 사용자 자신의 웹캠에서 캡처된 비디오 스트림, 이는 사용자가 발행하는 스트림으로 다른 참가자들에게 전송
 // 피어 : WebRTC에서 직접 연결되는 두 엔드포인트,
 
+// 방장 여부를 확인하는 쿼리
+const fetchHostStatus = async (sessionId: string) => {
+  const res = await axiosInstance.get(`/api/v1/sessions/${sessionId}/host`);
+  return res.data;
+};
+
 export const BattleRoom: React.FC = () => {
   const location = useLocation();
   const { token, roomName } = location.state as {
@@ -53,24 +67,35 @@ export const BattleRoom: React.FC = () => {
   );
   const [isVideoConfirmed, setIsVideoConfirmed] = useState<boolean>(false);
 
-  const [isReady, setIsReady] = useState<boolean>(false); // 자신의 준비 state
+  const [myReady, setMyReady] = useState<boolean>(false); // 자신의 준비 state
   const [peerReady, setPeerReady] = useState<boolean>(false); // 상대방의 준비 state
   const [isHost, setIsHost] = useState<boolean>(false); // 방장 여부를 확인하는 state
 
-  // 방장 설정(세션에 제일 먼저 들어온 참가자)
-  useEffect(() => {
-    if (session && publisher) {
-      const connection = publisher.stream.connection;
-      const sessionConnection = session.connection;
-
-      if (sessionConnection) {
-        const isFirstParticipant =
-          connection.connectionId === sessionConnection.connectionId;
-        setIsHost(isFirstParticipant);
-        console.log("방장 여부:", isFirstParticipant);
+  const {
+    data: hostData,
+    isLoading: isCheckingHost,
+    error: hostCheckError,
+  } = useQuery({
+    queryKey: ["hostStatus", session?.sessionId],
+    queryFn: () => {
+      if (!session?.sessionId) {
+        throw new Error("세션아이디가 없어용");
       }
+      return fetchHostStatus(session.sessionId);
+    },
+    enabled: !!session?.sessionId,
+  });
+
+  useEffect(() => {
+    if (hostData?.isSuccess && hostData?.data) {
+      const hostId = hostData.data;
+      const userId = JSON.parse(
+        sessionStorage.getItem("user_profile") || "{}"
+      ).id;
+      setIsHost(hostId === userId);
+      console.log("방장여부:", isHost);
     }
-  }, [session, publisher]);
+  }, [hostData, isHost]);
 
   // 비디오 아이템 클릭 핸들러
   const handleItemClick = (id: number) => {
@@ -132,24 +157,27 @@ export const BattleRoom: React.FC = () => {
 
   // 준비 버튼 클릭 시 상태를 변경하고 다른참가자에게 신호를 보내는 함수
   const toggleReady = () => {
-    const newReadyState = !isReady;
-    setIsReady(newReadyState);
-    if (session) {
-      session.signal({
-        data: JSON.stringify({ ready: newReadyState }),
-        type: "user-ready",
-      });
-    }
+    setMyReady((prevReady) => {
+      const newReadyState = !prevReady;
+      console.log("내 준비 상태가 다음과 같이 변경됨:", newReadyState);
+      if (session) {
+        session.signal({
+          data: JSON.stringify({ ready: newReadyState }),
+          type: "user-ready",
+        });
+      }
+      return newReadyState;
+    });
   };
 
   // 신호 처리를 위한 useEffect
   useEffect(() => {
     if (session) {
       const handleSignal = (event: SignalEvent) => {
-        console.log("Received signal:", event); // 디버깅을 위한 로그
+        console.log("Received signal:", event);
 
         const signalType = event.type.replace("signal:", "");
-        let signalData: any;
+        let signalData: SignalData;
 
         try {
           signalData =
@@ -158,6 +186,15 @@ export const BattleRoom: React.FC = () => {
               : event.data;
         } catch (error) {
           console.error("Signal data parsing error:", error);
+          return;
+        }
+
+        // 자신이 보낸 신호는 무시
+        if (
+          event.from &&
+          session.connection &&
+          event.from.connectionId === session.connection.connectionId
+        ) {
           return;
         }
 
@@ -170,7 +207,10 @@ export const BattleRoom: React.FC = () => {
             break;
           case "video-selected":
             console.log("비디오 선택됨:", signalData);
-            if (signalData.selectedVideoId !== null) {
+            if (
+              signalData.selectedVideoId !== null &&
+              signalData.selectedVideoId !== undefined
+            ) {
               const video = dummyData.find(
                 (item) => item.id === signalData.selectedVideoId
               );
@@ -182,7 +222,9 @@ export const BattleRoom: React.FC = () => {
             break;
           case "video-confirmed":
             console.log("비디오 확인됨:", signalData);
-            setIsVideoConfirmed(signalData.isVideoConfirmed);
+            if (signalData.isVideoConfirmed !== undefined) {
+              setIsVideoConfirmed(signalData.isVideoConfirmed);
+            }
             break;
           case "video-cancelled":
             console.log("비디오 취소됨");
@@ -204,7 +246,7 @@ export const BattleRoom: React.FC = () => {
 
   // 배틀 시작 함수
   const handleStart = () => {
-    if (isHost && isReady && peerReady) {
+    if (isHost && myReady && peerReady) {
       console.log("배틀 시작!");
     } else {
       alert("모든 참가자가 준비되지 않았습니다.");
@@ -288,6 +330,14 @@ export const BattleRoom: React.FC = () => {
     };
   }, [token, roomName]);
 
+  if (isCheckingHost) {
+    return <div>방장 여부 확인 중...</div>;
+  }
+
+  if (hostCheckError) {
+    return <div>방장 확인 중 오류가 발생했습니다.</div>;
+  }
+
   return (
     <Container>
       <BattleArea>
@@ -355,10 +405,13 @@ export const BattleRoom: React.FC = () => {
         )}
         <RightWebcamBox $isSmall={selectedVideo !== null && !isVideoConfirmed}>
           {publisher ? (
-            <video
-              autoPlay={true}
-              ref={(video) => video && publisher.addVideoElement(video)}
-            />
+            <>
+              <video
+                autoPlay={true}
+                ref={(video) => video && publisher.addVideoElement(video)}
+              />
+              {myReady && <ReadyOverlay>READY</ReadyOverlay>}
+            </>
           ) : (
             <EmptyBoxContent>연결중...</EmptyBoxContent>
           )}
@@ -368,16 +421,16 @@ export const BattleRoom: React.FC = () => {
           <ButtonContainer>
             {isVideoConfirmed && selectedVideo ? (
               <>
-                {isHost && isReady && peerReady && (
+                {isHost && myReady && peerReady && (
                   <ActionButton
                     onClick={handleStart}
-                    disabled={!(isReady && peerReady)}
+                    disabled={!(myReady && peerReady)}
                   >
                     시작
                   </ActionButton>
                 )}
                 <ActionButton onClick={toggleReady}>
-                  {isReady ? "준비 취소" : "준비"}
+                  {myReady ? "준비 취소" : "준비"}
                 </ActionButton>
                 <ActionButton onClick={() => console.log("나가기")}>
                   나가기
@@ -467,6 +520,8 @@ const ReadyOverlay = styled.div`
   padding: 5px 10px;
   border-radius: 5px;
   font-weight: bold;
+  font-size: 18px;
+  z-index: 10;
 `;
 
 const RightWebcamBox = styled.div<{ $isSmall: boolean }>`
