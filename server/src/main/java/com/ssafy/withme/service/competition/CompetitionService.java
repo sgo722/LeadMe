@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +31,9 @@ import static com.ssafy.withme.global.error.ErrorCode.USER_NOT_EXISTS;
 public class CompetitionService {
     private final CompetitionRepository competitionRepository;
     private final UserRepository userRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    private static final String SESSION_KEY_PREFIX = "session:";
 
     /**
      * 세션 생성
@@ -41,6 +45,9 @@ public class CompetitionService {
 
         log.info("세션 생성 : 유저 아아디" + user.getId() + " 유저 이메일 : " + user.getEmail());
 
+        // 해당 세션으로 레디스 데이터 생성
+        setSessionCount(sessionId, 0L);
+
         Competition competition = Competition.builder()
                                 .user(user)
                                 .roomName(request.getRoomName())
@@ -50,6 +57,9 @@ public class CompetitionService {
                                 .build();
 
         competitionRepository.save(competition);
+
+
+
     }
 
     /**
@@ -101,5 +111,31 @@ public class CompetitionService {
 
         Competition competition = competitionRepository.findBySessionId(sessionId);
         return competition.getCreateUser().getId();
+    }
+
+    public Long incrementSessionCount(String sessionId) {
+        String key = SESSION_KEY_PREFIX + sessionId + ":count";
+        return redisTemplate.opsForValue().increment(key);
+    }
+
+    public Long decrementSessionCount(String sessionId) {
+        String key = SESSION_KEY_PREFIX + sessionId + ":count";
+        return redisTemplate.opsForValue().decrement(key);
+    }
+
+    public Long getSessionCount(String sessionId) {
+        String key = SESSION_KEY_PREFIX + sessionId + ":count";
+        String count = redisTemplate.opsForValue().get(key);
+        return count != null ? Long.valueOf(count) : 0L;
+    }
+
+    public void setSessionCount(String sessionId, Long count) {
+        String key = SESSION_KEY_PREFIX + sessionId + ":count";
+        redisTemplate.opsForValue().set(key, String.valueOf(count));
+    }
+
+    public void deleteSessionCount(String sessionId) {
+        String key = SESSION_KEY_PREFIX + sessionId + ":count";
+        redisTemplate.delete(key);
     }
 }
