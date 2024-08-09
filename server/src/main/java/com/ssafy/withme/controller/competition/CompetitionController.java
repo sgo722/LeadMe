@@ -46,11 +46,11 @@ public class CompetitionController {
 
         competitionService.create(request, session.getSessionId(), user);
 
-        Connection connection = session.getConnection(session.getSessionId());
+        String token = session.createConnection().getToken();
 
         HashMap<String, Object> response = new HashMap<>();
         response.put("sessionId", session.getSessionId());
-        response.put("token", connection.getToken());
+        response.put("token", token);
 
         return SuccessResponse.of(response);
     }
