@@ -1,28 +1,100 @@
+import { useState, useEffect } from "react";
 import Header from "components/Header";
 import styled from "styled-components";
 import { SearchBar } from "components/SearchBar";
+import { ResponseData } from "types";
+import { baseUrl } from "axiosInstance/constants";
+import { useMutation } from "@tanstack/react-query";
+import { IoChevronBackSharp } from "react-icons/io5";
+import axios from "axios";
 
-interface TempData {
-  rank: number;
-  id: string;
-  likes: number;
+interface ListData {
+  userId: number;
+  userNickname: string;
+  liked: number;
   followers: number;
+  profileImg: string;
 }
 
-const tempData: TempData[] = [
-  { rank: 1, id: "user1", likes: 1000, followers: 5100 },
-  { rank: 2, id: "user2", likes: 950, followers: 480 },
-  { rank: 3, id: "user3", likes: 900, followers: 460 },
-  { rank: 4, id: "user4", likes: 850, followers: 440 },
-  { rank: 5, id: "user5", likes: 800, followers: 420 },
-  { rank: 6, id: "user6", likes: 750, followers: 400 },
-  { rank: 7, id: "user7", likes: 700, followers: 380 },
-  { rank: 8, id: "user8", likes: 650, followers: 360 },
-  { rank: 9, id: "user9", likes: 600, followers: 340 },
-  { rank: 10, id: "user10", likes: 550, followers: 320 },
-];
+const generateDummyData = (total: number): ListData[] => {
+  return Array.from({ length: total }, (_, idx) => ({
+    userId: idx + 1,
+    userNickname: `user${idx + 1}`,
+    liked: Math.floor(Math.random() * 1000),
+    followers: Math.floor(Math.random() * 500),
+    profileImg: `https://placeimg.com/100/100/people?${idx + 1}`,
+  }));
+};
 
 const Rank: React.FC = () => {
+  const [total, setTotal] = useState<number>(0);
+  const [rankList, setRankList] = useState<ListData[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const usersPerPage = 10; // 페이지당 유저 수
+
+  const mutationTotal = useMutation<number, Error>({
+    mutationFn: async () => {
+      const response = await axios.get<ResponseData<number>>(
+        `${baseUrl}/api/v1/rank/list`
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: number) => {
+      console.log(data);
+      setTotal(data);
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching totalNum:", error);
+    },
+  });
+
+  const mutationRank = useMutation<ListData[], Error, number>({
+    mutationFn: async (pageNo: number) => {
+      const response = await axios.get<ResponseData<ListData[]>>(
+        `${baseUrl}/api/v1/rank`,
+        {
+          params: { pageNo },
+        }
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: ListData[]) => {
+      console.log(data);
+      setRankList(data);
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching paging list:", error);
+    },
+  });
+
+  useEffect(() => {
+    mutationTotal.mutate();
+    mutationRank.mutate(currentPage);
+
+    setTotal(50);
+    const allUsers = generateDummyData(total);
+    const startIdx = (currentPage - 1) * usersPerPage;
+    const pagedUsers = allUsers.slice(startIdx, startIdx + usersPerPage);
+    setRankList(pagedUsers);
+  }, [currentPage, total]);
+
+  const handlePageClick = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) =>
+      Math.min(prevPage + 1, Math.ceil(total / usersPerPage))
+    );
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+
+  const totalPages = Math.ceil(total / usersPerPage);
+
   return (
     <>
       <Header />
@@ -40,17 +112,44 @@ const Rank: React.FC = () => {
                 </TableRow>
               </thead>
               <tbody>
-                {tempData.map((item: TempData) => (
-                  <TableRow key={item.rank}>
-                    <TableCell>{item.rank}</TableCell>
-                    <TableCell>{item.id}</TableCell>
-                    <TableCell>{item.likes}</TableCell>
+                {rankList.map((item, idx) => (
+                  <TableRow key={item.userId}>
+                    <TableCell>
+                      {(currentPage - 1) * usersPerPage + idx + 1}
+                    </TableCell>
+                    <TableCell>{item.userNickname}</TableCell>
+                    <TableCell>{item.liked}</TableCell>
                     <TableCell>{item.followers}</TableCell>
                   </TableRow>
                 ))}
               </tbody>
             </Table>
           </TableWrapper>
+          <Pagination>
+            <div>
+              <SideButton
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+              >
+                <IoChevronBackSharp />
+              </SideButton>
+              {Array.from({ length: totalPages }, (_, idx) => (
+                <PageButton
+                  key={idx + 1}
+                  onClick={() => handlePageClick(idx + 1)}
+                  disabled={currentPage === idx + 1}
+                >
+                  {idx + 1}
+                </PageButton>
+              ))}
+              <SideButton
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                <IoChevronBackSharp />
+              </SideButton>
+            </div>
+          </Pagination>
         </MainSection>
       </Container>
     </>
@@ -93,7 +192,6 @@ const TableWrapper = styled.div`
     rgba(255, 255, 255, 0.8) 0%,
     rgba(255, 255, 255, 0.2) 100%
   );
-
   backdrop-filter: blur(10px);
 `;
 
@@ -121,4 +219,37 @@ const TableHeader = styled.th`
 const TableCell = styled.td`
   padding: 14px;
   font-size: 16px;
+`;
+
+const Pagination = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+`;
+
+const PageButton = styled.button`
+  width: 24px;
+  padding: 4px 0;
+  margin: 0 2px;
+  border: none;
+  border-radius: 5px;
+  color: #ee5050;
+  background-color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ffffff;
+  }
+`;
+
+const SideButton = styled.button`
+  width: 40px;
+  padding: 8px 0;
+  margin: 0 14px;
+  border: none;
+  border-radius: 5px;
+  color: #ee5050;
+  background-color: inherit;
+  cursor: pointer;
 `;
