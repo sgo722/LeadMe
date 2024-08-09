@@ -86,7 +86,7 @@ public class CompetitionService {
         List<Competition> competitions = page.getContent();
 
         if (!competitions.isEmpty()) {
-            competitionRepository.fetchWithUser(competitions);
+            competitions = competitionRepository.fetchWithUser(competitions);
         }
 
         return competitions.stream()
