@@ -19,6 +19,7 @@ import Mypage from "pages/Mypage";
 import Feed from "pages/Feed";
 import { Battle } from "pages/Battle";
 import { BattleRoom } from "pages/BattleRoom";
+import Admin from "pages/Admin";
 
 const App: React.FC = () => {
   return (
@@ -47,6 +48,7 @@ const App: React.FC = () => {
         <Route path="/feed" element={<Feed />}></Route>
         <Route path="/battle" element={<Battle />}></Route>
         <Route path="/battleRoom/:sessionId" element={<BattleRoom />} />
+        <Route path="/private/admin" element={<Admin />} />
       </Routes>
       <ShortsModal />
     </ThemeProvider>
