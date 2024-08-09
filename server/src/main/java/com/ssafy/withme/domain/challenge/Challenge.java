@@ -25,6 +25,8 @@ public class Challenge extends BaseEntity {
 
     private String url;
 
+    private String videoPath;
+
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<UserChallenge> userChallenges;
 
@@ -33,6 +35,10 @@ public class Challenge extends BaseEntity {
         this.youtubeId = youtubeId;
         this.url = url;
         this.userChallenges = new ArrayList<>();
+    }
+
+    public void setVideoPath(String videoPath){
+        this.videoPath = videoPath;
     }
 
 

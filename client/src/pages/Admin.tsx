@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import styled from "styled-components";
 import { ResponseData } from "types";
 import { baseUrl } from "axiosInstance/constants";
+
+interface KeywordProps {
+  hashtagId: number;
+  hashtagName: string;
+}
 
 const Admin = () => {
   const [formData, setFormData] = useState({
@@ -11,21 +16,53 @@ const Admin = () => {
     url: "",
     title: "",
   });
-  const [hashtags, setHashtags] = useState<string[]>([]);
-  const [hashtagInput, setHashtagInput] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
+  const [keywordInput, setKeywordInput] = useState<string>("");
+  const [keywords, setKeywords] = useState<KeywordProps[]>([]);
+  const [selectedKeywordIds, setSelectedKeywordIds] = useState<number[]>([]);
 
-  const mutation = useMutation<ResponseData<any>, Error, FormData>({
+  // 페이지 로드 시 해시태그 목록을 가져오기 위한 useEffect
+  useEffect(() => {
+    mutationKeyword.mutate();
+  }, []);
+
+  const mutationNew = useMutation<any, Error, string>({
+    mutationFn: async (keyword: string) => {
+      const response = await axios.post<any>(`${baseUrl}/api/v1/hashtag`, {
+        hashtagName: keyword,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      // 키워드 추가 후 해시태그 목록 갱신
+      mutationKeyword.mutate();
+      console.log("키워드 추가 성공");
+    },
+    onError: (error) => {
+      console.error("키워드 추가 실패", error);
+    },
+  });
+
+  const mutationKeyword = useMutation<KeywordProps[], Error, void>({
+    mutationFn: async () => {
+      const response = await axios.get<ResponseData<KeywordProps[]>>(
+        `${baseUrl}/api/v1/hashtag`
+      );
+      return response.data.data; // response.data.data에서 해시태그 배열 반환
+    },
+    onSuccess: (data) => {
+      setKeywords(data);
+    },
+    onError: (error) => {
+      console.error("해시태그 목록 불러오기 실패", error);
+    },
+  });
+
+  const mutationForm = useMutation<ResponseData<any>, Error, FormData>({
     mutationFn: async (data: FormData) => {
-      console.log(data);
       const response = await axios.post<ResponseData<any>>(
         `${baseUrl}/api/v1/admin/challenge`,
-        data,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        data
       );
       return response.data;
     },
@@ -37,17 +74,27 @@ const Admin = () => {
     },
   });
 
-  const handleHashtagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (hashtagInput.trim() && !hashtags.includes(hashtagInput)) {
-        setHashtags([...hashtags, hashtagInput.trim()]);
-        setHashtagInput("");
+      if (keywordInput.trim()) {
+        mutationNew.mutate(keywordInput.trim());
+        setKeywordInput("");
       }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const toggleKeywordSelection = (id: number) => {
+    if (selectedKeywordIds.includes(id)) {
+      setSelectedKeywordIds(
+        selectedKeywordIds.filter((keywordId) => keywordId !== id)
+      );
+    } else {
+      setSelectedKeywordIds([...selectedKeywordIds, id]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!formData.title || !file) {
@@ -55,60 +102,56 @@ const Admin = () => {
       return;
     }
 
-    const data = new FormData();
+    const formDataObj = new FormData();
 
-    // 파일은 그대로 FormData에 추가
-    data.append("videoFile", file as File);
+    const fileBlob = new Blob([file as File], { type: file.type });
+    formDataObj.append("videoFile", fileBlob);
 
-    // 나머지 데이터를 JSON으로 변환하여 Blob으로 추가
     const jsonBlob = new Blob(
       [
         JSON.stringify({
           youtubeId: formData.youtubeId,
           url: formData.url,
           title: formData.title,
-          hashtags: hashtags,
+          hashtags: selectedKeywordIds, // 선택된 해시태그 ID 전송
         }),
       ],
       { type: "application/json" }
     );
-    data.append("jsonData", jsonBlob);
+    formDataObj.append("request", jsonBlob);
 
-    // FormData 내용을 콘솔에 출력
-    console.log("전송한 데이터 내용:");
-    for (let [key, value] of data.entries()) {
-      if (value instanceof Blob && key === "jsonData") {
-        const reader = new FileReader();
-        reader.onload = () => {
-          console.log(`${key}:`, reader.result);
-        };
-        reader.readAsText(value);
-      } else {
-        console.log(`${key}:`, value);
-      }
-    }
-
-    mutation.mutate(data);
+    mutationForm.mutate(formDataObj);
 
     setFormData({ youtubeId: "", url: "", title: "" });
-    setHashtags([]);
+    setSelectedKeywordIds([]);
     setFile(null);
   };
 
   return (
     <Container>
+      <New>
+        키워드 추가
+        <form>
+          <input
+            type="text"
+            placeholder="키워드 입력"
+            value={keywordInput}
+            onChange={(e) => setKeywordInput(e.target.value)}
+            onKeyDown={handleKeywordKeyDown}
+          />
+        </form>
+      </New>
       <LeftContainer>
-        <h2>해시태그 입력</h2>
-        <input
-          type="text"
-          placeholder="해시태그 입력"
-          value={hashtagInput}
-          onChange={(e) => setHashtagInput(e.target.value)}
-          onKeyDown={handleHashtagKeyDown}
-        />
+        <h2>해시태그 선택</h2>
         <HashtagContainer>
-          {hashtags.map((tag, index) => (
-            <Hashtag key={index}>{tag}</Hashtag>
+          {keywords.map((tag) => (
+            <Hashtag
+              key={tag.hashtagId}
+              selected={selectedKeywordIds.includes(tag.hashtagId)}
+              onClick={() => toggleKeywordSelection(tag.hashtagId)}
+            >
+              {tag.hashtagName}
+            </Hashtag>
           ))}
         </HashtagContainer>
       </LeftContainer>
@@ -176,13 +219,16 @@ const HashtagContainer = styled.div`
   min-height: 150px;
 `;
 
-const Hashtag = styled.span`
+const Hashtag = styled.span<{ selected: boolean }>`
   display: inline-block;
-  background-color: #f0f0f0;
+  background-color: ${({ selected }) => (selected ? "#c8e6c9" : "#f0f0f0")};
   color: black;
   padding: 5px;
   margin: 5px;
   border-radius: 5px;
+  cursor: pointer;
 `;
+
+const New = styled.div``;
 
 export default Admin;

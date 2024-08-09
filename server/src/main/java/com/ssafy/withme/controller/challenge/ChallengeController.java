@@ -47,11 +47,4 @@ public class ChallengeController extends BaseEntity {
     public SuccessResponse<LandmarkResponse> findLandMarkByVideoName(@PathVariable String youtubeId) throws Exception {
         return SuccessResponse.of(challengeService.getLandMarkByYoutubeId(youtubeId));
     }
-
-
-
-
-
-
-
 }
