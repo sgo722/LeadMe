@@ -2,6 +2,8 @@ package com.ssafy.withme.controller.challenge;
 
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.BaseEntity;
+import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.ApiResponse;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.challege.ChallengeService;
@@ -59,7 +61,9 @@ public class ChallengeController extends BaseEntity {
      * @return
      */
     @GetMapping("/api/v1/challenge/{youtubeId}")
-    public SuccessResponse<LandmarkResponse> findLandMarkByVideoName(@PathVariable String youtubeId) throws Exception {
+    public SuccessResponse<LandmarkResponse> findLandMarkByVideoName(
+            @CurrentUser User user,
+            @PathVariable String youtubeId) throws Exception {
         return SuccessResponse.of(challengeService.getLandMarkByYoutubeId(youtubeId));
     }
 

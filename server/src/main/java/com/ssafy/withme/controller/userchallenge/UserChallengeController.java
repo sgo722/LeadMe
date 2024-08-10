@@ -63,8 +63,10 @@ public class UserChallengeController {
      * @throws IOException
      */
     @PostMapping("/analyze")
-    public ApiResponse<UserChallengeAnalyzeResponse> createUserChallenge(@RequestPart("request") UserChallengeAnalyzeRequest request,
-                                                                         @RequestPart MultipartFile videoFile) throws IOException {
+    public ApiResponse<UserChallengeAnalyzeResponse> createUserChallenge(
+            @CurrentUser User user,
+            @RequestPart("request") UserChallengeAnalyzeRequest request,
+            @RequestPart MultipartFile videoFile) throws IOException {
 
         return SuccessResponse.of(userChallengeService.analyzeVideo(request, videoFile));
     }
@@ -78,7 +80,9 @@ public class UserChallengeController {
      */
 
     @GetMapping("/report/{uuid}")
-    public SuccessResponse<UserChallengeReportResponse> findReportByUuid(@PathVariable("uuid") String uuid) throws IOException, InterruptedException {
+    public SuccessResponse<UserChallengeReportResponse> findReportByUuid(
+            @CurrentUser User user,
+            @PathVariable("uuid") String uuid) throws IOException, InterruptedException {
         return SuccessResponse.of(userChallengeService.findReportByUuid(uuid));
     }
 
@@ -89,7 +93,9 @@ public class UserChallengeController {
      * @return
      */
     @PostMapping("/temporary/save")
-    public SuccessResponse<UserChallengeSaveResponse> saveTemporaryFile(@RequestBody UserChallengeSaveRequest request) {
+    public SuccessResponse<UserChallengeSaveResponse> saveTemporaryFile(
+            @CurrentUser User user,
+            @RequestBody UserChallengeSaveRequest request) {
         return SuccessResponse.of(userChallengeService.saveUserFile(request));
     }
 
@@ -100,7 +106,9 @@ public class UserChallengeController {
      * @return
      */
     @PostMapping("/temporary/delete")
-    public SuccessResponse<Void> deleteTemporaryFile(@RequestBody UserChallengeDeleteRequest request){
+    public SuccessResponse<Void> deleteTemporaryFile(
+            @CurrentUser User user,
+            @RequestBody UserChallengeDeleteRequest request){
         userChallengeService.deleteUserFile(request);
         return SuccessResponse.empty();
     }
