@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -180,12 +182,12 @@ public class ChallengeService {
      * @param pageable
      * @return
      */
-    public List<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
+    public Page<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
         // 페이징 조회로 Challenge를 가져온다.
         Page<Challenge> findChallengeByPaging = challengeRepository.findAll(pageable);
 
         // 썸네일 경로의 파일을 바이트코드로 변환하고, ResponseDto를 만들어서 반환한다.
-        return findChallengeByPaging.stream()
+        List<ChallengeViewResponse> challengeResponses = findChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
                         byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
@@ -196,7 +198,10 @@ public class ChallengeService {
                         return null; // 또는 다른 적절한 예외 처리 방법
                     }
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
+        return new PageImpl<>(challengeResponses, pageable, findChallengeByPaging.getTotalElements());
     }
 
 
@@ -208,11 +213,11 @@ public class ChallengeService {
      * @param searchTitle
      * @return
      */
-    public List<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String keyword) {
+    public Page<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String keyword) {
 
         // 키워드로 Challenge를 조회한다.
         Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitle(pageable, keyword);
-        return searchChallengeByPaging.stream()
+        List<ChallengeViewResponse> searchChallenges = searchChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
                         byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
@@ -224,6 +229,10 @@ public class ChallengeService {
                     }
                 })
                 .collect(Collectors.toList());
+
+        return new PageImpl<>(searchChallenges,pageable, searchChallengeByPaging.getTotalElements());
+
+
     }
 
     /**

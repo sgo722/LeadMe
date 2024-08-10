@@ -79,7 +79,7 @@ python-server:
 #  url: http://localhost:8000
 #  temp-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\temporary
 #  permanent-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\user
-#  permanent-thumbnail-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\user\thumbnail
+#  permanent-thumbnail-directory: /Users/yangjun-yeong/Desktop/home/ubuntu/python/video/challenge/thumbnail/
 #  youtube-audio-directory: C:\Users\SSAFY\Desktop\Jun\2024\S11P12C109\leadme\video\challenge\audio
 
 

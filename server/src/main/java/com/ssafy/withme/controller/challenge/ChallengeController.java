@@ -13,6 +13,7 @@ import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.userChallenge.UserChallengeService;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
@@ -91,7 +92,7 @@ public class ChallengeController extends BaseEntity {
      * @return
      */
     @GetMapping("/api/v1/challenge/search/{title}")
-    public SuccessResponse<List<ChallengeViewResponse>> searchChallengeByPaging(
+    public SuccessResponse<Page<ChallengeViewResponse>> searchChallengeByPaging(
             @PageableDefault(size = 4) Pageable pageable,
             @PathVariable(name = "title") String title) {
         return SuccessResponse.of(challengeService.searchChallengeByPaging(pageable,title));
