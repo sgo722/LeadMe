@@ -78,7 +78,7 @@ public class ChallengeController extends BaseEntity {
      * @return
      */
     @GetMapping("/api/v1/challenge")
-    public SuccessResponse<List<ChallengeViewResponse>> findChallengeByPaging(@PageableDefault(size = 4) Pageable pageable){
+    public SuccessResponse<Page<ChallengeViewResponse>> findChallengeByPaging(@PageableDefault(size = 4) Pageable pageable){
         return SuccessResponse.of(challengeService.findChallengeByPaging(pageable));
     }
 
