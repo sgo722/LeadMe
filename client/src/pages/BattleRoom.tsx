@@ -564,7 +564,7 @@ export const BattleRoom: React.FC = () => {
           <ButtonContainer>
             {isVideoConfirmed && selectedVideo ? (
               <>
-                {isHost && myReady && peerReady && (
+                {isHost && myReady && peerReady && !isRecording && (
                   <ActionButton
                     onClick={handleStart}
                     disabled={!(myReady && peerReady)}
@@ -572,12 +572,16 @@ export const BattleRoom: React.FC = () => {
                     시작
                   </ActionButton>
                 )}
-                <ActionButton onClick={toggleReady}>
-                  {myReady ? "준비 취소" : "준비"}
-                </ActionButton>
-                <ActionButton onClick={() => console.log("나가기")}>
-                  나가기
-                </ActionButton>
+                {!isRecording && (
+                  <>
+                    <ActionButton onClick={toggleReady}>
+                      {myReady ? "준비 취소" : "준비"}
+                    </ActionButton>
+                    <ActionButton onClick={() => console.log("나가기")}>
+                      나가기
+                    </ActionButton>
+                  </>
+                )}
               </>
             ) : (
               <ActionButton onClick={() => console.log("나가기")}>
