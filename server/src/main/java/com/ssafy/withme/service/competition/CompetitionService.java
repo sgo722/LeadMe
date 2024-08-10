@@ -74,7 +74,7 @@ public class CompetitionService {
      */
     public List<CompetitionResponse> getCompetitions(int pageNo, String criteria, int size, String searchKeyword) {
 
-        Pageable pageable = PageRequest.of(pageNo, size, Sort.by(Sort.Direction.DESC, criteria));
+        Pageable pageable = PageRequest.of(pageNo, size, Sort.by(Sort.Direction.ASC, criteria));
         Page<Competition> page;
         if(searchKeyword == null || searchKeyword.isEmpty()) {
             page = competitionRepository.findByStatus(CompetitionStatus.OPEN, pageable);
@@ -140,19 +140,16 @@ public class CompetitionService {
             public <K, V> Boolean execute(RedisOperations<K, V> operations) throws DataAccessException {
                 operations.watch((K) key);
 
-                String value = redisTemplate.opsForValue().get(key);
+                String value = (String) operations.opsForValue().get(key);  // redisTemplate 대신 operations 사용
                 int count = (value == null) ? 0 : Integer.parseInt(value);
 
                 if (count < 2) {
-                    // 값이 2 미만일 경우 트랜잭션 시작, 여기부터 모든 명령어는 큐에 쌓이다.
                     operations.multi();
-                    operations.opsForValue().increment((K) key);
+                    operations.opsForValue().increment((K) key);  // (K) 캐스팅 제거
 
-                    // 트랜잭션 끝 results 가 null이 아니면 성공
                     List<Object> results = operations.exec();
                     return results != null;
                 } else {
-                    // 값이 2 이상인 경우 감시 해제
                     operations.unwatch();
                     return false;
                 }
