@@ -124,8 +124,6 @@ public class UserController {
         HttpSession session = request.getSession(false);
 
         if (session != null){
-
-            sessionListener.sessionDestroyed(new HttpSessionEvent(session));
             session.invalidate();
         }
 
