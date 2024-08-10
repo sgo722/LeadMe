@@ -20,7 +20,7 @@ public interface CompetitionRepository extends JpaRepository<Competition, Intege
     Page<Competition> findByStatus(@Param("status") CompetitionStatus status, Pageable pageable);
 
     @Query("select c from Competition c join fetch c.createUser where c in :competitions")
-    List<Competition> fetchWithUser(@Param("competitions") List<Competition> competitions);
+    List<Competition> fetchWithUser(@Param("competitions") List<Competition> competitions, Pageable pageable);
 
     @Query("select c from Competition c where c.status = :status and lower(c.roomName) like lower(concat('%', :roomName, '%'))")
     Page<Competition> findByStatusAndRoomNameContains(@Param("status") CompetitionStatus status, @Param("roomName") String roomName, Pageable pageable);
