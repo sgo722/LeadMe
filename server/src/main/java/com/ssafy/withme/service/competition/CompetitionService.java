@@ -3,13 +3,13 @@ package com.ssafy.withme.service.competition;
 import com.ssafy.withme.controller.competition.request.CompetitionCreateRequest;
 import com.ssafy.withme.controller.competition.request.PasswordVerificationRequest;
 import com.ssafy.withme.domain.competition.Competition;
+import com.ssafy.withme.domain.competition.CompetitionEditor;
 import com.ssafy.withme.domain.competition.constant.CompetitionStatus;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.global.util.SHA256Util;
 import com.ssafy.withme.repository.competition.CompetitionRepository;
-import com.ssafy.withme.repository.user.UserRepository;
 import com.ssafy.withme.service.competition.response.CompetitionResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,6 @@ import static com.ssafy.withme.global.error.ErrorCode.USER_NOT_EXISTS;
 @Slf4j
 public class CompetitionService {
     private final CompetitionRepository competitionRepository;
-    private final UserRepository userRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
     private static final String SESSION_KEY_PREFIX = "session:";
@@ -175,8 +174,15 @@ public class CompetitionService {
         if(getCreateUserId(sessionId).equals(user.getId())) {
             deleteSessionCount(sessionId);
 
+            // 경쟁전 상태를 닫음으로 변경
             Competition competition = competitionRepository.findBySessionId(sessionId);
-            competitionRepository.delete(competition);
+
+            CompetitionEditor.CompetitionEditorBuilder editorBuilder = competition.toEditor();
+            CompetitionEditor competitionEditor =  editorBuilder
+                    .competitionStatus(CompetitionStatus.CLOSED)
+                    .build();
+
+            competition.edit(competitionEditor);
         }
         // 호스트가 아닌 경우
         else {
