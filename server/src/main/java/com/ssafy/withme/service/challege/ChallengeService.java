@@ -78,8 +78,12 @@ public class ChallengeService {
      */
     @Transactional
     public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request, MultipartFile videoFile) throws IOException {
+        // 이미 저장되어 있는지 확인한다.
+
+
         String youtubeId = request.getYoutubeId();
         Challenge challengeByYoutubeId = challengeRepository.findByYoutubeId(youtubeId);
+        // 저장된 적이 있다면? 스켈레톤 데이터를 반환한다.
         if(challengeByYoutubeId != null){
             Landmark landmark = landmarkRepository.findByYoutubeId(challengeByYoutubeId.getYoutubeId());
             System.out.println(landmark);
@@ -89,6 +93,7 @@ public class ChallengeService {
             return ChallengeCreateResponse.toResponse(challengeByYoutubeId);
         }
 
+        // 저장된 적이 없다면? 파이썬에 요청을 보내서 영상을 저장하고 데이터베이스(몽고디비, MySQL)에 저장한다.
         String url = FAST_API_URL + "/admin/challenge";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -107,8 +112,11 @@ public class ChallengeService {
         // Fast API 반환값
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
+        // 챌린지 정보를 저장한다.
         Challenge challenge = request.toEntity();
         Challenge savedChallenge = challengeRepository.save(challenge);
+
+        // 저장된 영상의 해시태그를 저장한다.
         ArrayList<String> hashtags = request.getHashtags();
         for(String hashtag : hashtags){
             Hashtag savedHashtag = hashtagRepository.save(new Hashtag(hashtag));
@@ -120,6 +128,7 @@ public class ChallengeService {
         }
 
 
+        // 썸네일을 파일로 생성하고, 썸네일 경로를 데이터베이스(MySQL)에 저장한다.
         try{
             String finalFileName = request.getYoutubeId() + ".png";
             Path permanentVideoPath = Paths.get(CHALLENGE_DIRECTORY, finalFileName);
@@ -150,12 +159,26 @@ public class ChallengeService {
 
         // youtubeId로 몽고디비로부터 스켈레톤 데이터를 조회합니다.
         Landmark findLandmarkByYoutubeId = landmarkRepository.findByYoutubeId(youtubeId);
+
+        // MySQL엔 저장된 정보가 있지만, 몽고디비엔 저장되지않은 경우 예외를 발생시킨다.
+        if(findLandmarkByYoutubeId == null){
+            throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE_SKELETON_DATA);
+        }
         return LandmarkResponse.ofResponse(findLandmarkByYoutubeId, challenge.getId());
     }
 
 
+    /**
+     * 직접 저장한 유튜브 챌린지 영상들을 페이징 조회한다.
+     *  기본적으로 4개의 영상정보를 반환한다.
+     * @param pageable
+     * @return
+     */
     public List<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
+        // 페이징 조회로 Challenge를 가져온다.
         Page<Challenge> findChallengeByPaging = challengeRepository.findAll(pageable);
+
+        // 썸네일 경로의 파일을 바이트코드로 변환하고, ResponseDto를 만들어서 반환한다.
         return findChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
@@ -171,8 +194,18 @@ public class ChallengeService {
     }
 
 
-    public List<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String searchTitle) {
-        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitle(pageable, searchTitle);
+    /**
+     * [메인페이지 챌린지 검색 기능]
+     * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
+     *  기본적으로 4개의 영상 정보를 반환한다.
+     * @param pageable
+     * @param searchTitle
+     * @return
+     */
+    public List<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String keyword) {
+
+        // 키워드로 Challenge를 조회한다.
+        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitle(pageable, keyword);
         return searchChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
@@ -187,6 +220,15 @@ public class ChallengeService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 썸네일 추출 메서드
+     * 썸네일은 영상 길이의 3/5 구간의 이미지를 추출한다.
+     * @param videoPath
+     * @param fileName
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     */
 
     private String extractThumbnail(Path videoPath, String fileName) throws IOException, InterruptedException {
         // 비디오 길이 확인
