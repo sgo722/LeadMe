@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { useQuery } from "@tanstack/react-query";
+import countdownSound from "assets/audio/countdown.mp3";
 import styled from "styled-components";
-import YouTube from "react-youtube";
+import YouTube, { YouTubePlayer } from "react-youtube";
 import type {
   Publisher,
   Session,
@@ -17,6 +18,7 @@ interface SignalData {
   ready?: boolean;
   selectedVideoId?: number | null;
   isVideoConfirmed?: boolean;
+  start?: boolean;
 }
 
 interface DummyDataItem {
@@ -70,6 +72,12 @@ export const BattleRoom: React.FC = () => {
   const [peerReady, setPeerReady] = useState<boolean>(false); // 상대방의 준비 state
   const [isHost, setIsHost] = useState<boolean>(false); // 방장 여부를 확인하는 state
 
+  const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
+  const [battleStart, setBattleStart] = useState<boolean>(false); // 배틀 시작 상태
+
+  const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
+  const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
+
   const {
     data: hostData,
     isLoading: isCheckingHost,
@@ -95,6 +103,11 @@ export const BattleRoom: React.FC = () => {
       console.log("방장여부:", isHost);
     }
   }, [hostData, isHost]);
+
+  // 카운트 다운 오디오 초기화
+  useEffect(() => {
+    countdownAudio.current = new Audio(countdownSound);
+  }, []);
 
   // 비디오 아이템 클릭 핸들러
   const handleItemClick = (id: number) => {
@@ -169,6 +182,71 @@ export const BattleRoom: React.FC = () => {
     });
   };
 
+  // 시작신호를 보내는 함수
+  const sendStartSignal = () => {
+    if (session) {
+      session.signal({
+        data: JSON.stringify({ start: true }),
+        type: "battle-start",
+      });
+    }
+  };
+
+  // 배틀 시작 함수
+  const startBattle = () => {
+    if (youtubePlayerRef.current) {
+      // 유튜브 영상 제일 처음으로 되돌리기
+      youtubePlayerRef.current.seekTo(0);
+      // 비디오 멈추기
+      youtubePlayerRef.current.pauseVideo();
+      // 배틀 시작
+      setBattleStart(true);
+      // 카운트다운 3으로 변경
+      setCountdown(3);
+      // me, you 준비상태 초기화
+      setMyReady(false);
+      setPeerReady(false);
+    }
+  };
+
+  // 배틀 시작 클릭시 시그널을 보내고 카운트다운을 시작하는 함수
+  const handleStart = () => {
+    if (isHost && myReady && peerReady) {
+      sendStartSignal();
+      startBattle();
+    } else {
+      alert("모든 참가자가 준비되지 않았습니다.");
+    }
+  };
+
+  // 카운트다운 및 영상 재생 로직
+  useEffect(() => {
+    let countdownInterval: NodeJS.Timeout;
+    if (battleStart && countdown !== null) {
+      countdownInterval = setInterval(() => {
+        setCountdown((prevCount) => {
+          if (prevCount === null) return null;
+          if (prevCount > 0) {
+            countdownAudio.current?.play();
+            return prevCount - 1;
+          } else {
+            clearInterval(countdownInterval);
+            if (youtubePlayerRef.current) {
+              youtubePlayerRef.current.playVideo();
+            }
+            return null;
+          }
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+    };
+  }, [battleStart, countdown]);
+
   // 신호 처리를 위한 useEffect
   useEffect(() => {
     if (session) {
@@ -230,6 +308,12 @@ export const BattleRoom: React.FC = () => {
             setIsVideoConfirmed(false);
             setSelectedVideo(null);
             break;
+          case "battle-start":
+            console.log("배틀 시작 신호 수신:", signalData);
+            if (signalData.start) {
+              startBattle();
+            }
+            break;
           default:
             console.log("알 수 없는 시그널 타입:", signalType);
         }
@@ -242,15 +326,6 @@ export const BattleRoom: React.FC = () => {
       };
     }
   }, [session]);
-
-  // 배틀 시작 함수
-  const handleStart = () => {
-    if (isHost && myReady && peerReady) {
-      console.log("배틀 시작!");
-    } else {
-      alert("모든 참가자가 준비되지 않았습니다.");
-    }
-  };
 
   // 걍 임시로 썻음 빌드할때 에러나서
   useEffect(() => {
@@ -365,9 +440,19 @@ export const BattleRoom: React.FC = () => {
                 opts={{
                   height: "622",
                   width: "350",
-                  playerVars: { autoplay: 1 },
+                  playerVars: { autoplay: 0, controls: 0 },
+                }}
+                onReady={(e: YouTubePlayer) => {
+                  youtubePlayerRef.current = e.target;
                 }}
               />
+              {countdown !== null && (
+                <CountdownOverlay>
+                  <CountdownText>
+                    {countdown === 0 ? "START!" : countdown}
+                  </CountdownText>
+                </CountdownOverlay>
+              )}
             </FullScreenYouTubeContainer>
           ) : (
             <>
@@ -409,7 +494,7 @@ export const BattleRoom: React.FC = () => {
                 autoPlay={true}
                 ref={(video) => video && publisher.addVideoElement(video)}
               />
-              {myReady && <ReadyOverlay>READY</ReadyOverlay>}
+              {myReady && !battleStart && <ReadyOverlay>READY</ReadyOverlay>}
             </>
           ) : (
             <EmptyBoxContent>연결중...</EmptyBoxContent>
@@ -727,4 +812,23 @@ const ActionButton = styled.button`
   &:hover {
     background-color: #f0f0f0;
   }
+`;
+
+const CountdownOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+`;
+
+const CountdownText = styled.div`
+  font-size: 100px;
+  color: white;
+  font-weight: bold;
 `;
