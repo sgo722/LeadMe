@@ -7,6 +7,7 @@ import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.ApiResponse;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.challege.ChallengeService;
+import com.ssafy.withme.service.challege.response.ChallengeBattleListResponse;
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.userChallenge.UserChallengeService;
@@ -94,6 +95,14 @@ public class ChallengeController extends BaseEntity {
             @PageableDefault(size = 4) Pageable pageable,
             @PathVariable(name = "title") String title) {
         return SuccessResponse.of(challengeService.searchChallengeByPaging(pageable,title));
+    }
+
+    /**
+     * 챌린지 목록을 조회한다.
+     */
+    @GetMapping("/api/v1/challenge/battleList")
+    public SuccessResponse<List<ChallengeBattleListResponse>> findAllChallenge(){
+        return SuccessResponse.of(challengeService.findAllChallenge());
     }
 
 }

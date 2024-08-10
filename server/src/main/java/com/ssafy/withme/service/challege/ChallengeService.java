@@ -12,6 +12,7 @@ import com.ssafy.withme.repository.challengeHashtag.ChallengeHashtagRepository;
 import com.ssafy.withme.repository.hashtag.HashtagRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
+import com.ssafy.withme.service.challege.response.ChallengeBattleListResponse;
 import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import jakarta.transaction.Transactional;
@@ -287,5 +288,15 @@ public class ChallengeService {
         reader = new BufferedReader(new InputStreamReader(thumbnailProcess.getInputStream()));
 
         return thumbnailPath.toString();
+    }
+
+    public List<ChallengeBattleListResponse> findAllChallenge() {
+
+        List<Challenge> findAllChallenges = challengeRepository.findAll();
+        return findAllChallenges.stream()
+                .map(challenge -> ChallengeBattleListResponse.ofResponse(challenge))
+                .collect(Collectors.toList());
+
+
     }
 }
