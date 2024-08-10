@@ -117,7 +117,7 @@ public class UserController {
     @GetMapping("/user/active/count")
     public Long getActiveUserCount() {
 
-        return redisTemplate.opsForSet().size("user_active_count");
+        return (Long) redisTemplate.opsForValue().get("active_user_count");
     }
 
     @PostMapping("/user/session/remove")
