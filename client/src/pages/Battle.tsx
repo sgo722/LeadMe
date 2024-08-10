@@ -49,7 +49,7 @@ export const Battle: React.FC = () => {
     useState<boolean>(false); // 비밀번호 입력 모달 표시 여부
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isPasswordError, setIsPasswordError] = useState<boolean>(false); // 비밀번호 틀렸는지에 대한 상태
-
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false); // 로그인 모달 상태 관리
   const nav = useNavigate();
 
   useEffect(() => {
@@ -109,6 +109,17 @@ export const Battle: React.FC = () => {
       console.error("방 생성 중 요류:", error);
     },
   });
+
+  // 방 생성 시 로그인 여부 검증
+  const handleCreateRoomClick = () => {
+    const user = sessionStorage.getItem("user_profile");
+    if (user) {
+      setShowCreateRoomModal(true);
+    } else {
+      window.alert("로그인이 필요한 서비스입니다.");
+      setShowLoginModal(true);
+    }
+  };
 
   // 방 생성 후 바로 입장하는 함수
   const navigateToRoom = (
@@ -221,7 +232,7 @@ export const Battle: React.FC = () => {
   if (isError) return <div>Error: {(error as Error).message}</div>;
   return (
     <>
-      <Header />
+      <Header loginModal={showLoginModal} setLoginModal={setShowLoginModal} />
       <Container>
         <MainSection>
           <SearchBar width={560} icon onSearch={handleSearch} />
@@ -243,7 +254,7 @@ export const Battle: React.FC = () => {
             ))}
           </RoomContainer>
           <CreateRoomButtonContainer>
-            <CreateRoomButton onClick={() => setShowCreateRoomModal(true)}>
+            <CreateRoomButton onClick={handleCreateRoomClick}>
               방생성
             </CreateRoomButton>
           </CreateRoomButtonContainer>
