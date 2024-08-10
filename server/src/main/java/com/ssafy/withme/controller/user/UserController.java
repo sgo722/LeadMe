@@ -120,13 +120,19 @@ public class UserController {
 
     @PostMapping("/user/session/remove")
     public SuccessResponse<?> removeSession(HttpServletRequest request) {
-
         HttpSession session = request.getSession(false);
 
-        if (session != null){
+        // 세션 ID 가져오기
+        String sessionId = session != null ? session.getId() : null;
+
+        if (session != null) {
             session.invalidate(); // 세션 무효화
+            log.info("세션 무효화됨: {}", sessionId);
+        } else {
+            log.warn("세션이 존재하지 않음");
         }
 
         return SuccessResponse.of(true);
+    }
     }
 }
