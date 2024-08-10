@@ -50,9 +50,9 @@ export const Chat: React.FC = () => {
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const [chatList, setChatList] = useState<ChatRoomGetResponse[]>([]);
   const [userProfile, setUserProfile] = useRecoilState(userProfileState);
-  const currentUserId = userProfile?.id || 0; // 로그인한 유저의 userId
-  const currentNickname = userProfile?.nickname || "defaultUser"; // 로그인한 유저의 닉네임
-  const { connectWebSocket, subscribeToChannel } = useWebSocket();
+  const currentUserId = userProfile?.id || 0;
+  const currentNickname = userProfile?.nickname || "defaultUser";
+  const { connectWebSocket } = useWebSocket();
 
   useEffect(() => {
     const savedUserProfile = sessionStorage.getItem("user_profile");
@@ -73,7 +73,6 @@ export const Chat: React.FC = () => {
       setSelectedPartnerId(id);
       setSelectedProfile(profileImg);
     } else {
-      // 상태가 전달되지 않았을 때 모달을 닫기 위한 처리
       setSelectedNickname(null);
       setSelectedPartnerId(null);
       setSelectedProfile(null);
@@ -82,10 +81,8 @@ export const Chat: React.FC = () => {
 
   useEffect(() => {
     if (currentUserId) {
-      // 웹소켓 연결 요청 - 1
       connectWebSocket();
 
-      // 채팅 목록 조회 - 2
       axios
         .get<ResponseData<ChatRoomGetResponse[]>>(
           `${baseUrl}/api/v1/chat/room/list`,
@@ -96,20 +93,10 @@ export const Chat: React.FC = () => {
           }
         )
         .then((response) => {
-          console.log("채팅 목록", response.data);
+          console.log("채팅 목록", response);
           const chatRooms = response.data.data;
           if (Array.isArray(chatRooms)) {
             setChatList(chatRooms);
-
-            // 각 채팅에 대해 소켓 구독 요청 - 3
-            chatRooms.forEach((chatRoom) => {
-              subscribeToChannel(
-                `/sub/chat/message/${chatRoom.roomId}`,
-                (message) => {
-                  console.log("New message received: ", message);
-                }
-              );
-            });
           } else {
             console.error("Unexpected response data format:", response.data);
           }
@@ -118,7 +105,7 @@ export const Chat: React.FC = () => {
           console.error("Failed to fetch chat list", error);
         });
     }
-  }, [currentUserId, connectWebSocket, subscribeToChannel]);
+  }, [currentUserId]);
 
   const openChatModal = (
     nickname: string,

@@ -49,8 +49,9 @@ export const Battle: React.FC = () => {
     useState<boolean>(false); // 비밀번호 입력 모달 표시 여부
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isPasswordError, setIsPasswordError] = useState<boolean>(false); // 비밀번호 틀렸는지에 대한 상태
-
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false); // 로그인 모달 상태 관리
   const nav = useNavigate();
+  const user = sessionStorage.getItem("user_profile"); // 로그인 여부
 
   useEffect(() => {
     if (isPasswordError) {
@@ -76,7 +77,6 @@ export const Battle: React.FC = () => {
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(0);
-    console.log("검색어", term);
   };
 
   const queryClient = useQueryClient();
@@ -98,29 +98,29 @@ export const Battle: React.FC = () => {
       setShowCreateRoomModal(false);
       // 생성된 방에 바로 입장
       const createdRoom = data.data.data;
-      console.log("이것좀보세요", createdRoom);
-      navigateToRoom(
-        createdRoom.sessionId,
-        createdRoom.token,
-        createdRoom.roomName
-      );
+      navigateToRoom(createdRoom.sessionId, createdRoom.token);
     },
     onError: (error) => {
       console.error("방 생성 중 요류:", error);
     },
   });
 
+  // 방 생성 시 로그인 여부 검증
+  const handleCreateRoomClick = () => {
+    if (user) {
+      setShowCreateRoomModal(true);
+    } else {
+      window.alert("로그인이 필요한 서비스입니다.");
+      setShowLoginModal(true);
+    }
+  };
+
   // 방 생성 후 바로 입장하는 함수
-  const navigateToRoom = (
-    sessionId: string,
-    token: string,
-    roomName: string
-  ) => {
+  const navigateToRoom = (sessionId: string, token: string) => {
     nav(`/battleRoom/${sessionId}`, {
       state: {
         token: token,
         sessionId: sessionId,
-        roomName: roomName,
       },
     });
   };
@@ -130,15 +130,10 @@ export const Battle: React.FC = () => {
     mutationFn: (room: Room) =>
       axiosInstance.post(`api/v1/sessions/${room.sessionId}/connections`),
     onSuccess: (data, room) => {
-      console.log("이거봐야돼:", data);
-      console.log("공개 방 토근 발급 성공", data.data.data.token);
-      console.log("세션아이디:", room.sessionId);
-      console.log("방이름:", room.roomName);
       nav(`/battleRoom/${room.sessionId}`, {
         state: {
           token: data.data.data.token,
           sessionId: room.sessionId,
-          roomName: room.roomName,
         },
       });
     },
@@ -156,20 +151,16 @@ export const Battle: React.FC = () => {
       }),
     onSuccess: (data, { room }) => {
       if (data.data.data.validation) {
-        console.log("이거봐야돼:", data);
-        console.log("비공개방 토큰 발급 성공", data.data.data.token);
         setShowInputPasswordModal(false);
         setIsPasswordError(false);
         nav(`/battleRoom/${room.sessionId}`, {
           state: {
             token: data.data.data.token,
             sessionId: room.sessionId,
-            roomNamd: room.roomName,
           },
         });
       }
       if (!data.data.data.validation) {
-        console.log("비밀번호 틀림");
         setIsPasswordError(true);
       }
     },
@@ -184,15 +175,22 @@ export const Battle: React.FC = () => {
   };
   // 방 입장
   const handleEnterRoom = (room: Room) => {
-    if (room.public) {
-      // 공개 방이면 바로 입장 시도
-      enterPublicRoomMutation.mutate(room);
-    }
-    if (!room.public) {
-      // 비공개 방이면 선택한 방 정보 저장 후 비밀번호 입력 모달 표시
-      setSelectedRoom(room);
-      setIsPasswordError(false);
-      setShowInputPasswordModal(true);
+    // 로그인 시
+    if (user) {
+      if (room.public) {
+        // 공개 방이면 바로 입장 시도
+        enterPublicRoomMutation.mutate(room);
+      }
+      if (!room.public) {
+        // 비공개 방이면 선택한 방 정보 저장 후 비밀번호 입력 모달 표시
+        setSelectedRoom(room);
+        setIsPasswordError(false);
+        setShowInputPasswordModal(true);
+      }
+    } else {
+      // 비로그인 시 로그인 모달 보여주기
+      window.alert("로그인이 필요한 서비스입니다.");
+      setShowLoginModal(true);
     }
   };
 
@@ -221,7 +219,7 @@ export const Battle: React.FC = () => {
   if (isError) return <div>Error: {(error as Error).message}</div>;
   return (
     <>
-      <Header />
+      <Header loginModal={showLoginModal} setLoginModal={setShowLoginModal} />
       <Container>
         <MainSection>
           <SearchBar width={560} icon onSearch={handleSearch} />
@@ -243,7 +241,7 @@ export const Battle: React.FC = () => {
             ))}
           </RoomContainer>
           <CreateRoomButtonContainer>
-            <CreateRoomButton onClick={() => setShowCreateRoomModal(true)}>
+            <CreateRoomButton onClick={handleCreateRoomClick}>
               방생성
             </CreateRoomButton>
           </CreateRoomButtonContainer>

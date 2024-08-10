@@ -39,26 +39,33 @@ const useAuth = () => {
 
   // 로그아웃
   const logout = () => {
-    setAccessToken(null);
-    setAccessTokenExpireTime(null);
-    setRefreshToken(null);
-    setRefreshTokenExpireTime(null);
-    sessionStorage.removeItem("access_token");
-    sessionStorage.removeItem("access_token_expire_time");
-    sessionStorage.removeItem("refresh_token");
-    sessionStorage.removeItem("refresh_token_expire_time");
-    sessionStorage.removeItem("timer_started");
-    sessionStorage.removeItem("user_profile");
+    axios
+      .post(`${baseUrl}/api/v1/user/session/remove`)
+      .then(() => {
+        setAccessToken(null);
+        setAccessTokenExpireTime(null);
+        setRefreshToken(null);
+        setRefreshTokenExpireTime(null);
+        sessionStorage.removeItem("access_token");
+        sessionStorage.removeItem("access_token_expire_time");
+        sessionStorage.removeItem("refresh_token");
+        sessionStorage.removeItem("refresh_token_expire_time");
+        sessionStorage.removeItem("timer_started");
+        sessionStorage.removeItem("user_profile");
 
-    if (timerId) {
-      clearTimeout(timerId);
-      setTimerId(null);
-    }
-    if (intervalId) {
-      clearInterval(intervalId);
-      setIntervalId(null);
-    }
-    navigate("/home");
+        if (timerId) {
+          clearTimeout(timerId);
+          setTimerId(null);
+        }
+        if (intervalId) {
+          clearInterval(intervalId);
+          setIntervalId(null);
+        }
+        navigate("/home");
+      })
+      .catch((err) => {
+        console.error("세션 로직 에러: ", err);
+      });
   };
 
   // refreshToken 유효성 체크

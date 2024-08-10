@@ -48,6 +48,13 @@ const useWebSocket = () => {
     };
   }, [accessToken]);
 
+  const connectWebSocket = useCallback(() => {
+    if (clientRef.current && !clientRef.current.connected) {
+      clientRef.current.activate();
+      console.log("WebSocket connection activated");
+    }
+  }, [accessToken]);
+
   const sendMessage = useCallback(
     (destination: string, body: any) => {
       if (clientRef.current && clientRef.current.connected) {
@@ -66,24 +73,19 @@ const useWebSocket = () => {
     [accessToken]
   );
 
-  const connectWebSocket = useCallback(() => {
-    if (clientRef.current && !clientRef.current.connected) {
-      clientRef.current.activate();
-      console.log("WebSocket connection activated");
-    }
-  }, []);
-
   const subscribeToChannel = useCallback(
     (channel: string, callback: (message: any) => void) => {
       if (clientRef.current && clientRef.current.connected) {
-        // 이미 구독된 채널이 있으면 새 구독을 만들지 않음
         if (subscriptions[channel]) {
           console.log(`Already subscribed to channel ${channel}`);
           return;
         }
 
         const subscription = clientRef.current.subscribe(channel, (message) => {
-          console.log(`Message received from ${channel}:`, message.body);
+          console.log(
+            `받은 메세지 / Message received from ${channel}:`,
+            message.body
+          );
           callback(JSON.parse(message.body));
         });
 
@@ -91,6 +93,7 @@ const useWebSocket = () => {
           ...prevSubscriptions,
           [channel]: subscription,
         }));
+        console.log("구독 중인 채널", subscribeToChannel);
 
         console.log(`Subscribed to channel ${channel}`);
       } else {
@@ -100,7 +103,11 @@ const useWebSocket = () => {
     [subscriptions]
   );
 
-  return { connectWebSocket, subscribeToChannel, sendMessage };
+  return {
+    connectWebSocket,
+    subscribeToChannel,
+    sendMessage,
+  };
 };
 
 export default useWebSocket;

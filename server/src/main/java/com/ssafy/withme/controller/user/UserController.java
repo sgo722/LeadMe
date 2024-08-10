@@ -9,6 +9,8 @@ import com.ssafy.withme.global.listener.SessionListener;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -114,5 +116,19 @@ public class UserController {
     public Long getActiveUserCount() {
 
         return sessionListener.getActiveUserCount();
+    }
+
+    @PostMapping("/user/session/remove")
+    public SuccessResponse<?> removeSession(HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+
+        if (session != null){
+
+            sessionListener.sessionDestroyed(new HttpSessionEvent(session));
+            session.invalidate();
+        }
+
+        return SuccessResponse.of(true);
     }
 }
