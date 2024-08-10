@@ -7,6 +7,7 @@ import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.dto.token.TokenDetails;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.config.jwt.constant.TokenType;
+import com.ssafy.withme.global.listener.SessionListener;
 import com.ssafy.withme.global.util.CookieUtil;
 import com.ssafy.withme.repository.user.RefreshTokenRepository;
 import com.ssafy.withme.service.user.UserService;
@@ -22,6 +23,8 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionEvent;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -47,6 +50,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
     private final UserService userService;
     private final ObjectMapper objectMapper;
+    private final SessionListener sessionListener;
 
     // 성공적으로 로그인 하는 경우에 토큰과 관련된 작업을 추가로 처리하기 위해 오버라이드함
 //    @Override
@@ -99,6 +103,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         // 인증 관련 설정값, 쿠키 제거
         clearAuthenticationAttributes(request, response);
+
+        // 세션 생성 (현재 사용자 확인을 위한 세션)
+        HttpSession session = (HttpSession) request.getSession();
+
+        sessionListener.sessionCreated(new HttpSessionEvent(session));
 
 //         리다이렉트 ( 2에서 만든 URL로 리다이렉트합니다)
         log.info("targetUrl: {}" + targetUrl);

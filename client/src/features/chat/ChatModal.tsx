@@ -125,7 +125,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         userId: currentUserId,
         nickname: currentNickname,
         message: newMessage,
-        time: new Date().toISOString(),
+        time: new Date().toISOString(), // ISO 문자열로 시간 저장
         status: "UNREAD",
       };
       sendMessage(`/pub/chat/message/${roomId}`, message);
