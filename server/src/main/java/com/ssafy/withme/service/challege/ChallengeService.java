@@ -130,7 +130,7 @@ public class ChallengeService {
 
         // 썸네일을 파일로 생성하고, 썸네일 경로를 데이터베이스(MySQL)에 저장한다.
         try{
-            String finalFileName = request.getYoutubeId() + ".png";
+            String finalFileName = request.getYoutubeId() + ".mp4";
             Path permanentVideoPath = Paths.get(CHALLENGE_DIRECTORY, finalFileName);
 
             String challengeThumbnail = extractThumbnail(permanentVideoPath, request.getYoutubeId());

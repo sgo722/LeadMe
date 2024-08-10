@@ -3,13 +3,13 @@ package com.ssafy.withme.service.competition;
 import com.ssafy.withme.controller.competition.request.CompetitionCreateRequest;
 import com.ssafy.withme.controller.competition.request.PasswordVerificationRequest;
 import com.ssafy.withme.domain.competition.Competition;
+import com.ssafy.withme.domain.competition.CompetitionEditor;
 import com.ssafy.withme.domain.competition.constant.CompetitionStatus;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.global.util.SHA256Util;
 import com.ssafy.withme.repository.competition.CompetitionRepository;
-import com.ssafy.withme.repository.user.UserRepository;
 import com.ssafy.withme.service.competition.response.CompetitionResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,6 @@ import static com.ssafy.withme.global.error.ErrorCode.USER_NOT_EXISTS;
 @Slf4j
 public class CompetitionService {
     private final CompetitionRepository competitionRepository;
-    private final UserRepository userRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
     private static final String SESSION_KEY_PREFIX = "session:";
@@ -75,7 +74,7 @@ public class CompetitionService {
      */
     public List<CompetitionResponse> getCompetitions(int pageNo, String criteria, int size, String searchKeyword) {
 
-        Pageable pageable = PageRequest.of(pageNo, size, Sort.by(Sort.Direction.DESC, criteria));
+        Pageable pageable = PageRequest.of(pageNo, size, Sort.by(Sort.Direction.ASC, criteria));
         Page<Competition> page;
         if(searchKeyword == null || searchKeyword.isEmpty()) {
             page = competitionRepository.findByStatus(CompetitionStatus.OPEN, pageable);
@@ -86,7 +85,7 @@ public class CompetitionService {
         List<Competition> competitions = page.getContent();
 
         if (!competitions.isEmpty()) {
-            competitions = competitionRepository.fetchWithUser(competitions);
+            competitions = competitionRepository.fetchWithUser(competitions, pageable.getSort());
         }
 
         return competitions.stream()
@@ -141,19 +140,16 @@ public class CompetitionService {
             public <K, V> Boolean execute(RedisOperations<K, V> operations) throws DataAccessException {
                 operations.watch((K) key);
 
-                String value = redisTemplate.opsForValue().get(key);
+                String value = (String) operations.opsForValue().get(key);  // redisTemplate 대신 operations 사용
                 int count = (value == null) ? 0 : Integer.parseInt(value);
 
                 if (count < 2) {
-                    // 값이 2 미만일 경우 트랜잭션 시작, 여기부터 모든 명령어는 큐에 쌓이다.
                     operations.multi();
-                    operations.opsForValue().increment((K) key);
+                    operations.opsForValue().increment((K) key);  // (K) 캐스팅 제거
 
-                    // 트랜잭션 끝 results 가 null이 아니면 성공
                     List<Object> results = operations.exec();
                     return results != null;
                 } else {
-                    // 값이 2 이상인 경우 감시 해제
                     operations.unwatch();
                     return false;
                 }
@@ -175,8 +171,15 @@ public class CompetitionService {
         if(getCreateUserId(sessionId).equals(user.getId())) {
             deleteSessionCount(sessionId);
 
+            // 경쟁전 상태를 닫음으로 변경
             Competition competition = competitionRepository.findBySessionId(sessionId);
-            competitionRepository.delete(competition);
+
+            CompetitionEditor.CompetitionEditorBuilder editorBuilder = competition.toEditor();
+            CompetitionEditor competitionEditor =  editorBuilder
+                    .competitionStatus(CompetitionStatus.CLOSED)
+                    .build();
+
+            competition.edit(competitionEditor);
         }
         // 호스트가 아닌 경우
         else {
