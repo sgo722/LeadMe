@@ -117,13 +117,14 @@ public class UserController {
     @GetMapping("/user/active/count")
     public Long getActiveUserCount() {
 
-        return (Long) redisTemplate.opsForValue().get("active_user_count");
+        Integer activeUserCount = (Integer) redisTemplate.opsForValue().get("active_user_count");
+        return activeUserCount != null ? activeUserCount.longValue() : 0L;
     }
 
     @PostMapping("/user/session/remove")
     public SuccessResponse<?> removeSession() {
 
-        redisTemplate.opsForValue().decrement("active_user_count");
+        redisTemplate.opsForValue().decrement("active_user_count", 1L);
 
         log.info("로그아웃 후 접속 유저 확인: {}", redisTemplate.opsForValue().get("active_user_count"));
 

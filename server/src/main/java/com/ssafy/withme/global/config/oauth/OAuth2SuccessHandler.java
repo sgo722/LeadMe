@@ -116,7 +116,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // 세션 생성 (현재 사용자 확인을 위한 세션)
 //        HttpSession session = request.getSession();
 
-        redisTemplate.opsForValue().increment("active_user_count");
+        redisTemplate.opsForValue().increment("active_user_count", 1L);
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
 
