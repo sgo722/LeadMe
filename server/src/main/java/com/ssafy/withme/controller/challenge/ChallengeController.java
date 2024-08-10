@@ -26,6 +26,7 @@ public class ChallengeController extends BaseEntity {
     private final UserChallengeService userChallengeService;
 
     /**
+     * [DEPRECATED - 사용되지않음]
      * 클라이언트가 youtubeURL로 요청하면 영상을 저장하고, 몽고디비에 스켈레톤 데이터를 저장한다.
      * @param request
      */
@@ -33,6 +34,16 @@ public class ChallengeController extends BaseEntity {
 //    public SuccessResponse<ChallengeCreateResponse> createChallenge(@RequestBody ChallengeCreateRequest request){
 //        return SuccessResponse.of(challengeService.createChallenge(request));
 //    }
+
+    /**
+     * [유튜브 기능 마비로 인한 대체 메서드]
+     * 관리자가 영상을 추가할 수 있다.
+     * 영상을 추가하면 스켈레톤 데이터와 challenge가 생성된다.
+     * @param request
+     * @param videoFile
+     * @return
+     * @throws IOException
+     */
 
     @PostMapping("/api/v1/admin/challenge")
     public ApiResponse<ChallengeCreateResponse> create(@RequestPart("request") ChallengeCreateRequest request,
@@ -54,13 +65,26 @@ public class ChallengeController extends BaseEntity {
 
 
     /**
-     * 서버에 있는 유튜브 챌린지 영상들을 조회한다.
+     * [메인페이지 챌린지 조회 기능]
+     * 직접 저장한 유튜브 챌린지 영상들을 페이징 조회한다.
+     *  기본적으로 4개의 영상정보를 반환한다.
+     * @param pageable
+     * @return
      */
     @GetMapping("/api/v1/challenge")
     public SuccessResponse<List<ChallengeViewResponse>> findChallengeByPaging(@PageableDefault(size = 4) Pageable pageable){
         return SuccessResponse.of(challengeService.findChallengeByPaging(pageable));
     }
 
+
+    /**
+     * [메인페이지 챌린지 검색 기능]
+     * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
+     *  기본적으로 4개의 영상 정보를 반환한다.
+     * @param pageable
+     * @param searchTitle
+     * @return
+     */
     @GetMapping("/api/v1/challenge/search/{searchTitle}")
     public SuccessResponse<List<ChallengeViewResponse>> searchChallengeByPaging(
             @PageableDefault(size = 4) Pageable pageable,
