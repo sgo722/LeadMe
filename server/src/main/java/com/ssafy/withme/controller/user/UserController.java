@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,5 +116,19 @@ public class UserController {
     public Long getActiveUserCount() {
 
         return sessionListener.getActiveUserCount();
+    }
+
+    @PostMapping("/user/session/remove")
+    public SuccessResponse<?> removeSession(HttpServletRequest request) {
+
+        HttpSession session = (HttpSession) request.getSession(false);
+
+        if (session != null){
+
+            sessionListener.sessionDestroyed(new HttpSessionEvent(session));
+            session.invalidate();
+        }
+
+        return SuccessResponse.of(true);
     }
 }
