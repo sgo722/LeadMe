@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
 import { axiosInstance } from "axiosInstance/apiClient";
@@ -93,6 +93,7 @@ export const BattleRoom: React.FC = () => {
     enabled: !!session?.sessionId,
   });
 
+  // 방장 여부 설정
   useEffect(() => {
     if (hostData?.isSuccess && hostData?.data) {
       const hostId = hostData.data;
@@ -168,19 +169,18 @@ export const BattleRoom: React.FC = () => {
   };
 
   // 준비 버튼 클릭 시 상태를 변경하고 다른참가자에게 신호를 보내는 함수
-  const toggleReady = () => {
-    setMyReady((prevReady) => {
-      const newReadyState = !prevReady;
-      console.log("내 준비 상태가 다음과 같이 변경됨:", newReadyState);
-      if (session) {
-        session.signal({
-          data: JSON.stringify({ ready: newReadyState }),
-          type: "user-ready",
-        });
-      }
-      return newReadyState;
-    });
-  };
+  const toggleReady = useCallback(() => {
+    const newReadyState = !myReady;
+    setMyReady(newReadyState);
+    console.log("내 준비 상태가 다음과 같이 변경됨:", newReadyState);
+
+    if (session) {
+      session.signal({
+        data: JSON.stringify({ ready: newReadyState }),
+        type: "user-ready",
+      });
+    }
+  }, [myReady, session]);
 
   // 시작신호를 보내는 함수
   const sendStartSignal = () => {
@@ -193,7 +193,7 @@ export const BattleRoom: React.FC = () => {
   };
 
   // 배틀 시작 함수
-  const startBattle = () => {
+  const startBattle = useCallback(() => {
     if (youtubePlayerRef.current) {
       // 유튜브 영상 제일 처음으로 되돌리기
       youtubePlayerRef.current.seekTo(0);
@@ -203,11 +203,11 @@ export const BattleRoom: React.FC = () => {
       setBattleStart(true);
       // 카운트다운 3으로 변경
       setCountdown(3);
-      // me, you 준비상태 초기화
+      // 준비 상태 초기화
       setMyReady(false);
       setPeerReady(false);
     }
-  };
+  }, [youtubePlayerRef]);
 
   // 배틀 시작 클릭시 시그널을 보내고 카운트다운을 시작하는 함수
   const handleStart = () => {
@@ -223,27 +223,21 @@ export const BattleRoom: React.FC = () => {
   useEffect(() => {
     let countdownInterval: NodeJS.Timeout;
     if (battleStart && countdown !== null) {
+      if (countdown === 3) countdownAudio.current?.play();
       countdownInterval = setInterval(() => {
         setCountdown((prevCount) => {
           if (prevCount === null) return null;
-          if (prevCount > 0) {
-            countdownAudio.current?.play();
-            return prevCount - 1;
-          } else {
+          if (prevCount > 0) return prevCount - 1;
+          else {
             clearInterval(countdownInterval);
-            if (youtubePlayerRef.current) {
-              youtubePlayerRef.current.playVideo();
-            }
+            youtubePlayerRef.current?.playVideo();
             return null;
           }
         });
       }, 1000);
     }
-
     return () => {
-      if (countdownInterval) {
-        clearInterval(countdownInterval);
-      }
+      if (countdownInterval) clearInterval(countdownInterval);
     };
   }, [battleStart, countdown]);
 
@@ -325,15 +319,7 @@ export const BattleRoom: React.FC = () => {
         session.off("signal", handleSignal);
       };
     }
-  }, [session]);
-
-  // 걍 임시로 썻음 빌드할때 에러나서
-  useEffect(() => {
-    if (session) {
-      console.log("세션이 설정되었습니다:", session);
-      // 여기서 session을 사용한 추가 로직을 구현할 수 있습니다.
-    }
-  }, [session]);
+  }, [session, startBattle]);
 
   // 컴포넌트가 마운트될때나 token이 변경될 때 실행
   useEffect(() => {
@@ -494,7 +480,7 @@ export const BattleRoom: React.FC = () => {
                 autoPlay={true}
                 ref={(video) => video && publisher.addVideoElement(video)}
               />
-              {myReady && !battleStart && <ReadyOverlay>READY</ReadyOverlay>}
+              {myReady && <ReadyOverlay>READY</ReadyOverlay>}
             </>
           ) : (
             <EmptyBoxContent>연결중...</EmptyBoxContent>
