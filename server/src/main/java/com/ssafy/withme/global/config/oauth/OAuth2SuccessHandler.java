@@ -105,9 +105,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         clearAuthenticationAttributes(request, response);
 
         // 세션 생성 (현재 사용자 확인을 위한 세션)
-        HttpSession session = (HttpSession) request.getSession();
-
-        sessionListener.sessionCreated(new HttpSessionEvent(session));
+//        HttpSession session = (HttpSession) request.getSession();
+//
+//        sessionListener.sessionCreated(new HttpSessionEvent(session));
 
 //         리다이렉트 ( 2에서 만든 URL로 리다이렉트합니다)
         log.info("targetUrl: {}" + targetUrl);
