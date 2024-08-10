@@ -74,7 +74,7 @@ public class CompetitionService {
      */
     public List<CompetitionResponse> getCompetitions(int pageNo, String criteria, int size, String searchKeyword) {
 
-        Pageable pageable = PageRequest.of(pageNo, size, Sort.by(Sort.Direction.ASC, criteria));
+        Pageable pageable = PageRequest.of(pageNo, size, Sort.by(Sort.Direction.DESC, criteria));
         Page<Competition> page;
         if(searchKeyword == null || searchKeyword.isEmpty()) {
             page = competitionRepository.findByStatus(CompetitionStatus.OPEN, pageable);
@@ -85,7 +85,7 @@ public class CompetitionService {
         List<Competition> competitions = page.getContent();
 
         if (!competitions.isEmpty()) {
-            competitions = competitionRepository.fetchWithUser(competitions, pageable.getSort());
+            competitions = competitionRepository.fetchWithUser(competitions);
         }
 
         return competitions.stream()
