@@ -5,6 +5,7 @@ import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.challengeHashtag.ChallengeHashTag;
 import com.ssafy.withme.domain.hashtag.Hashtag;
 import com.ssafy.withme.domain.landmark.Landmark;
+import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.challengeHashtag.ChallengeHashtagRepository;
