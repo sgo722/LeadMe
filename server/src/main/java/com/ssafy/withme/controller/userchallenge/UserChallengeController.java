@@ -29,18 +29,6 @@ public class UserChallengeController {
     private final UserChallengeService userChallengeService;
 
     /**
-     * 영상 분석 결과를 조회한다.
-     * 영상 고유 uuid를 받아서 영상 레포트 정보를 반환한다.
-     * @param uuid
-     * @return
-     */
-
-    @GetMapping("/report/{uuid}")
-    public SuccessResponse<UserChallengeReportResponse> findReportByUuid(@PathVariable("uuid") String uuid) throws IOException, InterruptedException {
-        return SuccessResponse.of(userChallengeService.findReportByUuid(uuid));
-    }
-
-    /**
      * leadMe에 업로드한 사용자들의 영상을 페이징 조회한다.
      * @param pageable
      * @return
@@ -52,7 +40,23 @@ public class UserChallengeController {
     }
 
     /**
-     ** 유저의 스켈레톤 데이터를 받아와서 알고리즘으로 분석률을 반환한다.
+     * 본인, 타인의 개인 피드를 조회한다.
+     * @param pageable
+     * @param user
+     * @param viewUserId
+     * @return
+     */
+    @GetMapping("/{viewUserId}")
+    public SuccessResponse<Page<UserChallengeMyPageResponse>> getUserMyPageFeed(
+            @PageableDefault(size = 8) Pageable pageable,
+            @CurrentUser User user,
+            @PathVariable("viewUserId") Long viewUserId
+    ){
+        return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user, viewUserId));
+    }
+
+    /**
+     ** 유저영상을 스켈레톤 데이터를 저장하고 영상파일을 임시저장 한다.
      * @param request
      * @param videoFile
      * @return
@@ -65,8 +69,22 @@ public class UserChallengeController {
         return SuccessResponse.of(userChallengeService.analyzeVideo(request, videoFile));
     }
 
+
     /**
-     ** uuid와 fileName을 받아 임시저장 파일에서 해당 영상을 찾아 영구저장 파일로 이동시키고 파일 이름을 변경하여 영구저장한다.
+     * 영상 분석 결과를 조회한다.
+     * 영상 고유 uuid를 받아서 영상 레포트 정보를 반환한다.
+     * @param uuid
+     * @return
+     */
+
+    @GetMapping("/report/{uuid}")
+    public SuccessResponse<UserChallengeReportResponse> findReportByUuid(@PathVariable("uuid") String uuid) throws IOException, InterruptedException {
+        return SuccessResponse.of(userChallengeService.findReportByUuid(uuid));
+    }
+
+    /**
+     * 임시저장된 유저 영상파일을 영구저장한다.
+     * 유저가 챌린지를 따라 한 후 업로드/저장을 한 경우 사용된다.
      * @param request
      * @return
      */
@@ -76,7 +94,8 @@ public class UserChallengeController {
     }
 
     /**
-     * 유저 영상 uuid를 받아 임시저장폴더에서 해당 영상을 찾아서 삭제한다.
+     * 임시저장된 파일을 영구 삭제한다.
+     * 유저가 챌린지를 따라 한 후 재촬영/취소를 한 경우 사용된다.
      * @param request
      * @return
      */
@@ -86,13 +105,5 @@ public class UserChallengeController {
         return SuccessResponse.empty();
     }
 
-    @GetMapping("/{viewUserId}")
-    public SuccessResponse<Page<UserChallengeMyPageResponse>> getUserMyPageFeed(
-            @PageableDefault(size = 8) Pageable pageable,
-            @CurrentUser User user,
-            @PathVariable("viewUserId") Long viewUserId
-    ){
-        return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user, viewUserId));
-    }
 
 }

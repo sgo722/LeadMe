@@ -166,8 +166,7 @@ public class UserChallengeService {
 
 
     /**
-     * 파이썬 서버에서 받아온 keypoints 값을 역직렬화 진행
-     *
+     * 파이썬 서버에서 받아온 스켈레톤데이터를 값을 역직렬화 진행
      * @param jsonResponse
      * @return List<Frame>
      * @throws JsonProcessingException
@@ -200,8 +199,8 @@ public class UserChallengeService {
 
 
     /**
-     * uuid와 fileName을 받아 임시저장 파일에서 해당 영상을 찾아 영구저장 파일로 이동시키고 파일 이름을 변경하여 영구저장한다.
-     *
+     * 임시저장된 유저 영상파일을 영구저장한다.
+     * 유저가 챌린지를 따라 한 후 업로드/저장을 한 경우 사용된다.
      * @param request
      */
     public UserChallengeSaveResponse saveUserFile(UserChallengeSaveRequest request) {
@@ -252,8 +251,8 @@ public class UserChallengeService {
     }
 
     /**
-     * 유저 영상 uuid를 받아 임시저장폴더에서 해당 영상을 찾아서 삭제한다.
-     *
+     * 임시저장된 파일을 영구 삭제한다.
+     * 유저가 챌린지를 따라 한 후 재촬영/취소를 한 경우 사용된다.
      * @param request
      */
     public void deleteUserFile(UserChallengeDeleteRequest request) {
@@ -275,7 +274,6 @@ public class UserChallengeService {
 
     /**
      * uuid를 기반으로 영상 분석데이터를 조회한다.
-     *
      * @param uuid
      * @return
      */
@@ -296,7 +294,11 @@ public class UserChallengeService {
         return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, mergedVideoFile);
     }
 
-
+    /**
+     * leadme 페이지에서 사용자들이 업로드한 영상을 조회한다.
+     * @param pageable
+     * @return
+     */
     public List<UserChallengeFeedResponse> findUserChallengeByPageable(Pageable pageable) {
         //유저 영상 중 access = "public" 인 영상들을 페이징 조회한다.
         Page<UserChallenge> findUserChallenge = userChallengeRepository.findByAccessOrderByCreatedDateDesc("public", pageable);
@@ -316,6 +318,15 @@ public class UserChallengeService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 유저영상의 챌린지 음악을 삽입한다.
+     * @param videoPath
+     * @param audioPath
+     * @param outputPath
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     */
     private byte[] mergeVideoAndAudio(String videoPath, String audioPath, String outputPath) throws IOException, InterruptedException {
         // 입력 파일 경로 확인
         System.out.println(videoPath);
@@ -354,6 +365,14 @@ public class UserChallengeService {
         return mergedFile;
     }
 
+    /**
+     * 썸네일 추출 기능
+     * @param videoPath
+     * @param fileName
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     */
     private String extractThumbnail(Path videoPath, String fileName) throws IOException, InterruptedException {
         // 비디오 길이 확인
         String durationCommand = String.format("ffmpeg -i %s", videoPath.toString());
@@ -414,11 +433,20 @@ public class UserChallengeService {
         return thumbnailPath.toString();
     }
 
+    /**
+     * 유저의 본인, 타인의 개인피드를 조회한다.
+     * @param pageable
+     * @param user
+     * @param viewUserId
+     * @return
+     */
     public Page<UserChallengeMyPageResponse> getUserChallengeByUser(Pageable pageable, User user, Long viewUserId) {
+        // 개인 피드를 조회한 유저를 조회한다.
         User findUser = userRepository.findById(viewUserId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_EXISTS));
 
 
+        // 본인의 개인 피드를 조회한 경우 - access값이 private, public 모두 보여준다
         if(findUser.equals(user)){
             Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdOrderByCreatedDateDesc(user.getId(), pageable);
             return userChallengeByPaging
@@ -432,6 +460,8 @@ public class UserChallengeService {
                         }
                     });
         }
+
+        // 타인의 개인피드를 조회한 경우 - access값이 public인 영상만 보여준다.
         if(!findUser.equals(user)){
             Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdAndAccessOrderByCreatedDateDesc(findUser.getId(), "public", pageable);
             return userChallengeByPaging
