@@ -50,12 +50,9 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   const [newMessage, setNewMessage] = useState<string>("");
   const [roomId, setRoomId] = useState<number | null>(null);
 
-  const { sendMessage, subscribeToChannel, unsubscribeFromChannel } =
-    useWebSocket();
+  const { sendMessage, subscribeToChannel } = useWebSocket();
 
   useEffect(() => {
-    let subscriptionId: string | null = null;
-
     if (isOpen && partnerId) {
       axios
         .post(
@@ -72,23 +69,22 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         )
         .then((response) => {
           const createdRoomId = response.data.data;
+          console.log("roomId:", createdRoomId);
           setRoomId(createdRoomId);
 
-          subscriptionId = `/sub/chat/message/${createdRoomId}`;
-
-          unsubscribeFromChannel(subscriptionId);
-
-          subscribeToChannel(subscriptionId, (message: ChatMessageDto) => {
-            setMessages((prevMessages) => [
-              ...prevMessages,
-              { ...message, time: formatTime(message.time) },
-            ]);
-            console.log(message);
-            if (modalBodyRef.current) {
-              modalBodyRef.current.scrollTop =
-                modalBodyRef.current.scrollHeight;
+          subscribeToChannel(
+            `/sub/chat/message/${createdRoomId}`,
+            (message: ChatMessageDto) => {
+              setMessages((prevMessages) => [
+                ...prevMessages,
+                { ...message, time: formatTime(message.time) },
+              ]);
+              if (modalBodyRef.current) {
+                modalBodyRef.current.scrollTop =
+                  modalBodyRef.current.scrollHeight;
+              }
             }
-          });
+          );
 
           return axios.get(`${baseUrl}/api/v1/chat/room/message/list`, {
             params: {
@@ -98,6 +94,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           });
         })
         .then((response) => {
+          console.log(response.data);
           const formattedMessages = response.data.data.map(
             (message: ChatMessageDto) => ({
               ...message,
@@ -112,14 +109,14 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         .catch((error) => {
           console.error("Failed to create chat room or fetch messages", error);
         });
-
-      return () => {
-        if (subscriptionId) {
-          unsubscribeFromChannel(subscriptionId);
-        }
-      };
     }
-  }, [isOpen]);
+  }, [isOpen, currentUserId, partnerId, subscribeToChannel]);
+
+  useEffect(() => {
+    if (modalBodyRef.current) {
+      modalBodyRef.current.scrollTop = modalBodyRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSendMessage = () => {
     if (roomId && newMessage.trim() !== "") {
@@ -129,20 +126,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         userId: currentUserId,
         nickname: currentNickname,
         message: newMessage,
-        time: new Date().toISOString(),
+        time: new Date().toISOString(), // ISO 문자열로 시간 저장
         status: "UNREAD",
       };
       sendMessage(`/pub/chat/message/${roomId}`, message);
       setNewMessage("");
     }
-  };
-
-  const handleClose = () => {
-    if (roomId) {
-      unsubscribeFromChannel(`/sub/chat/message/${roomId}`);
-    }
-    onClose();
-    setRoomId(null); // 상태 초기화
   };
 
   if (!isOpen || !partnerNickname) return null;
@@ -158,7 +147,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
             />
             <div>{partnerNickname}</div>
           </Opponent>
-          <CloseButton onClick={handleClose}>&times;</CloseButton>
+          <CloseButton onClick={onClose}>&times;</CloseButton>
         </ModalHeader>
         <ModalBody ref={modalBodyRef}>
           {messages.map((message, index) => {
