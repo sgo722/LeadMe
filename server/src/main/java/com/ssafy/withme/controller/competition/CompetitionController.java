@@ -2,6 +2,7 @@ package com.ssafy.withme.controller.competition;
 
 import com.ssafy.withme.controller.competition.request.CompetitionCreateRequest;
 import com.ssafy.withme.controller.competition.request.PasswordVerificationRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.error.ErrorCode;
@@ -16,7 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -157,6 +160,10 @@ public class CompetitionController {
         competitionService.deleteSession(sessionId, user);
     }
 
+    @PostMapping("api/v1/competition/result")
+    public SuccessResponse<?> getCompetitionResult(UserChallengeAnalyzeRequest request, MultipartFile videoFile, @CurrentUser User user) throws IOException {
+        return SuccessResponse.of(competitionService.getCompetitionResult(request, videoFile));
+    }
 }
 
 

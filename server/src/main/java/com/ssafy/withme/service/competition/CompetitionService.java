@@ -1,18 +1,30 @@
 package com.ssafy.withme.service.competition;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.withme.controller.competition.request.CompetitionCreateRequest;
 import com.ssafy.withme.controller.competition.request.PasswordVerificationRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
+import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.competition.Competition;
 import com.ssafy.withme.domain.competition.CompetitionEditor;
 import com.ssafy.withme.domain.competition.constant.CompetitionStatus;
+import com.ssafy.withme.domain.landmark.Landmark;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
+import com.ssafy.withme.global.response.Frame;
+import com.ssafy.withme.global.response.Keypoint;
+import com.ssafy.withme.global.util.PoseComparison;
 import com.ssafy.withme.global.util.SHA256Util;
+import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.competition.CompetitionRepository;
+import com.ssafy.withme.repository.landmark.LandmarkRepository;
 import com.ssafy.withme.service.competition.response.CompetitionResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,20 +33,39 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.ssafy.withme.global.error.ErrorCode.NOT_FOUND_COMPETITION;
-import static com.ssafy.withme.global.error.ErrorCode.USER_NOT_EXISTS;
+import static com.ssafy.withme.global.error.ErrorCode.*;
+import static com.ssafy.withme.service.userChallenge.UserChallengeService.deserialize;
 
 @RequiredArgsConstructor
 @Service
 @Slf4j
 public class CompetitionService {
+
+    @Value("${python-server.url}")
+    String FAST_API_URL;
+
+    private final RestTemplate restTemplate;
+
+    private final LandmarkRepository landmarkRepository;
+
     private final CompetitionRepository competitionRepository;
+
+    private final ChallengeRepository challengeRepository;
+
     private final RedisTemplate<String, String> redisTemplate;
+
 
     private static final String SESSION_KEY_PREFIX = "session:";
 
@@ -82,7 +113,9 @@ public class CompetitionService {
             page = competitionRepository.findByStatusAndRoomNameContains(CompetitionStatus.OPEN, searchKeyword, pageable);
         }
 
+        if(page == null) throw new EntityNotFoundException(NOT_FOUND_COMPETITION);
         List<Competition> competitions = page.getContent();
+
 
         if (!competitions.isEmpty()) {
             competitions = competitionRepository.fetchWithUser(competitions, pageable);
@@ -132,9 +165,7 @@ public class CompetitionService {
      */
     public boolean incrementIfLessThenTwo(String sessionId) {
         String key = SESSION_KEY_PREFIX + sessionId+":count";
-        // 값이 2 미만일 경우 트랜잭션 시작, 여기부터 모든 명령어는 큐에 쌓이다.
-        // 트랜잭션 끝 results 가 null이 아니면 성공
-        // 값이 2 이상인 경우 감시 해제
+
         return Boolean.TRUE.equals(redisTemplate.execute(new SessionCallback<Boolean>() {
             @Override
             public <K, V> Boolean execute(RedisOperations<K, V> operations) throws DataAccessException {
@@ -143,13 +174,16 @@ public class CompetitionService {
                 String value = (String) operations.opsForValue().get(key);  // redisTemplate 대신 operations 사용
                 int count = (value == null) ? 0 : Integer.parseInt(value);
 
+                // 값이 2 미만일 경우 트랜잭션 시작, 여기부터 모든 명령어는 큐에 쌓이다.
                 if (count < 2) {
                     operations.multi();
                     operations.opsForValue().increment((K) key);  // (K) 캐스팅 제거
 
                     List<Object> results = operations.exec();
+                    // 트랜잭션 끝 results 가 null이 아니면 성공
                     return results != null;
                 } else {
+                    // 값이 2 이상인 경우 감시 해제
                     operations.unwatch();
                     return false;
                 }
@@ -185,6 +219,60 @@ public class CompetitionService {
         else {
             deleteSessionCount(sessionId);
         }
+    }
+
+    public double getCompetitionResult(UserChallengeAnalyzeRequest request, MultipartFile videoFile) throws IOException {
+        // 챌린지 아이디
+        Long challengeId = request.getChallengeId();
+
+        // 챌린지 아이디를 기반으로 저장되어 있는 챌린지 정보 조회
+        Challenge challenge = challengeRepository.findById(challengeId).orElse(null);
+
+        // 조회한 챌린지가 없는 경우 예외처리
+        if (challenge == null) {
+            throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
+        }
+
+        String url = FAST_API_URL + "/upload/userFile";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return videoFile.getOriginalFilename();
+            }
+        });
+        body.add("youtubeId", challenge.getYoutubeId());
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        // Fast API 반환값
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+        String result = response.getBody();
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode rootNode = objectMapper.readTree(result);
+        String uuid = rootNode.path("uuid").asText();
+
+        // 역직렬화한 유저 포즈 정보
+        List<Frame> userFrames = deserialize(result);
+
+        // 저장된 챌린지 포즈 정보
+        Landmark landmark = landmarkRepository.findByYoutubeId(challenge.getYoutubeId());
+        log.info("youtubeID : {} 동영상 분석 준비", challenge.getYoutubeId());
+
+        // 기존 챌린지 정보를 List<Frame> 형태로 캐스팅
+        List<Frame> challengeFrames = landmark.getLandmarks().stream()
+                .map(keypoints -> keypoints.stream()
+                        .map(p -> new Keypoint(p.getX(), p.getY(), p.getZ(), p.getVisibility()))
+                        .collect(Collectors.toList()))
+                .map(Frame::new)
+                .collect(Collectors.toList());
+
+        Map<String, Object> calculateResult = PoseComparison.calculatePoseScore(userFrames, challengeFrames);
+        log.info(" 반환 점수 : {}", calculateResult.get("score"));
+        return Double.valueOf((String) calculateResult.get("score"));
     }
 
     public Long decrementSessionCount(String sessionId) {
