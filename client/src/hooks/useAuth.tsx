@@ -40,7 +40,7 @@ const useAuth = () => {
   // 로그아웃
   const logout = () => {
     axios
-      .post(`${baseUrl}/api/v1/user/session/remove`)
+      .post(`${baseUrl}/api/v1/user/session/remove`, null, {})
       .then(() => {
         setAccessToken(null);
         setAccessTokenExpireTime(null);
