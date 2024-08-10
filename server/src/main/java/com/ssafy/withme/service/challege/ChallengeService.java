@@ -119,10 +119,14 @@ public class ChallengeService {
         // 저장된 영상의 해시태그를 저장한다.
         ArrayList<String> hashtags = request.getHashtags();
         for(String hashtag : hashtags){
-            Hashtag savedHashtag = hashtagRepository.save(new Hashtag(hashtag));
+            Hashtag findHashtagByName = hashtagRepository.findByName(hashtag);
+            if(findHashtagByName == null){
+                findHashtagByName = hashtagRepository.save(new Hashtag(hashtag));
+            }
+
             ChallengeHashTag challengeHashTag = ChallengeHashTag.builder()
                     .challenge(savedChallenge)
-                    .hashtag(savedHashtag)
+                    .hashtag(findHashtagByName)
                     .build();
             challengeHashTagRepository.save(challengeHashTag);
         }
