@@ -49,7 +49,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   const [messages, setMessages] = useState<ChatMessageDto[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
   const [roomId, setRoomId] = useState<number | null>(null);
-
   const { sendMessage, subscribeToChannel } = useWebSocket();
 
   useEffect(() => {

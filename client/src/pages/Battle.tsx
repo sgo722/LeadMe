@@ -77,7 +77,6 @@ export const Battle: React.FC = () => {
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(0);
-    console.log("검색어", term);
   };
 
   const queryClient = useQueryClient();
@@ -99,12 +98,7 @@ export const Battle: React.FC = () => {
       setShowCreateRoomModal(false);
       // 생성된 방에 바로 입장
       const createdRoom = data.data.data;
-      console.log("이것좀보세요", createdRoom);
-      navigateToRoom(
-        createdRoom.sessionId,
-        createdRoom.token,
-        createdRoom.roomName
-      );
+      navigateToRoom(createdRoom.sessionId, createdRoom.token);
     },
     onError: (error) => {
       console.error("방 생성 중 요류:", error);
@@ -122,16 +116,11 @@ export const Battle: React.FC = () => {
   };
 
   // 방 생성 후 바로 입장하는 함수
-  const navigateToRoom = (
-    sessionId: string,
-    token: string,
-    roomName: string
-  ) => {
+  const navigateToRoom = (sessionId: string, token: string) => {
     nav(`/battleRoom/${sessionId}`, {
       state: {
         token: token,
         sessionId: sessionId,
-        roomName: roomName,
       },
     });
   };
@@ -141,15 +130,10 @@ export const Battle: React.FC = () => {
     mutationFn: (room: Room) =>
       axiosInstance.post(`api/v1/sessions/${room.sessionId}/connections`),
     onSuccess: (data, room) => {
-      console.log("이거봐야돼:", data);
-      console.log("공개 방 토근 발급 성공", data.data.data.token);
-      console.log("세션아이디:", room.sessionId);
-      console.log("방이름:", room.roomName);
       nav(`/battleRoom/${room.sessionId}`, {
         state: {
           token: data.data.data.token,
           sessionId: room.sessionId,
-          roomName: room.roomName,
         },
       });
     },
@@ -167,20 +151,16 @@ export const Battle: React.FC = () => {
       }),
     onSuccess: (data, { room }) => {
       if (data.data.data.validation) {
-        console.log("이거봐야돼:", data);
-        console.log("비공개방 토큰 발급 성공", data.data.data.token);
         setShowInputPasswordModal(false);
         setIsPasswordError(false);
         nav(`/battleRoom/${room.sessionId}`, {
           state: {
             token: data.data.data.token,
             sessionId: room.sessionId,
-            roomNamd: room.roomName,
           },
         });
       }
       if (!data.data.data.validation) {
-        console.log("비밀번호 틀림");
         setIsPasswordError(true);
       }
     },

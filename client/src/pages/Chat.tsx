@@ -52,7 +52,7 @@ export const Chat: React.FC = () => {
   const [userProfile, setUserProfile] = useRecoilState(userProfileState);
   const currentUserId = userProfile?.id || 0;
   const currentNickname = userProfile?.nickname || "defaultUser";
-  const { connectWebSocket, disconnectWebSocket } = useWebSocket();
+  const { connectWebSocket } = useWebSocket();
 
   useEffect(() => {
     const savedUserProfile = sessionStorage.getItem("user_profile");
@@ -61,14 +61,6 @@ export const Chat: React.FC = () => {
       setUserProfile(JSON.parse(savedUserProfile));
     }
   }, [setUserProfile]);
-
-  useEffect(() => {
-    connectWebSocket();
-
-    return () => {
-      disconnectWebSocket();
-    };
-  }, [connectWebSocket, disconnectWebSocket]);
 
   useEffect(() => {
     if (location.state) {
@@ -89,6 +81,8 @@ export const Chat: React.FC = () => {
 
   useEffect(() => {
     if (currentUserId) {
+      connectWebSocket();
+
       axios
         .get<ResponseData<ChatRoomGetResponse[]>>(
           `${baseUrl}/api/v1/chat/room/list`,
@@ -99,6 +93,7 @@ export const Chat: React.FC = () => {
           }
         )
         .then((response) => {
+          console.log("채팅 목록", response);
           const chatRooms = response.data.data;
           if (Array.isArray(chatRooms)) {
             setChatList(chatRooms);
