@@ -61,6 +61,8 @@ const useAuth = () => {
           clearInterval(intervalId);
           setIntervalId(null);
         }
+
+        // 홈으로 리다이렉트
         navigate("/home");
       })
       .catch((err) => {
