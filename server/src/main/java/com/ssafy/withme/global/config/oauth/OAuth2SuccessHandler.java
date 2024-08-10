@@ -11,6 +11,7 @@ import com.ssafy.withme.global.listener.SessionListener;
 import com.ssafy.withme.global.util.CookieUtil;
 import com.ssafy.withme.repository.user.RefreshTokenRepository;
 import com.ssafy.withme.service.user.UserService;
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -104,9 +105,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // 인증 관련 설정값, 쿠키 제거
         clearAuthenticationAttributes(request, response);
 
-        // 세션 생성 (현재 사용자 확인을 위한 세션)
-        HttpSession session = request.getSession();
-
 //         리다이렉트 ( 2에서 만든 URL로 리다이렉트합니다)
         log.info("targetUrl: {}" + targetUrl);
         log.info("accessToken: {}" + accessToken);
@@ -114,7 +112,13 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+        // 세션 생성 (현재 사용자 확인을 위한 세션)
+        HttpSession session = request.getSession();
+
+//        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+
+        RequestDispatcher dispatcher = request.getRequestDispatcher(targetUrl);
+        dispatcher.forward(request, response);
 //
 //        log.info("response: {}", responseTokenDto);
 //
