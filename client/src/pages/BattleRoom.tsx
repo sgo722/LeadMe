@@ -55,9 +55,8 @@ const fetchHostStatus = async (sessionId: string) => {
 
 export const BattleRoom: React.FC = () => {
   const location = useLocation();
-  const { token, roomName } = location.state as {
+  const { token } = location.state as {
     token: string;
-    roomName: string;
   };
   const [session, setSession] = useState<Session | null>(null); //OpenVidu 세션 상태 관리
   const [publisher, setPublisher] = useState<Publisher | null>(null); // 로컬 비디오 스트림 발행자 상태 관리
@@ -261,7 +260,7 @@ export const BattleRoom: React.FC = () => {
     }
   }, [session]);
 
-  // 컴포넌트가 마운트될때나 token, roomName이 변경될 때 실행
+  // 컴포넌트가 마운트될때나 token이 변경될 때 실행
   useEffect(() => {
     // OpenVidu 객체 생성
     const OV = new OpenVidu();
@@ -328,7 +327,7 @@ export const BattleRoom: React.FC = () => {
         return null;
       });
     };
-  }, [token, roomName]);
+  }, [token]);
 
   if (isCheckingHost) {
     return <div>방장 여부 확인 중...</div>;
