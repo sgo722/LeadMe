@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpSessionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ public class UserController {
     private final UserService userService;
     private final TokenProvider tokenProvider;
     private final SessionListener sessionListener;
+    private final RedisTemplate redisTemplate;
 
     @GetMapping("/user/me")
     public SuccessResponse<?> getInfo(HttpServletRequest request) {
@@ -115,24 +117,16 @@ public class UserController {
     @GetMapping("/user/active/count")
     public Long getActiveUserCount() {
 
-        return sessionListener.getActiveUserCount();
+        return redisTemplate.opsForSet().size("user_active_count");
     }
 
     @PostMapping("/user/session/remove")
-    public SuccessResponse<?> removeSession(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
+    public SuccessResponse<?> removeSession() {
 
-        // 세션 ID 가져오기
-        String sessionId = session != null ? session.getId() : null;
+        redisTemplate.opsForValue().decrement("active_user_count");
 
-        if (session != null) {
-            session.invalidate(); // 세션 무효화
-            log.info("세션 무효화됨: {}", sessionId);
-        } else {
-            log.warn("세션이 존재하지 않음");
-        }
+        log.info("로그아웃 후 접속 유저 확인: {}", redisTemplate.opsForValue().get("active_user_count"));
 
         return SuccessResponse.of(true);
-
     }
 }

@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpSessionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -51,6 +52,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final UserService userService;
     private final ObjectMapper objectMapper;
     private final SessionListener sessionListener;
+    private final RedisTemplate redisTemplate;
 
     // 성공적으로 로그인 하는 경우에 토큰과 관련된 작업을 추가로 처리하기 위해 오버라이드함
 //    @Override
@@ -112,7 +114,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // 세션 생성 (현재 사용자 확인을 위한 세션)
-        HttpSession session = request.getSession();
+//        HttpSession session = request.getSession();
+
+        redisTemplate.opsForValue().increment("active_user_count");
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
 
