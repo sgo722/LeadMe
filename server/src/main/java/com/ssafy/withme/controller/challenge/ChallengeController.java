@@ -82,14 +82,14 @@ public class ChallengeController extends BaseEntity {
      * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
      *  기본적으로 4개의 영상 정보를 반환한다.
      * @param pageable
-     * @param searchTitle
+     * @param title
      * @return
      */
-    @GetMapping("/api/v1/challenge/search/{searchTitle}")
+    @GetMapping("/api/v1/challenge/search/{title}")
     public SuccessResponse<List<ChallengeViewResponse>> searchChallengeByPaging(
             @PageableDefault(size = 4) Pageable pageable,
-            @PathVariable(name = "searchTitle") String searchTitle) {
-        return SuccessResponse.of(challengeService.searchChallengeByPaging(pageable,searchTitle));
+            @PathVariable(name = "title") String title) {
+        return SuccessResponse.of(challengeService.searchChallengeByPaging(pageable,title));
     }
 
 }
