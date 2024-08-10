@@ -51,6 +51,7 @@ export const Battle: React.FC = () => {
   const [isPasswordError, setIsPasswordError] = useState<boolean>(false); // 비밀번호 틀렸는지에 대한 상태
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false); // 로그인 모달 상태 관리
   const nav = useNavigate();
+  const user = sessionStorage.getItem("user_profile"); // 로그인 여부
 
   useEffect(() => {
     if (isPasswordError) {
@@ -112,7 +113,6 @@ export const Battle: React.FC = () => {
 
   // 방 생성 시 로그인 여부 검증
   const handleCreateRoomClick = () => {
-    const user = sessionStorage.getItem("user_profile");
     if (user) {
       setShowCreateRoomModal(true);
     } else {
@@ -195,15 +195,22 @@ export const Battle: React.FC = () => {
   };
   // 방 입장
   const handleEnterRoom = (room: Room) => {
-    if (room.public) {
-      // 공개 방이면 바로 입장 시도
-      enterPublicRoomMutation.mutate(room);
-    }
-    if (!room.public) {
-      // 비공개 방이면 선택한 방 정보 저장 후 비밀번호 입력 모달 표시
-      setSelectedRoom(room);
-      setIsPasswordError(false);
-      setShowInputPasswordModal(true);
+    // 로그인 시
+    if (user) {
+      if (room.public) {
+        // 공개 방이면 바로 입장 시도
+        enterPublicRoomMutation.mutate(room);
+      }
+      if (!room.public) {
+        // 비공개 방이면 선택한 방 정보 저장 후 비밀번호 입력 모달 표시
+        setSelectedRoom(room);
+        setIsPasswordError(false);
+        setShowInputPasswordModal(true);
+      }
+    } else {
+      // 비로그인 시 로그인 모달 보여주기
+      window.alert("로그인이 필요한 서비스입니다.");
+      setShowLoginModal(true);
     }
   };
 
