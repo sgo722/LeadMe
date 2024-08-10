@@ -21,26 +21,11 @@ interface SignalData {
   start?: boolean;
 }
 
-interface DummyDataItem {
-  id: number;
+interface VideoDataItem {
+  challengeId: number;
+  youtubeId: string;
   title: string;
-  videoId: string;
 }
-
-const dummyData: DummyDataItem[] = [
-  { id: 1, title: "마라탕후루", videoId: "COwRJMCCWL0" },
-  { id: 2, title: "킥드베", videoId: "Fpmqa_ldQS0" },
-  { id: 3, title: "채소 댄스", videoId: "rspqaUYy56M" },
-  { id: 4, title: "띵띵땅땅", videoId: "Niob9m3ccGY" },
-  { id: 6, title: "Tell me", videoId: "LYnhkVVXGIU" },
-  { id: 7, title: "최애의아이", videoId: "KsE_jurZDYs" },
-  { id: 8, title: "립제이", videoId: "gKoBOP8rSpo" },
-  { id: 9, title: "bluecheck", videoId: "rct6LjDypqY" },
-  { id: 10, title: "supernatural", videoId: "y7mmUrlYCOM" },
-  { id: 11, title: "Land of Lola", videoId: "yoeduVglPUQ" },
-  { id: 12, title: "도토리 주우러 갈래?", videoId: "ZM5ioaMqD5g" },
-  { id: 13, title: "How Sweet", videoId: "ZtoItsp4DHA" },
-];
 
 // 세션 : 화상 회의 가상 공간
 // 발행자(publisher) : 자신의 오디오/비디오 스트림을 세션에 전송하는 참가자
@@ -55,6 +40,12 @@ const fetchHostStatus = async (sessionId: string) => {
   return res.data;
 };
 
+// 서버에 저장된 영상 목록 가져오는 쿼리
+const fetchVideoList = async () => {
+  const res = await axiosInstance.get("/api/v1/challenge/battleList");
+  return res.data;
+};
+
 export const BattleRoom: React.FC = () => {
   const location = useLocation();
   const { token } = location.state as {
@@ -63,7 +54,7 @@ export const BattleRoom: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null); //OpenVidu 세션 상태 관리
   const [publisher, setPublisher] = useState<Publisher | null>(null); // 로컬 비디오 스트림 발행자 상태 관리
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]); // 원격 비디오 스트림 구독자 목록 상태 관리
-  const [selectedVideo, setSelectedVideo] = useState<DummyDataItem | null>(
+  const [selectedVideo, setSelectedVideo] = useState<VideoDataItem | null>(
     null
   );
   const [isVideoConfirmed, setIsVideoConfirmed] = useState<boolean>(false);
@@ -82,6 +73,13 @@ export const BattleRoom: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 
+  // 서버에 저장된 영상 가져오기
+  const { data: videoList, isLoading: isVideoLoading } = useQuery({
+    queryKey: ["videoList"],
+    queryFn: fetchVideoList,
+  });
+
+  // 방장 여부 확인
   const {
     data: hostData,
     isLoading: isCheckingHost,
@@ -116,13 +114,15 @@ export const BattleRoom: React.FC = () => {
 
   // 비디오 아이템 클릭 핸들러
   const handleItemClick = (id: number) => {
-    const video = dummyData.find((item) => item.id === id);
+    const video = videoList?.data.find(
+      (item: VideoDataItem) => item.challengeId === id
+    );
     setSelectedVideo(video || null);
     setIsVideoConfirmed(false);
     // 선택된 비디오 정보를 다른 참가자에게 전송
     if (session && video) {
       session.signal({
-        data: JSON.stringify({ selectedVideoId: video.id }),
+        data: JSON.stringify({ selectedVideoId: video.challengeId }),
         type: "video-selected",
       });
     }
@@ -220,27 +220,6 @@ export const BattleRoom: React.FC = () => {
       alert("모든 참가자가 준비되지 않았습니다.");
     }
   };
-
-  // 녹화 시작 함수
-  // const startRecording = useCallback(() => {
-  //   if (publisher && publisher.stream) {
-  //     const mediaRecorder = new MediaRecorder(
-  //       publisher.stream.getMediaStream(),
-  //       { mimeType: "video/webm" }
-  //     );
-  //     mediaRecorderRef.current = mediaRecorder;
-  //     recordedChunksRef.current = [];
-
-  //     mediaRecorder.ondataavailable = (event) => {
-  //       if (event.data.size > 0) {
-  //         recordedChunksRef.current.push(event.data);
-  //       }
-  //     };
-  //     mediaRecorder.start();
-  //     setIsRecording(true);
-  //     console.log("녹화 시작");
-  //   }
-  // }, [publisher]);
 
   // 녹화 시작 함수
   const startRecording = useCallback(() => {
@@ -362,8 +341,9 @@ export const BattleRoom: React.FC = () => {
               signalData.selectedVideoId !== null &&
               signalData.selectedVideoId !== undefined
             ) {
-              const video = dummyData.find(
-                (item) => item.id === signalData.selectedVideoId
+              const video = videoList?.data.find(
+                (item: VideoDataItem) =>
+                  item.challengeId === signalData.selectedVideoId
               );
               setSelectedVideo(video || null);
             } else {
@@ -399,7 +379,7 @@ export const BattleRoom: React.FC = () => {
         session.off("signal", handleSignal);
       };
     }
-  }, [session, startBattle]);
+  }, [session, startBattle, videoList]);
 
   // 컴포넌트가 마운트될때나 token이 변경될 때 실행
   useEffect(() => {
@@ -502,7 +482,7 @@ export const BattleRoom: React.FC = () => {
             <FullScreenYouTubeContainer>
               <BackIcon onClick={handleCancel}>&larr;</BackIcon>
               <YouTube
-                videoId={selectedVideo.videoId}
+                videoId={selectedVideo.youtubeId}
                 opts={{
                   height: "622",
                   width: "350",
@@ -530,17 +510,23 @@ export const BattleRoom: React.FC = () => {
           ) : (
             <>
               <Title>Battle!</Title>
-              <ScrollableList>
-                {dummyData.map((item) => (
-                  <ListItem
-                    key={item.id}
-                    onClick={() => handleItemClick(item.id)}
-                    $isSelected={selectedVideo?.id === item.id}
-                  >
-                    {item.title}
-                  </ListItem>
-                ))}
-              </ScrollableList>
+              {isVideoLoading ? (
+                <div>로딩중</div>
+              ) : (
+                <ScrollableList>
+                  {videoList?.data.map((item: VideoDataItem) => (
+                    <ListItem
+                      key={item.challengeId}
+                      onClick={() => handleItemClick(item.challengeId)}
+                      $isSelected={
+                        selectedVideo?.challengeId === item.challengeId
+                      }
+                    >
+                      {item.title}
+                    </ListItem>
+                  ))}
+                </ScrollableList>
+              )}
             </>
           )}
         </DataBox>
@@ -549,7 +535,7 @@ export const BattleRoom: React.FC = () => {
             <CloseButton onClick={handleClose}>×</CloseButton>
             <YouTubeContainer>
               <YouTube
-                videoId={selectedVideo.videoId}
+                videoId={selectedVideo.youtubeId}
                 opts={{
                   height: "480",
                   width: "270",
