@@ -75,8 +75,12 @@ export const BattleRoom: React.FC = () => {
   const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
   const [battleStart, setBattleStart] = useState<boolean>(false); // 배틀 시작 상태
 
+  const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
+
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   const {
     data: hostData,
@@ -172,8 +176,6 @@ export const BattleRoom: React.FC = () => {
   const toggleReady = useCallback(() => {
     const newReadyState = !myReady;
     setMyReady(newReadyState);
-    console.log("내 준비 상태가 다음과 같이 변경됨:", newReadyState);
-
     if (session) {
       session.signal({
         data: JSON.stringify({ ready: newReadyState }),
@@ -218,6 +220,84 @@ export const BattleRoom: React.FC = () => {
       alert("모든 참가자가 준비되지 않았습니다.");
     }
   };
+
+  // 녹화 시작 함수
+  // const startRecording = useCallback(() => {
+  //   if (publisher && publisher.stream) {
+  //     const mediaRecorder = new MediaRecorder(
+  //       publisher.stream.getMediaStream(),
+  //       { mimeType: "video/webm" }
+  //     );
+  //     mediaRecorderRef.current = mediaRecorder;
+  //     recordedChunksRef.current = [];
+
+  //     mediaRecorder.ondataavailable = (event) => {
+  //       if (event.data.size > 0) {
+  //         recordedChunksRef.current.push(event.data);
+  //       }
+  //     };
+  //     mediaRecorder.start();
+  //     setIsRecording(true);
+  //     console.log("녹화 시작");
+  //   }
+  // }, [publisher]);
+
+  // 녹화 시작 함수
+  const startRecording = useCallback(() => {
+    if (publisher && publisher.stream) {
+      const stream = publisher.stream.getMediaStream();
+      try {
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: "video/webm",
+        });
+
+        mediaRecorderRef.current = mediaRecorder;
+        recordedChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            recordedChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onerror = (error) => {
+          console.error("MediaRecorder 에러:", error);
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+        console.log("녹화 시작");
+      } catch (error) {
+        console.error("MediaRecorder 생성 실패:", error);
+      }
+    } else {
+      console.error("Publisher 또는 스트림이 없음");
+    }
+  }, [publisher]);
+
+  // 녹화 데이터 처리, 영상 제출 api 호출
+  useEffect(() => {
+    if (!isRecording && recordedChunksRef.current.length > 0) {
+      const recordedBlob = new Blob(recordedChunksRef.current, {
+        type: "video/webm",
+      });
+      console.log("녹화된 영상 크기:", recordedBlob.size);
+      // 여기서 영상 제출 API 호출
+      // 예: submitRecordedVideo(recordedBlob);
+
+      // 처리 후 초기화
+      recordedChunksRef.current = [];
+    }
+  }, [isRecording]);
+
+  // 녹화 중지 함수
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      console.log("녹화 끝");
+    }
+  }, [isRecording]);
 
   // 카운트다운 및 영상 재생 로직
   useEffect(() => {
@@ -430,6 +510,13 @@ export const BattleRoom: React.FC = () => {
                 }}
                 onReady={(e: YouTubePlayer) => {
                   youtubePlayerRef.current = e.target;
+                }}
+                onStateChange={(e: { target: YouTubePlayer; data: number }) => {
+                  if (e.data === YouTube.PlayerState.PLAYING) {
+                    startRecording();
+                  } else if (e.data === YouTube.PlayerState.ENDED) {
+                    stopRecording();
+                  }
                 }}
               />
               {countdown !== null && (
