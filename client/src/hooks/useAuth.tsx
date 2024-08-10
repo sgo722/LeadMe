@@ -39,35 +39,28 @@ const useAuth = () => {
 
   // 로그아웃
   const logout = () => {
-    axios
-      .post(`${baseUrl}/api/v1/user/session/remove`)
-      .then(() => {
-        // 세션 삭제 및 토큰 제거
-        setAccessToken(null);
-        setAccessTokenExpireTime(null);
-        setRefreshToken(null);
-        setRefreshTokenExpireTime(null);
-        sessionStorage.removeItem("access_token");
-        sessionStorage.removeItem("access_token_expire_time");
-        sessionStorage.removeItem("refresh_token");
-        sessionStorage.removeItem("refresh_token_expire_time");
-        sessionStorage.removeItem("timer_started");
-        sessionStorage.removeItem("user_profile");
+    // axios.post(`${baseUrl}/api/v1/user/session/remove`);
 
-        if (timerId) {
-          clearTimeout(timerId);
-          setTimerId(null);
-        }
-        if (intervalId) {
-          clearInterval(intervalId);
-          setIntervalId(null);
-        }
+    setAccessToken(null);
+    setAccessTokenExpireTime(null);
+    setRefreshToken(null);
+    setRefreshTokenExpireTime(null);
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("access_token_expire_time");
+    sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("refresh_token_expire_time");
+    sessionStorage.removeItem("timer_started");
+    sessionStorage.removeItem("user_profile");
 
-        navigate("/home");
-      })
-      .catch((error) => {
-        console.error("Failed to logout:", error);
-      });
+    if (timerId) {
+      clearTimeout(timerId);
+      setTimerId(null);
+    }
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+    navigate("/home");
   };
 
   // refreshToken 유효성 체크
