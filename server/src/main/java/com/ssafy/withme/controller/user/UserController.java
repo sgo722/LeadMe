@@ -9,6 +9,8 @@ import com.ssafy.withme.global.listener.SessionListener;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -18,8 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -121,7 +121,7 @@ public class UserController {
     @PostMapping("/user/session/remove")
     public SuccessResponse<?> removeSession(HttpServletRequest request) {
 
-        HttpSession session = (HttpSession) request.getSession(false);
+        HttpSession session = request.getSession(false);
 
         if (session != null){
 

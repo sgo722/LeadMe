@@ -14,6 +14,8 @@ import com.ssafy.withme.service.user.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -23,8 +25,6 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionEvent;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -105,9 +105,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         clearAuthenticationAttributes(request, response);
 
         // 세션 생성 (현재 사용자 확인을 위한 세션)
-//        HttpSession session = (HttpSession) request.getSession();
-//
-//        sessionListener.sessionCreated(new HttpSessionEvent(session));
+        HttpSession session = request.getSession();
+
+        sessionListener.sessionCreated(new HttpSessionEvent(session));
 
 //         리다이렉트 ( 2에서 만든 URL로 리다이렉트합니다)
         log.info("targetUrl: {}" + targetUrl);
