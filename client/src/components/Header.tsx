@@ -20,14 +20,24 @@ import { UserProfile } from "types";
 
 interface HeaderProps {
   stickyOnly?: boolean;
+  loginModal?: boolean;
+  setLoginModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Header: React.FC<HeaderProps> = ({ stickyOnly = false }) => {
+const Header: React.FC<HeaderProps> = ({
+  stickyOnly = false,
+  loginModal: externalLoginModal,
+  setLoginModal: externalSetLoginModal,
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [loginModal, setLoginModal] = useState<boolean>(false);
-  const [sessionUser, setSessionUser] = useRecoilState(userProfileState);
 
+  //props로 상태를 받으면 받은걸 사용하고 없으면 내부 상태 사용
+  const [internalLoginModal, setInternalLoginModal] = useState<boolean>(false);
+  const [sessionUser, setSessionUser] = useRecoilState(userProfileState);
+  const loginModal =
+    externalLoginModal !== undefined ? externalLoginModal : internalLoginModal;
+  const setLoginModal = externalSetLoginModal || setInternalLoginModal;
   const setAccessToken = useSetRecoilState(accessTokenState);
   const setAccessTokenExpireTime = useSetRecoilState(
     accessTokenExpireTimeState
