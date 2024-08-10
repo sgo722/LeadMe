@@ -129,7 +129,16 @@ pipeline {
                                         docker pull ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
                                         docker stop ${DOCKERHUB_NAME} || true
                                         docker rm ${DOCKERHUB_NAME} || true
-                                        docker run --name ${DOCKERHUB_NAME} -d --network my-network -p 8090:8090 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" -v /home/ubuntu:/host ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
+                                        docker run --name ${DOCKERHUB_NAME} -d --network my-network -p 8090:8090 \
+                                -v /home/ubuntu/python/video/temporary:/home/ubuntu/python/video/temporary \
+                                -v /home/ubuntu/python/video/user:/home/ubuntu/python/video/user \
+                                -v /home/ubuntu/python/video/challenge:/home/ubuntu/python/video/challenge \
+                                -v /home/ubuntu/python/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
+                                -v /home/ubuntu/python/video/challenge/thumbnail:/home/ubuntu/python/video/challenge/thumbnail \
+                                -v /home/ubuntu/python/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
+                                -v /home/ubuntu:/host \
+                                -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" \
+                                ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
 
                                         docker pull ${DOCKERHUB_USERNAME}/client-image:latest
                                         docker stop client || true
