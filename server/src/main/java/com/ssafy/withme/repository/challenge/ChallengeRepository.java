@@ -17,7 +17,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
     Page<Challenge> findAll(Pageable pageable);
 
-    Page<Challenge> findByTitle(Pageable pageable, String title);
+    Page<Challenge> findByTitleContaining(Pageable pageable, String title);
 
     @Query("select c from Challenge c where c.thumbnailUrl is null")
     List<Challenge> findAllWithThumbnailUrlIsNull();

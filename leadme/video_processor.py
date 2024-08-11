@@ -178,7 +178,6 @@ def process_video_user(video_path):
     frame_interval = int(original_fps / target_fps)
     if frame_interval <= 0:
         frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
-    frame_interval = int(original_fps / target_fps)
 
     frame_count = 0
 

@@ -91,10 +91,10 @@ public class ChallengeController extends BaseEntity {
      * @param title
      * @return
      */
-    @GetMapping("/api/v1/challenge/search/{title}")
+    @GetMapping("/api/v1/challenge/search")
     public SuccessResponse<Page<ChallengeViewResponse>> searchChallengeByPaging(
             @PageableDefault(size = 4) Pageable pageable,
-            @PathVariable(name = "title") String title) {
+            @RequestParam(name = "title") String title) {
         return SuccessResponse.of(challengeService.searchChallengeByPaging(pageable,title));
     }
 

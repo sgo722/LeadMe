@@ -68,7 +68,7 @@ const CommentSectionWrapper = styled.div<{ $show: boolean }>`
   transition: right 0.3s ease-in-out;
   margin-right: 48px;
   z-index: 1000;
-  border-radius: 14px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.8);
 `;
 

@@ -2,10 +2,13 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
 import { axiosInstance } from "axiosInstance/apiClient";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRecoilValue } from "recoil";
+import { userProfileState } from "stores/authAtom";
 import countdownSound from "assets/audio/countdown.mp3";
 import styled from "styled-components";
 import YouTube, { YouTubePlayer } from "react-youtube";
+import { getJWTHeader } from "axiosInstance/apiClient";
 import type {
   Publisher,
   Session,
@@ -19,6 +22,7 @@ interface SignalData {
   selectedVideoId?: number | null;
   isVideoConfirmed?: boolean;
   start?: boolean;
+  selectedYoutubeId?: string;
 }
 
 interface VideoDataItem {
@@ -46,17 +50,38 @@ const fetchVideoList = async () => {
   return res.data;
 };
 
+// 유저가 선택한 영상의 blasePose 데이터를 받아오는 쿼리
+const fetchChallengeData = async (youtubeId: string) => {
+  const res = await axiosInstance.get(`/api/v1/challenge/${youtubeId}`);
+  return res.data;
+};
+
+// 녹화 영상 제출 및 점수 반환 쿼리
+const submitRecordedVideo = async (data: FormData) => {
+  const res = await axiosInstance.post("/api/v1/competition/result", data, {
+    headers: {
+      ...getJWTHeader(),
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};
+
 export const BattleRoom: React.FC = () => {
   const location = useLocation();
   const { token } = location.state as {
     token: string;
   };
+  const userProfile = useRecoilValue(userProfileState); // 유저정보
   const [session, setSession] = useState<Session | null>(null); //OpenVidu 세션 상태 관리
   const [publisher, setPublisher] = useState<Publisher | null>(null); // 로컬 비디오 스트림 발행자 상태 관리
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]); // 원격 비디오 스트림 구독자 목록 상태 관리
   const [selectedVideo, setSelectedVideo] = useState<VideoDataItem | null>(
     null
   );
+  const [selectedYoutubeId, setSelectedYoutubeId] = useState<string | null>(
+    null
+  ); // 선택된 영상의 youtubeId 상태
   const [searchTerm, setSearchTerm] = useState<string>(""); // 검색어
   const [isVideoConfirmed, setIsVideoConfirmed] = useState<boolean>(false);
 
@@ -66,19 +91,57 @@ export const BattleRoom: React.FC = () => {
 
   const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
   const [battleStart, setBattleStart] = useState<boolean>(false); // 배틀 시작 상태
+  const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
 
   const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
-
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  const webcamCanvasRef = useRef<HTMLCanvasElement>(null); // 캔버스 참조
 
   // 서버에 저장된 영상 가져오기
   const { data: videoList, isLoading: isVideoLoading } = useQuery({
     queryKey: ["videoList"],
     queryFn: fetchVideoList,
   });
+
+  // 영상을 제출하고 점수를 반환하는 뮤테이션
+  const submitRecordedVideoMutation = useMutation({
+    mutationFn: submitRecordedVideo,
+    onSuccess: (data) => {
+      console.log("성공했음 반환값:", data);
+    },
+    onError: (error) => {
+      console.log("녹화영상 제출 실패", error);
+    },
+  });
+
+  // 선택된 비디오의 blazepose 데이터를 받아오는 쿼리
+  const challengeQuery = useQuery({
+    queryKey: ["challengeData", selectedYoutubeId],
+    queryFn: () => {
+      if (selectedYoutubeId) {
+        return fetchChallengeData(selectedYoutubeId);
+      }
+      throw new Error("selectedYoutubeId is null");
+    },
+    enabled: !!selectedYoutubeId,
+  });
+  // 지울꺼
+  useEffect(() => {
+    if (challengeQuery.isSuccess) {
+      console.log("블레이즈포즈 데이터:", challengeQuery.data.data.landmarks);
+    }
+    if (challengeQuery.isError) {
+      console.error("블레이즈포즈 가져오다가 에러남:", challengeQuery.error);
+    }
+  }, [
+    challengeQuery.isSuccess,
+    challengeQuery.isError,
+    challengeQuery.data,
+    challengeQuery.error,
+  ]);
 
   // 방장 여부 확인
   const {
@@ -146,11 +209,16 @@ export const BattleRoom: React.FC = () => {
   // 비디오 선택 확인 핸들러
   const handleConfirm = () => {
     setIsVideoConfirmed(true);
-
+    if (selectedVideo) {
+      setSelectedYoutubeId(selectedVideo.youtubeId);
+    }
     // 비디오 선택 확인 정보를 다른 참가자에게 전송
     if (session) {
       session.signal({
-        data: JSON.stringify({ isVideoConfirmed: true }),
+        data: JSON.stringify({
+          isVideoConfirmed: true,
+          selectedYoutubeId: selectedVideo?.youtubeId,
+        }),
         type: "video-confirmed",
       });
     }
@@ -263,12 +331,37 @@ export const BattleRoom: React.FC = () => {
       });
       console.log("녹화된 영상 크기:", recordedBlob.size);
       // 여기서 영상 제출 API 호출
-      // 예: submitRecordedVideo(recordedBlob);
+
+      const formData = new FormData();
+      formData.append(
+        "request",
+        JSON.stringify({
+          userId: userProfile?.id,
+          challengeId: selectedVideo?.challengeId,
+        })
+      );
+      formData.append("videoFile", recordedBlob, "record.webm");
+      // const blob = new Blob(
+      //   [
+      //     JSON.stringify({
+      //       userId: 5,
+      //       challengeId: selectedVideo?.challengeId,
+      //     }),
+      //   ],
+      //   {
+      //     type: "application/json",
+      //   }
+      // );
+      // formData.append("request", blob);
+      // formData.append("videoFile", recordedBlob, "record.mp4");
+
+      // 영상 제출 mutation 실행
+      submitRecordedVideoMutation.mutate(formData);
 
       // 처리 후 초기화
       recordedChunksRef.current = [];
     }
-  }, [isRecording]);
+  }, [isRecording, selectedVideo, submitRecordedVideoMutation, userProfile]);
 
   // 녹화 중지 함수
   const stopRecording = useCallback(() => {
@@ -356,6 +449,9 @@ export const BattleRoom: React.FC = () => {
             console.log("비디오 확인됨:", signalData);
             if (signalData.isVideoConfirmed !== undefined) {
               setIsVideoConfirmed(signalData.isVideoConfirmed);
+              if (signalData.selectedYoutubeId) {
+                setSelectedYoutubeId(signalData.selectedYoutubeId);
+              }
             }
             break;
           case "video-cancelled":
@@ -459,6 +555,121 @@ export const BattleRoom: React.FC = () => {
     );
   }, [videoList?.data, searchTerm]);
 
+  // BlazePose 데이터 그리기 함수
+  const drawBlazePoseData = useCallback(
+    (frameIndex: number) => {
+      if (!webcamCanvasRef.current || !challengeQuery.data?.data?.landmarks)
+        return;
+      const ctx = webcamCanvasRef.current.getContext("2d");
+      if (!ctx) return;
+
+      ctx.clearRect(
+        0,
+        0,
+        webcamCanvasRef.current.width,
+        webcamCanvasRef.current.height
+      );
+      const landmarks = challengeQuery.data.data.landmarks[frameIndex];
+      if (!landmarks) return;
+
+      const connections = [
+        [11, 12],
+        [11, 13],
+        [13, 15],
+        [12, 14],
+        [14, 16],
+        [11, 23],
+        [12, 24],
+        [23, 24],
+        [23, 25],
+        [25, 27],
+        [27, 29],
+        [29, 31],
+        [24, 26],
+        [26, 28],
+        [28, 30],
+        [30, 32],
+      ];
+
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      connections.forEach(([i, j]) => {
+        const start = landmarks[i];
+        const end = landmarks[j];
+        if (start && end) {
+          ctx.beginPath();
+          ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
+          ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
+          ctx.stroke();
+        }
+      });
+
+      const bodyJoints = [
+        11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+      ];
+      bodyJoints.forEach((index) => {
+        const landmark = landmarks[index];
+        ctx.beginPath();
+        ctx.arc(
+          landmark.x * webcamCanvasRef.current!.width,
+          landmark.y * webcamCanvasRef.current!.height,
+          5,
+          0,
+          2 * Math.PI
+        );
+        ctx.fillStyle = "red";
+        ctx.fill();
+      });
+    },
+    [challengeQuery.data]
+  );
+
+  // 캔버스 애니메이션 로직
+  useEffect(() => {
+    let animationFrameId: number;
+    const fps = 30;
+    const frameInterval = 1000 / fps;
+    let lastTime = 0;
+
+    const animate = (currentTime: number) => {
+      if (
+        !youtubePlayerRef.current ||
+        !isYouTubePlaying ||
+        !challengeQuery.data?.data?.landmarks ||
+        challengeQuery.data.data.landmarks.length === 0
+      ) {
+        animationFrameId = requestAnimationFrame(animate);
+        return;
+      }
+
+      if (currentTime - lastTime >= frameInterval) {
+        const currentVideoTime = youtubePlayerRef.current.getCurrentTime();
+        const frameIndex = Math.floor(currentVideoTime * fps);
+        drawBlazePoseData(frameIndex);
+        lastTime = currentTime;
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isYouTubePlaying, challengeQuery.data, drawBlazePoseData]);
+
+  // youtube 이벤트 핸들러
+  const handleYouTubeStateChange = (e: {
+    target: YouTubePlayer;
+    data: number;
+  }) => {
+    setIsYouTubePlaying(e.data === YouTube.PlayerState.PLAYING);
+    if (e.data === YouTube.PlayerState.PLAYING) {
+      startRecording();
+    } else if (e.data === YouTube.PlayerState.ENDED) {
+      stopRecording();
+    }
+  };
+
   if (isCheckingHost) {
     return <div>방장 여부 확인 중...</div>;
   }
@@ -500,13 +711,7 @@ export const BattleRoom: React.FC = () => {
                 onReady={(e: YouTubePlayer) => {
                   youtubePlayerRef.current = e.target;
                 }}
-                onStateChange={(e: { target: YouTubePlayer; data: number }) => {
-                  if (e.data === YouTube.PlayerState.PLAYING) {
-                    startRecording();
-                  } else if (e.data === YouTube.PlayerState.ENDED) {
-                    stopRecording();
-                  }
-                }}
+                onStateChange={handleYouTubeStateChange}
               />
               {countdown !== null && (
                 <CountdownOverlay>
@@ -568,6 +773,7 @@ export const BattleRoom: React.FC = () => {
                 autoPlay={true}
                 ref={(video) => video && publisher.addVideoElement(video)}
               />
+              <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
               {myReady && <ReadyOverlay>READY</ReadyOverlay>}
             </>
           ) : (
@@ -918,4 +1124,12 @@ const CountdownText = styled.div`
   font-size: 100px;
   color: white;
   font-weight: bold;
+`;
+
+const WebcamCanvas = styled.canvas`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 `;

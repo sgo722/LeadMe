@@ -9,18 +9,19 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
-import { useSetRecoilState } from "recoil";
-import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
+// import { useSetRecoilState } from "recoil";
+// import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
 import { SubmitModal } from "features/practice/SubmitModal";
 import { TiMediaRecord } from "react-icons/ti";
 import { MdOutlineSpeed } from "react-icons/md";
 import countdownSound from "assets/audio/countdown.mp3";
+import { FaVideoSlash } from "react-icons/fa6";
 
-interface ChallengeData {
-  youtubeId: string;
-  url: string;
-}
+// interface ChallengeData {
+//   youtubeId: string;
+//   url: string;
+// }
 
 interface Landmark {
   x: number;
@@ -35,10 +36,10 @@ interface YoutubeBlazePoseData {
   challengeId: number;
 }
 
-const postChallenge = async (data: ChallengeData) => {
-  const res = await axiosInstance.post("/api/v1/challenge", data);
-  return res.data;
-};
+// const postChallenge = async (data: ChallengeData) => {
+//   const res = await axiosInstance.post("/api/v1/challenge", data);
+//   return res.data;
+// };
 
 const fetchYoutubeBlazePoseData = async (
   videoId: string
@@ -53,12 +54,12 @@ export const Practice: React.FC = () => {
   const nav = useNavigate();
 
   // Recoil 상태 설정
-  const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
-  const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
+  // const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
+  // const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
 
   // 로컬 상태 관리
-  const [inputUrl, setInputUrl] = useState<string>("");
-  const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
+  // const [inputUrl, setInputUrl] = useState<string>("");
+  // const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
@@ -84,24 +85,24 @@ export const Practice: React.FC = () => {
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오
 
   // API 요청 관련 mutation
-  const mutation = useMutation({
-    mutationFn: postChallenge,
-    onMutate: (variables: ChallengeData) => {
-      setIsCompletionAlertModalOpen(true);
-      setIsWebcamVisible(true);
-      setCurrentYoutubeId(variables.youtubeId);
-    },
-    onSuccess: (data) => {
-      setIsWebcamVisible(false);
-      setCurrentYoutubeId("");
-      nav(`/practice/${data.data.youtubeId}`);
-    },
-    onError: () => {
-      setIsWebcamVisible(false);
-      setCurrentYoutubeId("");
-      nav("/home");
-    },
-  });
+  // const mutation = useMutation({
+  //   mutationFn: postChallenge,
+  //   onMutate: (variables: ChallengeData) => {
+  //     setIsCompletionAlertModalOpen(true);
+  //     setIsWebcamVisible(true);
+  //     setCurrentYoutubeId(variables.youtubeId);
+  //   },
+  //   onSuccess: (data) => {
+  //     setIsWebcamVisible(false);
+  //     setCurrentYoutubeId("");
+  //     nav(`/practice/${data.data.youtubeId}`);
+  //   },
+  //   onError: () => {
+  //     setIsWebcamVisible(false);
+  //     setCurrentYoutubeId("");
+  //     nav("/home");
+  //   },
+  // });
 
   // YouTube BlazePose 데이터 쿼리
   const youtubeBlazePoseQuery = useQuery({
@@ -353,26 +354,26 @@ export const Practice: React.FC = () => {
   const handleBackButtonClick = () => nav(-1);
   const handleChangeButtonClick = () => nav("/practice");
   const handleSearchButtonClick = () => nav("/home");
-  const validateUrl = (url: string) => url.toLowerCase().includes("shorts");
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputUrl(e.target.value);
-    setIsValidUrl(validateUrl(e.target.value));
-  };
+  // const validateUrl = (url: string) => url.toLowerCase().includes("shorts");
+  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setInputUrl(e.target.value);
+  //   setIsValidUrl(validateUrl(e.target.value));
+  // };
 
-  const handleLoadVideo = () => {
-    const youtubeId = extractVideoId(inputUrl);
-    if (youtubeId) {
-      mutation.mutate({ youtubeId, url: inputUrl });
-      setInputUrl("");
-    } else {
-      console.error("올바른 Youtube Shorts URL이 아닙니다.");
-    }
-  };
+  // const handleLoadVideo = () => {
+  //   const youtubeId = extractVideoId(inputUrl);
+  //   if (youtubeId) {
+  //     mutation.mutate({ youtubeId, url: inputUrl });
+  //     setInputUrl("");
+  //   } else {
+  //     console.error("올바른 Youtube Shorts URL이 아닙니다.");
+  //   }
+  // };
 
-  const extractVideoId = (url: string): string | null => {
-    const match = url.match(/shorts\/([^?]+)/);
-    return match ? match[1] : null;
-  };
+  // const extractVideoId = (url: string): string | null => {
+  //   const match = url.match(/shorts\/([^?]+)/);
+  //   return match ? match[1] : null;
+  // };
 
   // 파이썬에서 영상 다운받는동안 대기시간에 홈으로 이동시켜줌
   const handleCloseIsCompletionAlertModal = () => {
@@ -547,14 +548,15 @@ export const Practice: React.FC = () => {
                   />
                 ) : (
                   <SearchUrl>
+                    <FaVideoSlash size={26} color="#ef6d6d" />
                     <Title>참고 영상을 첨부하세요</Title>
-                    <SubTitle>
+                    {/* <SubTitle>
                       <span>방법 1</span>
-                    </SubTitle>
+                    </SubTitle> */}
                     <SearchButton onClick={handleSearchButtonClick}>
                       영상 검색하러 가기
                     </SearchButton>
-                    <SubTitle>
+                    {/* <SubTitle>
                       <span>방법 2</span>
                     </SubTitle>
                     <SearchInput
@@ -568,7 +570,7 @@ export const Practice: React.FC = () => {
                       style={{ opacity: isValidUrl ? 1 : 0.5 }}
                     >
                       url 영상 불러오기
-                    </SearchButton>
+                    </SearchButton> */}
                   </SearchUrl>
                 )}
               </YouTubeWrapper>
@@ -819,6 +821,8 @@ const SearchUrl = styled.div`
   justify-content: center;
   padding: 30px;
   gap: 25px;
+
+  margin-top: -20px;
 `;
 
 const Title = styled.div`
@@ -827,25 +831,25 @@ const Title = styled.div`
   font-weight: 500;
 `;
 
-const SubTitle = styled.div`
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: #b4b4b4;
-  font-size: 14px;
-  width: 100%;
+// const SubTitle = styled.div`
+//   display: flex;
+//   align-items: center;
+//   text-align: center;
+//   color: #b4b4b4;
+//   font-size: 14px;
+//   width: 100%;
 
-  &::before,
-  &::after {
-    content: "";
-    flex: 1;
-    border-bottom: 1px solid #cecece;
-  }
+//   &::before,
+//   &::after {
+//     content: "";
+//     flex: 1;
+//     border-bottom: 1px solid #cecece;
+//   }
 
-  & > span {
-    padding: 0 10px;
-  }
-`;
+//   & > span {
+//     padding: 0 10px;
+//   }
+// `;
 
 const SearchButton = styled.button`
   border-radius: 4px;
@@ -860,16 +864,16 @@ const SearchButton = styled.button`
   font-weight: 500;
 `;
 
-const SearchInput = styled.input`
-  border-radius: 4px;
-  background: #fff;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.15);
-  border: none;
-  width: 250px;
-  height: 44px;
-  outline: none;
-  padding-left: 15px;
-`;
+// const SearchInput = styled.input`
+//   border-radius: 4px;
+//   background: #fff;
+//   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.15);
+//   border: none;
+//   width: 250px;
+//   height: 44px;
+//   outline: none;
+//   padding-left: 15px;
+// `;
 
 const ButtonWrapper = styled.div`
   position: relative;
