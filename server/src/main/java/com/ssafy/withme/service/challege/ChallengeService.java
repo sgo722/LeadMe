@@ -2,6 +2,7 @@ package com.ssafy.withme.service.challege;
 
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
+import com.ssafy.withme.domain.challenge.ChallengeEditor;
 import com.ssafy.withme.domain.challengeHashtag.ChallengeHashTag;
 import com.ssafy.withme.domain.hashtag.Hashtag;
 import com.ssafy.withme.domain.landmark.Landmark;
@@ -15,6 +16,7 @@ import com.ssafy.withme.repository.landmark.LandmarkRepository;
 import com.ssafy.withme.service.challege.response.ChallengeBattleListResponse;
 import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
+import com.ssafy.withme.service.youtube.YouTubeService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -63,6 +65,7 @@ public class ChallengeService {
 
     private final ChallengeHashtagRepository challengeHashTagRepository;
 
+    private final YouTubeService youTubeService;
 
     private final RestTemplate restTemplate;
 
@@ -210,7 +213,7 @@ public class ChallengeService {
      * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
      *  기본적으로 4개의 영상 정보를 반환한다.
      * @param pageable
-     * @param searchTitle
+     * @param keyword
      * @return
      */
     public Page<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String keyword) {
@@ -299,6 +302,27 @@ public class ChallengeService {
         return thumbnailPath.toString();
     }
 
+    /**
+     * 챌린지 목록에서 유튜브 썸네일 이미지 주소가 없는 목록을 가져와 유튜브 api를 활용해 썸네일 주소를 입력해준다.
+     */
+    @Transactional
+    public void updateChallengeThumbnailUrl() {
+
+        List<Challenge> challenges = challengeRepository.findAllWithThumbnailUrlIsNull();
+        for(Challenge challenge: challenges) {
+
+            ChallengeEditor.ChallengeEditorBuilder challengeEditorBuilder = challenge.toEditor();
+            ChallengeEditor challengeEditor =  challengeEditorBuilder.
+                    thumbnailUrl(youTubeService
+                            .getYoutubeThumbnailUrl(challenge.getYoutubeId()))
+                    .build();
+
+            challenge.edit(challengeEditor);
+        }
+
+
+    }
+
     public List<ChallengeBattleListResponse> findAllChallenge() {
 
         List<Challenge> findAllChallenges = challengeRepository.findAll();
@@ -308,4 +332,5 @@ public class ChallengeService {
 
 
     }
+
 }

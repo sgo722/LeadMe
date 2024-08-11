@@ -106,4 +106,10 @@ public class ChallengeController extends BaseEntity {
         return SuccessResponse.of(challengeService.findAllChallenge());
     }
 
+    @PutMapping("/api/v1/challenge/thumbnail-url")
+    public SuccessResponse<?> updateChallengeThumbnailUrl() {
+        challengeService.updateChallengeThumbnailUrl();
+        return SuccessResponse.of(true);
+    }
+
 }
