@@ -6,19 +6,17 @@ import { CommentSection } from "features/videoDetail/CommentSection";
 
 interface VideoPlayerProps {
   video: Video;
-  isActive: boolean;
   showComments: boolean;
   onToggleComments: () => void;
 }
 
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
   video,
-  isActive,
   showComments,
   onToggleComments,
 }) => {
   return (
-    <VideoPlayerWrapper $isActive={isActive} $showComments={showComments}>
+    <VideoPlayerWrapper $showComments={showComments}>
       <VideoContent>
         <VideoThumbnail src={video.src} alt={video.title} />
         <InteractionButtons
@@ -33,7 +31,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 };
 
 const VideoPlayerWrapper = styled.div<{
-  $isActive: boolean;
   $showComments: boolean;
 }>`
   display: flex;
@@ -41,12 +38,22 @@ const VideoPlayerWrapper = styled.div<{
   align-items: center;
   position: relative;
   scroll-snap-align: start;
-  height: 90vh;
+  height: 85vh;
   width: 100%;
-  margin-bottom: 3vh;
+  margin-bottom: 15vh;
   transition: transform 0.3s ease-in-out;
   transform: ${(props) =>
     props.$showComments ? "translateX(-20%)" : "translateX(0)"};
+  scroll-snap-align: start;
+`;
+
+const VideoThumbnail = styled.img`
+  width: auto;
+  height: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  aspect-ratio: 9 / 16;
+  border-radius: 10px;
 `;
 
 const VideoContent = styled.div`
@@ -55,10 +62,4 @@ const VideoContent = styled.div`
   align-items: center;
 `;
 
-const VideoThumbnail = styled.img`
-  width: 24vw;
-  height: 80vh;
-  max-width: 100%;
-  object-fit: cover;
-  border-radius: 10px;
-`;
+export default VideoPlayer;
