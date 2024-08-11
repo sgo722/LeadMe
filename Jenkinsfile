@@ -108,7 +108,7 @@ pipeline {
         //                        ${DOCKERHUB_USERNAME}/python-image:latest
         //                '''
                         sh '''
-                            docker run -d --name python-container -p 4567:4567 ${DOCEKRHUB_USERNAME}/python-image:latest
+                            docker run -d --name python-container -p 4567:4567 ${DOCKERHUB_USERNAME}/python-image:latest
                         '''
                     }
                 }
