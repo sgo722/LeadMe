@@ -15,19 +15,19 @@ pose = mp_pose.Pose()
 PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
 
 
-client = MongoClient(
-    host='localhost',
-    port=27017,
-)
+# client = MongoClient(
+#     host='localhost',
+#     port=27017,
+# )
 
 # MongoDB 연결 설정
-# client = MongoClient(
-#     host='i11c109.p.ssafy.io',
-#     port=27070,
-#     username='leadme',
-#     password='leadmessafy11',
-#     authSource='admin'  # 인증할 데이터베이스를 지정합니다. 기본적으로 'admin'을 사용합니다.
-# )
+client = MongoClient(
+    host='i11c109.p.ssafy.io',
+    port=27070,
+    username='leadme',
+    password='leadmessafy11',
+    authSource='admin'  # 인증할 데이터베이스를 지정합니다. 기본적으로 'admin'을 사용합니다.
+)
 db = client['local']  # 'local' 데이터베이스 이름 설정
 collection = db['landmarks']  # 'landmarks' 컬렉션 이름 설정
 

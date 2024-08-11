@@ -32,18 +32,18 @@ class Video(BaseModel):
     youtubeId : str
 
 UPLOAD_DIRECTORY = "."
-#TEMP_DIRECTORY = "video/temporary"
-#PERMANENT_DIRECTORY_USER = "video/user"
-#PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
-#PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
-#THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
+TEMP_DIRECTORY = "video/temporary"
+PERMANENT_DIRECTORY_USER = "video/user"
+PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
+PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
+THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
 
 
-TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
-PERMANENT_DIRECTORY_USER = "/home/ubuntu/python/video/user"
-PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
-PERMANENT_DIRECTORY_CHALLENGE_AUDIO =  "/home/ubuntu/python/video/challenge/audio"
-THUMBNAIL_DIRECTORY = "/home/ubuntu/python/video/temporary/thumbnail"
+# TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
+# PERMANENT_DIRECTORY_USER = "/home/ubuntu/python/video/user"
+# PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
+# PERMANENT_DIRECTORY_CHALLENGE_AUDIO =  "/home/ubuntu/python/video/challenge/audio"
+# THUMBNAIL_DIRECTORY = "/home/ubuntu/python/video/temporary/thumbnail"
 
 
 ## 서비스 로직 호출 부분을 Ray로 병렬 처리한다.
