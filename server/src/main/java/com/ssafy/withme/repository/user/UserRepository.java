@@ -26,6 +26,6 @@ public interface UserRepository extends JpaRepository<User,Long>, UserRepository
     Optional<User> findByNickname(String nickname);
 
     // 유저를 좋아요 순으로 정렬하고 페이징 적용하여 가져오기
-    @Query("SELECT u FROM users u ORDER BY u.userLikeCnt DESC")
+    @Query("SELECT u FROM users u join fetch u.fromFollowList f ORDER BY u.userLikeCnt DESC")
     List<User> findTopUsersByLikes(Pageable pageable);
 }
