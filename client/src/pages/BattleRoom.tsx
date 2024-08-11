@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -72,6 +72,7 @@ export const BattleRoom: React.FC = () => {
   const { token } = location.state as {
     token: string;
   };
+  const nav = useNavigate();
   const userProfile = useRecoilValue(userProfileState); // 유저정보
   const [session, setSession] = useState<Session | null>(null); //OpenVidu 세션 상태 관리
   const [publisher, setPublisher] = useState<Publisher | null>(null); // 로컬 비디오 스트림 발행자 상태 관리
@@ -161,7 +162,7 @@ export const BattleRoom: React.FC = () => {
 
   // 방장 여부 설정
   useEffect(() => {
-    if (hostData?.isSuccess && hostData?.data) {
+    if (hostData?.isSuccess) {
       const hostId = hostData.data;
       const userId = JSON.parse(
         sessionStorage.getItem("user_profile") || "{}"
@@ -191,6 +192,20 @@ export const BattleRoom: React.FC = () => {
       });
     }
   };
+
+  // 방 나가는 뮤테이션
+  const exitSessionMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      await axiosInstance.delete(`/api/v1/session/${sessionId}`);
+    },
+    onSuccess: () => {
+      console.log("세션 종료 성공");
+      nav("/battle");
+    },
+    onError: (error) => {
+      console.error("세션 종료 실패:", error);
+    },
+  });
 
   // 비디오 선택 취소 핸들러
   const handleClose = () => {
@@ -798,14 +813,26 @@ export const BattleRoom: React.FC = () => {
                     <ActionButton onClick={toggleReady}>
                       {myReady ? "준비 취소" : "준비"}
                     </ActionButton>
-                    <ActionButton onClick={() => console.log("나가기")}>
+                    <ActionButton
+                      onClick={() => {
+                        if (session) {
+                          exitSessionMutation.mutate(session.sessionId);
+                        }
+                      }}
+                    >
                       나가기
                     </ActionButton>
                   </>
                 )}
               </>
             ) : (
-              <ActionButton onClick={() => console.log("나가기")}>
+              <ActionButton
+                onClick={() => {
+                  if (session) {
+                    exitSessionMutation.mutate(session.sessionId);
+                  }
+                }}
+              >
                 나가기
               </ActionButton>
             )}
