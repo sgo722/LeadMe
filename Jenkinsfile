@@ -109,9 +109,6 @@ pipeline {
                             -v /home/ubuntu/leadme/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
                             ${DOCKERHUB_USERNAME}/python-image:latest
                         '''
-                        sh '''
-                            docker run -d --name python-container -p 4567:4567 ${DOCKERHUB_USERNAME}/python-image:latest
-                        '''
                     }
                 }
             }
