@@ -44,6 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.ssafy.withme.global.error.ErrorCode.*;
@@ -232,32 +233,42 @@ public class CompetitionService {
         log.info("챌린지 id: {}", challengeId);
 
         // 챌린지 아이디를 기반으로 저장되어 있는 챌린지 정보 조회
-        Challenge challenge = challengeRepository.findById(challengeId).orElse(null);
-
-        // 조회한 챌린지가 없는 경우 예외처리
-        if (challenge == null) {
-            log.info("조회할 챌린지가 없어 예외 발생.");
-            throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
-        }
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> {
+                    log.info("조회할 챌린지가 없어 예외 발생.");
+                    throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
+                });
 
         log.info("비디오 파일 정보 : {}", videoFile.getOriginalFilename());
 
         String url = FAST_API_URL + "/upload/userFile";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
-            @Override
-            public String getFilename() {
-                return videoFile.getOriginalFilename();
-            }
-        });
-        body.add("youtubeId", challenge.getYoutubeId());
 
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+        CompletableFuture<ResponseEntity<String>> responseFuture = CompletableFuture.supplyAsync(() -> {
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+            try {
+                body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
+                    @Override
+                    public String getFilename() {
+                        return videoFile.getOriginalFilename();
+                    }
+                });
+            } catch (IOException e) {
+                log.error("videoFile IOException: {}", e.getMessage());
+            }
+            body.add("youtubeId", challenge.getYoutubeId());
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            return restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+        });
+
 
         // Fast API 반환값
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+        ResponseEntity<String> response = responseFuture.join();
 
         String result = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -274,6 +285,7 @@ public class CompetitionService {
 
         // 기존 챌린지 정보를 List<Frame> 형태로 캐스팅
         List<Frame> challengeFrames = landmark.getLandmarks().stream()
+                .parallel()
                 .map(keypoints -> keypoints.stream()
                         .map(p -> new Keypoint(p.getX(), p.getY(), p.getZ(), p.getVisibility()))
                         .collect(Collectors.toList()))
