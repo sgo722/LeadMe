@@ -162,6 +162,8 @@ public class CompetitionController {
 
     @PostMapping("api/v1/competition/result")
     public SuccessResponse<?> getCompetitionResult(UserChallengeAnalyzeRequest request, MultipartFile videoFile, @CurrentUser User user) throws IOException {
+        log.info(getClass().getSimpleName() + Thread.currentThread().getStackTrace()[1].getMethodName() + "===================================");
+
         return SuccessResponse.of(competitionService.getCompetitionResult(request, videoFile));
     }
 }

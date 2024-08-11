@@ -224,14 +224,19 @@ public class CompetitionService {
     public double getCompetitionResult(UserChallengeAnalyzeRequest request, MultipartFile videoFile) throws IOException {
         // 챌린지 아이디
         Long challengeId = request.getChallengeId();
+        log.info("챌린지 id: {}", challengeId);
 
         // 챌린지 아이디를 기반으로 저장되어 있는 챌린지 정보 조회
         Challenge challenge = challengeRepository.findById(challengeId).orElse(null);
 
         // 조회한 챌린지가 없는 경우 예외처리
         if (challenge == null) {
+            log.info("조회할 챌린지가 없어 예외 발생.");
             throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
         }
+
+        log.info("비디오 파일 정보 : {}", videoFile.getOriginalFilename());
+        log.info("비디오 파일 크기 : {} bytes", videoFile.getBytes());
 
         String url = FAST_API_URL + "/upload/userFile";
         HttpHeaders headers = new HttpHeaders();
@@ -257,6 +262,7 @@ public class CompetitionService {
 
         // 역직렬화한 유저 포즈 정보
         List<Frame> userFrames = deserialize(result);
+        log.info("유저 영상 프레임 수 : {} ", userFrames.size());
 
         // 저장된 챌린지 포즈 정보
         Landmark landmark = landmarkRepository.findByYoutubeId(challenge.getYoutubeId());
