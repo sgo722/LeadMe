@@ -2,10 +2,13 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
 import { axiosInstance } from "axiosInstance/apiClient";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRecoilValue } from "recoil";
+import { userProfileState } from "stores/authAtom";
 import countdownSound from "assets/audio/countdown.mp3";
 import styled from "styled-components";
 import YouTube, { YouTubePlayer } from "react-youtube";
+import { getJWTHeader } from "axiosInstance/apiClient";
 import type {
   Publisher,
   Session,
@@ -46,17 +49,38 @@ const fetchVideoList = async () => {
   return res.data;
 };
 
+// 유저가 선택한 영상의 blasePose 데이터를 받아오는 쿼리
+const fetchChallengeData = async (youtubeId: string) => {
+  const res = await axiosInstance.get(`/api/v1/challenge/${youtubeId}`);
+  return res.data;
+};
+
+// 녹화 영상 제출 및 점수 반환 쿼리
+const submitRecordedVideo = async (data: FormData) => {
+  const res = await axiosInstance.post("/api/v1/competition/result", data, {
+    headers: {
+      ...getJWTHeader(),
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};
+
 export const BattleRoom: React.FC = () => {
   const location = useLocation();
   const { token } = location.state as {
     token: string;
   };
+  const userProfile = useRecoilValue(userProfileState); // 유저정보
   const [session, setSession] = useState<Session | null>(null); //OpenVidu 세션 상태 관리
   const [publisher, setPublisher] = useState<Publisher | null>(null); // 로컬 비디오 스트림 발행자 상태 관리
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]); // 원격 비디오 스트림 구독자 목록 상태 관리
   const [selectedVideo, setSelectedVideo] = useState<VideoDataItem | null>(
     null
   );
+  const [selectedYoutubeId, setSelectedYoutubeId] = useState<string | null>(
+    null
+  ); // 선택된 영상의 youtubeId 상태
   const [searchTerm, setSearchTerm] = useState<string>(""); // 검색어
   const [isVideoConfirmed, setIsVideoConfirmed] = useState<boolean>(false);
 
@@ -79,6 +103,43 @@ export const BattleRoom: React.FC = () => {
     queryKey: ["videoList"],
     queryFn: fetchVideoList,
   });
+
+  // 영상을 제출하고 점수를 반환하는 뮤테이션
+  const submitRecordedVideoMutation = useMutation({
+    mutationFn: submitRecordedVideo,
+    onSuccess: (data) => {
+      console.log("성공했음 반환값:", data);
+    },
+    onError: (error) => {
+      console.log("녹화영상 제출 실패", error);
+    },
+  });
+
+  // 선택된 비디오의 blazepose 데이터를 받아오는 쿼리
+  const challengeQuery = useQuery({
+    queryKey: ["challengeData", selectedYoutubeId],
+    queryFn: () => {
+      if (selectedYoutubeId) {
+        return fetchChallengeData(selectedYoutubeId);
+      }
+      throw new Error("selectedYoutubeId is null");
+    },
+    enabled: !!selectedYoutubeId,
+  });
+  // 지울꺼
+  useEffect(() => {
+    if (challengeQuery.isSuccess) {
+      console.log("블레이즈포즈 데이터:", challengeQuery.data.data.landmarks);
+    }
+    if (challengeQuery.isError) {
+      console.error("블레이즈포즈 가져오다가 에러남:", challengeQuery.error);
+    }
+  }, [
+    challengeQuery.isSuccess,
+    challengeQuery.isError,
+    challengeQuery.data,
+    challengeQuery.error,
+  ]);
 
   // 방장 여부 확인
   const {
@@ -146,7 +207,9 @@ export const BattleRoom: React.FC = () => {
   // 비디오 선택 확인 핸들러
   const handleConfirm = () => {
     setIsVideoConfirmed(true);
-
+    if (selectedVideo) {
+      setSelectedYoutubeId(selectedVideo.youtubeId);
+    }
     // 비디오 선택 확인 정보를 다른 참가자에게 전송
     if (session) {
       session.signal({
@@ -263,12 +326,37 @@ export const BattleRoom: React.FC = () => {
       });
       console.log("녹화된 영상 크기:", recordedBlob.size);
       // 여기서 영상 제출 API 호출
-      // 예: submitRecordedVideo(recordedBlob);
+
+      const formData = new FormData();
+      formData.append(
+        "request",
+        JSON.stringify({
+          userId: userProfile?.id,
+          challengeId: selectedVideo?.challengeId,
+        })
+      );
+      formData.append("videoFile", recordedBlob, "record.webm");
+      // const blob = new Blob(
+      //   [
+      //     JSON.stringify({
+      //       userId: 5,
+      //       challengeId: selectedVideo?.challengeId,
+      //     }),
+      //   ],
+      //   {
+      //     type: "application/json",
+      //   }
+      // );
+      // formData.append("request", blob);
+      // formData.append("videoFile", recordedBlob, "record.mp4");
+
+      // 영상 제출 mutation 실행
+      submitRecordedVideoMutation.mutate(formData);
 
       // 처리 후 초기화
       recordedChunksRef.current = [];
     }
-  }, [isRecording]);
+  }, [isRecording, selectedVideo, submitRecordedVideoMutation]);
 
   // 녹화 중지 함수
   const stopRecording = useCallback(() => {
