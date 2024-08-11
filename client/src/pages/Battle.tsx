@@ -33,8 +33,8 @@ const fetchRooms = async (
 interface Room {
   competitionId: number;
   createdDate: string;
-  nickname: string | null;
-  profileImg: string | null;
+  nickname: string;
+  profileImg: string;
   public: boolean;
   roomName: string;
   sessionId: string;
@@ -224,9 +224,12 @@ export const Battle: React.FC = () => {
           <SearchBar width={560} icon onSearch={handleSearch} />
           <RoomContainer>
             {rooms?.competitions.map((room: Room) => (
-              <Room key={room.competitionId}>
+              <RoomItem key={room.competitionId}>
                 <RoomTop>
-                  <div>{room.nickname || "수정하셈"}</div>
+                  <ProfileSection>
+                    <ProfileImage src={room.profileImg} alt="Profile" />
+                    <div>{room.nickname}</div>
+                  </ProfileSection>
                   <div>{!room.public && <MdLock />}</div>
                 </RoomTop>
                 <RoomMid>{room.roomName}</RoomMid>
@@ -236,7 +239,7 @@ export const Battle: React.FC = () => {
                     enter
                   </EnterButton>
                 </RoomBottom>
-              </Room>
+              </RoomItem>
             ))}
           </RoomContainer>
           <CreateRoomButtonContainer>
@@ -309,7 +312,7 @@ const RoomContainer = styled.div`
   min-height: 400px;
 `;
 
-const Room = styled.div`
+const RoomItem = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -332,6 +335,19 @@ const RoomTop = styled.div`
   align-items: center;
   margin-bottom: 10px;
   color: #929292;
+`;
+
+const ProfileSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const ProfileImage = styled.img`
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
 `;
 
 const RoomMid = styled.h1`
