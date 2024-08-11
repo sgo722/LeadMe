@@ -236,7 +236,6 @@ public class CompetitionService {
         }
 
         log.info("비디오 파일 정보 : {}", videoFile.getOriginalFilename());
-        log.info("비디오 파일 크기 : {} bytes", videoFile.getBytes());
 
         String url = FAST_API_URL + "/upload/userFile";
         HttpHeaders headers = new HttpHeaders();
