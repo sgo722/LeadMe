@@ -38,10 +38,10 @@ pipeline {
                     }
                     
                     // 클라이언트 빌드
-                    dir('S11P12C109/client') {
-                        sh 'npm install'  
-                        sh 'npm run build'  
-                    }
+                    //dir('S11P12C109/client') {
+                    //    sh 'npm install'  
+                    //    sh 'npm run build'  
+                    //}
                 }
             }
         }
@@ -62,21 +62,21 @@ pipeline {
             }
         }
 
-        stage('Build and Push Client Docker Image') {
-            steps {
-                script {
-                    dir('S11P12C109/client') { // 클라이언트 디렉토리 경로 변경
-                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                            sh '''
-                            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-                            docker build -t ${DOCKERHUB_USERNAME}/client-image:latest .
-                            docker push ${DOCKERHUB_USERNAME}/client-image:latest
-                            '''
-                        }
-                    }
-                }
-            }
-        }
+        // stage('Build and Push Client Docker Image') {
+        //    steps {
+        //        script {
+        //            dir('S11P12C109/client') { // 클라이언트 디렉토리 경로 변경
+        //                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+        //                    sh '''
+        //                    echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+        //                    docker build -t ${DOCKERHUB_USERNAME}/client-image:latest .
+        //                    docker push ${DOCKERHUB_USERNAME}/client-image:latest
+        //                    '''
+        //                }
+        //           }
+        //       }
+        //    }
+        //}
 
         stage('Build and Push Python Docker Image') {
             steps {
@@ -99,12 +99,12 @@ pipeline {
                         // 컨테이너 실행
                         sh '''
                         docker run -d --name python-container -p 4567:4567 \
-                                -v /home/ubuntu/leadme/video/temporary:/home/ubuntu/python/video/temporary \
-                                -v /home/ubuntu/leadme/video/user:/home/ubuntu/python/video/user \
-                                -v /home/ubuntu/leadme/video/challenge:/home/ubuntu/python/video/challenge \
-                                -v /home/ubuntu/leadme/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
-                                -v /home/ubuntu/leadme/video/challenge/thumbnail:/home/ubuntu/python/video/challenge/thumbnail \
-                                -v /home/ubuntu/leadme/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
+        //                        -v /home/ubuntu/leadme/video/temporary:/home/ubuntu/python/video/temporary \
+        //                        -v /home/ubuntu/leadme/video/user:/home/ubuntu/python/video/user \
+        //                        -v /home/ubuntu/leadme/video/challenge:/home/ubuntu/python/video/challenge \
+        //                        -v /home/ubuntu/leadme/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
+        //                        -v /home/ubuntu/leadme/video/challenge/thumbnail:/home/ubuntu/python/video/challenge/thumbnail \
+        //                        -v /home/ubuntu/leadme/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
                                 ${DOCKERHUB_USERNAME}/python-image:latest
                         '''
                     }
