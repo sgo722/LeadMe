@@ -2,6 +2,7 @@ package com.ssafy.withme.global.util;
 
 import com.ssafy.withme.global.response.Frame;
 import com.ssafy.withme.global.response.Keypoint;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +12,8 @@ import java.util.Map;
 /**
  * 유클리드 정규화 및 코사인 유사도 측정을 진행하는 클래스
  */
+
+@Slf4j
 public class PoseComparison {
     // L2 정규화 학습
     public static List<Keypoint> l2Normalize(List<Keypoint> pose) {
@@ -69,6 +72,11 @@ public class PoseComparison {
         int totalFrameCount = challengeFrames.size();
         int userVideoFrameCount = userVideoFrames.size();
 
+
+        log.info("totalFrameCount :" + totalFrameCount);
+
+        log.info("userVideoFrameCount :" + userVideoFrameCount);
+
         // 유저 영상 프레임 수가 챌린지 프레임 수보다 적거나 같다면
         if(totalFrameCount >= userVideoFrameCount) {
 
@@ -118,11 +126,19 @@ public class PoseComparison {
             }
         }
 
+
         // 원본 프레임 기준으로 평균을 나눔
         totalScore = totalScore / totalFrameCount;
+
+
+        log.info("totalScore :" + totalScore);
+
+
         response.put("totalScore", totalScore);
         response.put("scoreHistory", scoreHistroy);
 
+
+        log.info("scoreHistroy :" + scoreHistroy);
         return response;
     }
 }
