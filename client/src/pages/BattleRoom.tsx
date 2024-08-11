@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
 import { axiosInstance } from "axiosInstance/apiClient";
@@ -57,6 +57,7 @@ export const BattleRoom: React.FC = () => {
   const [selectedVideo, setSelectedVideo] = useState<VideoDataItem | null>(
     null
   );
+  const [searchTerm, setSearchTerm] = useState<string>(""); // 검색어
   const [isVideoConfirmed, setIsVideoConfirmed] = useState<boolean>(false);
 
   const [myReady, setMyReady] = useState<boolean>(false); // 자신의 준비 state
@@ -450,6 +451,14 @@ export const BattleRoom: React.FC = () => {
     };
   }, [token]);
 
+  // 검색어 처리
+  const filteredVideoList = useMemo(() => {
+    if (!videoList?.data) return [];
+    return videoList.data.filter((item: VideoDataItem) =>
+      item.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [videoList?.data, searchTerm]);
+
   if (isCheckingHost) {
     return <div>방장 여부 확인 중...</div>;
   }
@@ -510,11 +519,17 @@ export const BattleRoom: React.FC = () => {
           ) : (
             <>
               <Title>Battle!</Title>
+              <SearchInput
+                type="text"
+                placeholder="검색어를 입력해주세요"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
               {isVideoLoading ? (
                 <div>로딩중</div>
               ) : (
                 <ScrollableList>
-                  {videoList?.data.map((item: VideoDataItem) => (
+                  {filteredVideoList.map((item: VideoDataItem) => (
                     <ListItem
                       key={item.challengeId}
                       onClick={() => handleItemClick(item.challengeId)}
@@ -709,6 +724,15 @@ const DataBox = styled.div<{ $isShifted: boolean; $isSelected: boolean }>`
   left: ${(props) => (props.$isShifted ? "50%" : "auto")};
   top: ${(props) => (props.$isShifted ? "50%" : "auto")};
   transform: ${(props) => (props.$isShifted ? "translate(-55%, 0%)" : "none")};
+`;
+
+const SearchInput = styled.input`
+  width: 90%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  border-radius: 10px;
+  margin: 10px 10px;
 `;
 
 const YouTubeBox = styled.div<{ $isVisible: boolean }>`
