@@ -3,6 +3,7 @@ package com.ssafy.withme.service.user;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.user.constant.RoleType;
 import com.ssafy.withme.domain.user.constant.UserStatus;
+import com.ssafy.withme.global.config.database.MongoConfig;
 import com.ssafy.withme.repository.user.UserRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -68,5 +69,16 @@ class UserServiceBootTest {
         List<User> all = userService.findAll();
 
         assertThat(all.size()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("회원 식별자로 탐색")
+    void 회원_식별자_탐색() {
+
+        User findUser1 = userService.findById(1L);
+        User findUser2 = userService.findById(2L);
+
+        assertThat(findUser1.getId()).isEqualTo(1L);
+        assertThat(findUser2.getId()).isEqualTo(2L);
     }
 }
