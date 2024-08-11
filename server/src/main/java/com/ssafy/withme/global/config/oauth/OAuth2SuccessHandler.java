@@ -40,7 +40,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofHours(1);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(30);
 
     // 로그인 성공 시 리다이렉트 페이지
     public static final String REDIRECT_PATH = "https://i11c109.p.ssafy.io/home";
