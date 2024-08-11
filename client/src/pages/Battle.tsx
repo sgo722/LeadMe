@@ -52,7 +52,6 @@ export const Battle: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false); // 로그인 모달 상태 관리
   const nav = useNavigate();
   const user = sessionStorage.getItem("user_profile"); // 로그인 여부
-
   useEffect(() => {
     if (isPasswordError) {
       const timer = setTimeout(() => {
