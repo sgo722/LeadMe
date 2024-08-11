@@ -2,14 +2,18 @@ package com.ssafy.withme.controller.challenge;
 
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.BaseEntity;
+import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.response.ApiResponse;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.challege.ChallengeService;
+import com.ssafy.withme.service.challege.response.ChallengeBattleListResponse;
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.userChallenge.UserChallengeService;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
@@ -59,7 +63,9 @@ public class ChallengeController extends BaseEntity {
      * @return
      */
     @GetMapping("/api/v1/challenge/{youtubeId}")
-    public SuccessResponse<LandmarkResponse> findLandMarkByVideoName(@PathVariable String youtubeId) throws Exception {
+    public SuccessResponse<LandmarkResponse> findLandMarkByVideoName(
+            @CurrentUser User user,
+            @PathVariable String youtubeId) throws Exception {
         return SuccessResponse.of(challengeService.getLandMarkByYoutubeId(youtubeId));
     }
 
@@ -72,7 +78,7 @@ public class ChallengeController extends BaseEntity {
      * @return
      */
     @GetMapping("/api/v1/challenge")
-    public SuccessResponse<List<ChallengeViewResponse>> findChallengeByPaging(@PageableDefault(size = 4) Pageable pageable){
+    public SuccessResponse<Page<ChallengeViewResponse>> findChallengeByPaging(@PageableDefault(size = 4) Pageable pageable){
         return SuccessResponse.of(challengeService.findChallengeByPaging(pageable));
     }
 
@@ -82,14 +88,22 @@ public class ChallengeController extends BaseEntity {
      * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
      *  기본적으로 4개의 영상 정보를 반환한다.
      * @param pageable
-     * @param searchTitle
+     * @param title
      * @return
      */
-    @GetMapping("/api/v1/challenge/search/{searchTitle}")
-    public SuccessResponse<List<ChallengeViewResponse>> searchChallengeByPaging(
+    @GetMapping("/api/v1/challenge/search/{title}")
+    public SuccessResponse<Page<ChallengeViewResponse>> searchChallengeByPaging(
             @PageableDefault(size = 4) Pageable pageable,
-            @PathVariable(name = "searchTitle") String searchTitle) {
-        return SuccessResponse.of(challengeService.searchChallengeByPaging(pageable,searchTitle));
+            @PathVariable(name = "title") String title) {
+        return SuccessResponse.of(challengeService.searchChallengeByPaging(pageable,title));
+    }
+
+    /**
+     * 챌린지 목록을 조회한다.
+     */
+    @GetMapping("/api/v1/challenge/battleList")
+    public SuccessResponse<List<ChallengeBattleListResponse>> findAllChallenge(){
+        return SuccessResponse.of(challengeService.findAllChallenge());
     }
 
     @PutMapping("/api/v1/challenge/thumbnail-url")

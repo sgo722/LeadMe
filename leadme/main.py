@@ -31,12 +31,12 @@ class Video(BaseModel):
     url : str
     youtubeId : str
 
-# UPLOAD_DIRECTORY = "."
-TEMP_DIRECTORY = "video/temporary"
-PERMANENT_DIRECTORY_USER = "video/user"
-PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
-PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
-THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
+UPLOAD_DIRECTORY = "."
+#TEMP_DIRECTORY = "video/temporary"
+#PERMANENT_DIRECTORY_USER = "video/user"
+#PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
+#PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
+#THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
 
 
 TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"

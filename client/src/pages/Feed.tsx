@@ -1,47 +1,74 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "components/Header";
-import axios from "axios";
 import { SearchBar } from "components/SearchBar";
-import { ResponseData } from "types";
-import { useMutation } from "@tanstack/react-query";
-import { baseUrl } from "axiosInstance/constants";
+import VideoPlayer from "features/videoDetail/VideoPlayer";
+
+const dummyData = [
+  {
+    id: 1,
+    src: "https://via.placeholder.com/300x500.png?text=Video+1",
+    title: "Dummy Video 1",
+    likes: 1500,
+    comments: [
+      { id: 1, user: "User1", text: "Great video!" },
+      { id: 2, user: "User2", text: "Amazing!" },
+    ],
+  },
+  {
+    id: 2,
+    src: "https://via.placeholder.com/300x500.png?text=Video+2",
+    title: "Dummy Video 2",
+    likes: 2300,
+    comments: [
+      { id: 3, user: "User3", text: "Love it!" },
+      { id: 4, user: "User4", text: "Awesome content!" },
+    ],
+  },
+  {
+    id: 3,
+    src: "https://via.placeholder.com/300x500.png?text=Video+3",
+    title: "Dummy Video 3",
+    likes: 900,
+    comments: [
+      { id: 5, user: "User5", text: "Nice!" },
+      { id: 6, user: "User6", text: "Well done!" },
+    ],
+  },
+];
 
 const Feed = () => {
-  const [_, setFeed] = useState<feedProps[]>();
-
-  interface feedProps {}
-
-  const mutationFeed = useMutation<feedProps[], Error, number>({
-    mutationFn: async (page: number) => {
-      const response = await axios.get<ResponseData<feedProps[]>>(
-        `${baseUrl}/api/v1/userChallenge/feed`,
-        {
-          params: { page },
-        }
-      );
-      return response.data.data;
-    },
-    onSuccess: (data: feedProps[]) => {
-      console.log(data);
-      setFeed(data);
-    },
-    onError: (error: Error) => {
-      console.error("Error fetching user data:", error);
-    },
-  });
+  const [feed, setFeed] = useState(dummyData);
+  const [showComments, setShowComments] = useState<boolean>(false);
 
   useEffect(() => {
-    mutationFeed.mutate(1);
+    // 서버로부터 데이터 가져오는 부분
   }, []);
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    // 스크롤이 바닥에 닿으면 다음 페이지를 불러옴 - 무한 스크롤
+  };
+
+  const toggleComments = () => {
+    setShowComments((prev) => !prev);
+  };
+
   return (
-    <PageLayout>
+    <PageLayout onScroll={handleScroll}>
       <Header stickyOnly />
       <SearchBarWrapper>
         <SearchBar width={650} navigation />
       </SearchBarWrapper>
-      <VideoContainer></VideoContainer>
+      <VideoContainer>
+        {feed.map((video, index) => (
+          <VideoPlayer
+            key={video.id}
+            video={video}
+            showComments={showComments}
+            onToggleComments={toggleComments}
+          />
+        ))}
+      </VideoContainer>
     </PageLayout>
   );
 };
@@ -57,6 +84,7 @@ const SearchBarWrapper = styled.div`
   padding: 20px;
   display: flex;
   justify-content: center;
+  margin-bottom: 8px;
 `;
 
 const VideoContainer = styled.div`
@@ -66,6 +94,7 @@ const VideoContainer = styled.div`
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   height: 100vh;
+  padding-bottom: 0vh;
   &::-webkit-scrollbar {
     display: none;
   }

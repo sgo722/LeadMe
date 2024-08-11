@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { OpenVidu } from "openvidu-browser";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { useQuery } from "@tanstack/react-query";
+import countdownSound from "assets/audio/countdown.mp3";
 import styled from "styled-components";
-import YouTube from "react-youtube";
+import YouTube, { YouTubePlayer } from "react-youtube";
 import type {
   Publisher,
   Session,
@@ -17,28 +18,14 @@ interface SignalData {
   ready?: boolean;
   selectedVideoId?: number | null;
   isVideoConfirmed?: boolean;
+  start?: boolean;
 }
 
-interface DummyDataItem {
-  id: number;
+interface VideoDataItem {
+  challengeId: number;
+  youtubeId: string;
   title: string;
-  videoId: string;
 }
-
-const dummyData: DummyDataItem[] = [
-  { id: 1, title: "마라탕후루", videoId: "COwRJMCCWL0" },
-  { id: 2, title: "킥드베", videoId: "Fpmqa_ldQS0" },
-  { id: 3, title: "채소 댄스", videoId: "rspqaUYy56M" },
-  { id: 4, title: "띵띵땅땅", videoId: "Niob9m3ccGY" },
-  { id: 6, title: "Tell me", videoId: "LYnhkVVXGIU" },
-  { id: 7, title: "최애의아이", videoId: "KsE_jurZDYs" },
-  { id: 8, title: "립제이", videoId: "gKoBOP8rSpo" },
-  { id: 9, title: "bluecheck", videoId: "rct6LjDypqY" },
-  { id: 10, title: "supernatural", videoId: "y7mmUrlYCOM" },
-  { id: 11, title: "Land of Lola", videoId: "yoeduVglPUQ" },
-  { id: 12, title: "도토리 주우러 갈래?", videoId: "ZM5ioaMqD5g" },
-  { id: 13, title: "How Sweet", videoId: "ZtoItsp4DHA" },
-];
 
 // 세션 : 화상 회의 가상 공간
 // 발행자(publisher) : 자신의 오디오/비디오 스트림을 세션에 전송하는 참가자
@@ -53,6 +40,12 @@ const fetchHostStatus = async (sessionId: string) => {
   return res.data;
 };
 
+// 서버에 저장된 영상 목록 가져오는 쿼리
+const fetchVideoList = async () => {
+  const res = await axiosInstance.get("/api/v1/challenge/battleList");
+  return res.data;
+};
+
 export const BattleRoom: React.FC = () => {
   const location = useLocation();
   const { token } = location.state as {
@@ -61,7 +54,7 @@ export const BattleRoom: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null); //OpenVidu 세션 상태 관리
   const [publisher, setPublisher] = useState<Publisher | null>(null); // 로컬 비디오 스트림 발행자 상태 관리
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]); // 원격 비디오 스트림 구독자 목록 상태 관리
-  const [selectedVideo, setSelectedVideo] = useState<DummyDataItem | null>(
+  const [selectedVideo, setSelectedVideo] = useState<VideoDataItem | null>(
     null
   );
   const [isVideoConfirmed, setIsVideoConfirmed] = useState<boolean>(false);
@@ -70,6 +63,23 @@ export const BattleRoom: React.FC = () => {
   const [peerReady, setPeerReady] = useState<boolean>(false); // 상대방의 준비 state
   const [isHost, setIsHost] = useState<boolean>(false); // 방장 여부를 확인하는 state
 
+  const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
+  const [battleStart, setBattleStart] = useState<boolean>(false); // 배틀 시작 상태
+
+  const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
+
+  const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
+  const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
+  // 서버에 저장된 영상 가져오기
+  const { data: videoList, isLoading: isVideoLoading } = useQuery({
+    queryKey: ["videoList"],
+    queryFn: fetchVideoList,
+  });
+
+  // 방장 여부 확인
   const {
     data: hostData,
     isLoading: isCheckingHost,
@@ -85,6 +95,7 @@ export const BattleRoom: React.FC = () => {
     enabled: !!session?.sessionId,
   });
 
+  // 방장 여부 설정
   useEffect(() => {
     if (hostData?.isSuccess && hostData?.data) {
       const hostId = hostData.data;
@@ -96,15 +107,22 @@ export const BattleRoom: React.FC = () => {
     }
   }, [hostData, isHost]);
 
+  // 카운트 다운 오디오 초기화
+  useEffect(() => {
+    countdownAudio.current = new Audio(countdownSound);
+  }, []);
+
   // 비디오 아이템 클릭 핸들러
   const handleItemClick = (id: number) => {
-    const video = dummyData.find((item) => item.id === id);
+    const video = videoList?.data.find(
+      (item: VideoDataItem) => item.challengeId === id
+    );
     setSelectedVideo(video || null);
     setIsVideoConfirmed(false);
     // 선택된 비디오 정보를 다른 참가자에게 전송
     if (session && video) {
       session.signal({
-        data: JSON.stringify({ selectedVideoId: video.id }),
+        data: JSON.stringify({ selectedVideoId: video.challengeId }),
         type: "video-selected",
       });
     }
@@ -155,19 +173,132 @@ export const BattleRoom: React.FC = () => {
   };
 
   // 준비 버튼 클릭 시 상태를 변경하고 다른참가자에게 신호를 보내는 함수
-  const toggleReady = () => {
-    setMyReady((prevReady) => {
-      const newReadyState = !prevReady;
-      console.log("내 준비 상태가 다음과 같이 변경됨:", newReadyState);
-      if (session) {
-        session.signal({
-          data: JSON.stringify({ ready: newReadyState }),
-          type: "user-ready",
-        });
-      }
-      return newReadyState;
-    });
+  const toggleReady = useCallback(() => {
+    const newReadyState = !myReady;
+    setMyReady(newReadyState);
+    if (session) {
+      session.signal({
+        data: JSON.stringify({ ready: newReadyState }),
+        type: "user-ready",
+      });
+    }
+  }, [myReady, session]);
+
+  // 시작신호를 보내는 함수
+  const sendStartSignal = () => {
+    if (session) {
+      session.signal({
+        data: JSON.stringify({ start: true }),
+        type: "battle-start",
+      });
+    }
   };
+
+  // 배틀 시작 함수
+  const startBattle = useCallback(() => {
+    if (youtubePlayerRef.current) {
+      // 유튜브 영상 제일 처음으로 되돌리기
+      youtubePlayerRef.current.seekTo(0);
+      // 비디오 멈추기
+      youtubePlayerRef.current.pauseVideo();
+      // 배틀 시작
+      setBattleStart(true);
+      // 카운트다운 3으로 변경
+      setCountdown(3);
+      // 준비 상태 초기화
+      setMyReady(false);
+      setPeerReady(false);
+    }
+  }, [youtubePlayerRef]);
+
+  // 배틀 시작 클릭시 시그널을 보내고 카운트다운을 시작하는 함수
+  const handleStart = () => {
+    if (isHost && myReady && peerReady) {
+      sendStartSignal();
+      startBattle();
+    } else {
+      alert("모든 참가자가 준비되지 않았습니다.");
+    }
+  };
+
+  // 녹화 시작 함수
+  const startRecording = useCallback(() => {
+    if (publisher && publisher.stream) {
+      const stream = publisher.stream.getMediaStream();
+      try {
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: "video/webm",
+        });
+
+        mediaRecorderRef.current = mediaRecorder;
+        recordedChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            recordedChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onerror = (error) => {
+          console.error("MediaRecorder 에러:", error);
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+        console.log("녹화 시작");
+      } catch (error) {
+        console.error("MediaRecorder 생성 실패:", error);
+      }
+    } else {
+      console.error("Publisher 또는 스트림이 없음");
+    }
+  }, [publisher]);
+
+  // 녹화 데이터 처리, 영상 제출 api 호출
+  useEffect(() => {
+    if (!isRecording && recordedChunksRef.current.length > 0) {
+      const recordedBlob = new Blob(recordedChunksRef.current, {
+        type: "video/webm",
+      });
+      console.log("녹화된 영상 크기:", recordedBlob.size);
+      // 여기서 영상 제출 API 호출
+      // 예: submitRecordedVideo(recordedBlob);
+
+      // 처리 후 초기화
+      recordedChunksRef.current = [];
+    }
+  }, [isRecording]);
+
+  // 녹화 중지 함수
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      console.log("녹화 끝");
+    }
+  }, [isRecording]);
+
+  // 카운트다운 및 영상 재생 로직
+  useEffect(() => {
+    let countdownInterval: NodeJS.Timeout;
+    if (battleStart && countdown !== null) {
+      if (countdown === 3) countdownAudio.current?.play();
+      countdownInterval = setInterval(() => {
+        setCountdown((prevCount) => {
+          if (prevCount === null) return null;
+          if (prevCount > 0) return prevCount - 1;
+          else {
+            clearInterval(countdownInterval);
+            youtubePlayerRef.current?.playVideo();
+            return null;
+          }
+        });
+      }, 1000);
+    }
+    return () => {
+      if (countdownInterval) clearInterval(countdownInterval);
+    };
+  }, [battleStart, countdown]);
 
   // 신호 처리를 위한 useEffect
   useEffect(() => {
@@ -210,8 +341,9 @@ export const BattleRoom: React.FC = () => {
               signalData.selectedVideoId !== null &&
               signalData.selectedVideoId !== undefined
             ) {
-              const video = dummyData.find(
-                (item) => item.id === signalData.selectedVideoId
+              const video = videoList?.data.find(
+                (item: VideoDataItem) =>
+                  item.challengeId === signalData.selectedVideoId
               );
               setSelectedVideo(video || null);
             } else {
@@ -230,6 +362,12 @@ export const BattleRoom: React.FC = () => {
             setIsVideoConfirmed(false);
             setSelectedVideo(null);
             break;
+          case "battle-start":
+            console.log("배틀 시작 신호 수신:", signalData);
+            if (signalData.start) {
+              startBattle();
+            }
+            break;
           default:
             console.log("알 수 없는 시그널 타입:", signalType);
         }
@@ -241,24 +379,7 @@ export const BattleRoom: React.FC = () => {
         session.off("signal", handleSignal);
       };
     }
-  }, [session]);
-
-  // 배틀 시작 함수
-  const handleStart = () => {
-    if (isHost && myReady && peerReady) {
-      console.log("배틀 시작!");
-    } else {
-      alert("모든 참가자가 준비되지 않았습니다.");
-    }
-  };
-
-  // 걍 임시로 썻음 빌드할때 에러나서
-  useEffect(() => {
-    if (session) {
-      console.log("세션이 설정되었습니다:", session);
-      // 여기서 session을 사용한 추가 로직을 구현할 수 있습니다.
-    }
-  }, [session]);
+  }, [session, startBattle, videoList]);
 
   // 컴포넌트가 마운트될때나 token이 변경될 때 실행
   useEffect(() => {
@@ -361,28 +482,51 @@ export const BattleRoom: React.FC = () => {
             <FullScreenYouTubeContainer>
               <BackIcon onClick={handleCancel}>&larr;</BackIcon>
               <YouTube
-                videoId={selectedVideo.videoId}
+                videoId={selectedVideo.youtubeId}
                 opts={{
                   height: "622",
                   width: "350",
-                  playerVars: { autoplay: 1 },
+                  playerVars: { autoplay: 0, controls: 0 },
+                }}
+                onReady={(e: YouTubePlayer) => {
+                  youtubePlayerRef.current = e.target;
+                }}
+                onStateChange={(e: { target: YouTubePlayer; data: number }) => {
+                  if (e.data === YouTube.PlayerState.PLAYING) {
+                    startRecording();
+                  } else if (e.data === YouTube.PlayerState.ENDED) {
+                    stopRecording();
+                  }
                 }}
               />
+              {countdown !== null && (
+                <CountdownOverlay>
+                  <CountdownText>
+                    {countdown === 0 ? "START!" : countdown}
+                  </CountdownText>
+                </CountdownOverlay>
+              )}
             </FullScreenYouTubeContainer>
           ) : (
             <>
               <Title>Battle!</Title>
-              <ScrollableList>
-                {dummyData.map((item) => (
-                  <ListItem
-                    key={item.id}
-                    onClick={() => handleItemClick(item.id)}
-                    $isSelected={selectedVideo?.id === item.id}
-                  >
-                    {item.title}
-                  </ListItem>
-                ))}
-              </ScrollableList>
+              {isVideoLoading ? (
+                <div>로딩중</div>
+              ) : (
+                <ScrollableList>
+                  {videoList?.data.map((item: VideoDataItem) => (
+                    <ListItem
+                      key={item.challengeId}
+                      onClick={() => handleItemClick(item.challengeId)}
+                      $isSelected={
+                        selectedVideo?.challengeId === item.challengeId
+                      }
+                    >
+                      {item.title}
+                    </ListItem>
+                  ))}
+                </ScrollableList>
+              )}
             </>
           )}
         </DataBox>
@@ -391,7 +535,7 @@ export const BattleRoom: React.FC = () => {
             <CloseButton onClick={handleClose}>×</CloseButton>
             <YouTubeContainer>
               <YouTube
-                videoId={selectedVideo.videoId}
+                videoId={selectedVideo.youtubeId}
                 opts={{
                   height: "480",
                   width: "270",
@@ -420,7 +564,7 @@ export const BattleRoom: React.FC = () => {
           <ButtonContainer>
             {isVideoConfirmed && selectedVideo ? (
               <>
-                {isHost && myReady && peerReady && (
+                {isHost && myReady && peerReady && !isRecording && (
                   <ActionButton
                     onClick={handleStart}
                     disabled={!(myReady && peerReady)}
@@ -428,12 +572,16 @@ export const BattleRoom: React.FC = () => {
                     시작
                   </ActionButton>
                 )}
-                <ActionButton onClick={toggleReady}>
-                  {myReady ? "준비 취소" : "준비"}
-                </ActionButton>
-                <ActionButton onClick={() => console.log("나가기")}>
-                  나가기
-                </ActionButton>
+                {!isRecording && (
+                  <>
+                    <ActionButton onClick={toggleReady}>
+                      {myReady ? "준비 취소" : "준비"}
+                    </ActionButton>
+                    <ActionButton onClick={() => console.log("나가기")}>
+                      나가기
+                    </ActionButton>
+                  </>
+                )}
               </>
             ) : (
               <ActionButton onClick={() => console.log("나가기")}>
@@ -727,4 +875,23 @@ const ActionButton = styled.button`
   &:hover {
     background-color: #f0f0f0;
   }
+`;
+
+const CountdownOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+`;
+
+const CountdownText = styled.div`
+  font-size: 100px;
+  color: white;
+  font-weight: bold;
 `;

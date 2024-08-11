@@ -9,7 +9,5 @@ import lombok.NoArgsConstructor;
 @Getter
 public class CommentLikeCreateRequest {
 
-    private Long userId;
-
     private Long commentId;
 }
