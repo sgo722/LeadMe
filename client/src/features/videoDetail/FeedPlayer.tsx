@@ -1,31 +1,33 @@
 import React from "react";
 import styled from "styled-components";
-import { Video } from "types/index";
+import { Feed } from "types/index";
 import { InteractionButtons } from "features/videoDetail/InteractionButtons";
 import { CommentSection } from "features/videoDetail/CommentSection";
 
 interface VideoPlayerProps {
-  video: Video;
+  video: Feed;
   showComments: boolean;
   onToggleComments: () => void;
+  userChallengeId: number;
 }
 
 const FeedPlayer: React.FC<VideoPlayerProps> = ({
   video,
   showComments,
   onToggleComments,
+  userChallengeId,
 }) => {
   return (
     <VideoPlayerWrapper $showComments={showComments}>
       <VideoContent>
-        <VideoThumbnail src={video.src} alt={video.title} />
+        <VideoThumbnail src={video.thumbnail} alt={video.title} />
         <InteractionButtons
-          likes={video.likes}
-          commentCount={video.comments.length}
+          likes={1000} // 더미 데이터
+          commentCount={0}
           onToggleComments={onToggleComments}
         />
       </VideoContent>
-      <CommentSection show={showComments} comments={video.comments} />
+      <CommentSection show={showComments} userChallengeId={userChallengeId} />
     </VideoPlayerWrapper>
   );
 };
@@ -45,10 +47,10 @@ const VideoPlayerWrapper = styled.div<{
 `;
 const VideoThumbnail = styled.img`
   width: auto;
-  height: 100%; // 부모의 높이에 맞게 설정
+  height: 100%;
   max-height: 100%;
   object-fit: cover;
-  aspect-ratio: 9 / 16; // 9:16 비율 유지
+  aspect-ratio: 9 / 16;
   border-radius: 8px;
 `;
 const VideoContent = styled.div`
@@ -56,4 +58,5 @@ const VideoContent = styled.div`
   display: flex;
   align-items: center;
 `;
+
 export default FeedPlayer;
