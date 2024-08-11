@@ -8,6 +8,7 @@ import ray
 import cv2
 import time
 import logging
+import aiofiles
 # from pathlib import Path
 import subprocess
 
@@ -111,8 +112,12 @@ async def saveVideDataByUserFile(
 
     # 파일을 TEMP_DIRECTORY에 원래 이름으로 저장
     download_start = time.time()
-    with open(original_video_path, "wb") as buffer:
-        shutil.copyfileobj(videoFile.file, buffer)
+
+    # 수정 전 원본 라인 (Jinwoo)    
+    # with open(original_video_path, "wb") as buffer:
+    #     shutil.copyfileobj(videoFile.file, buffer)
+    
+    await save_file(videoFile, original_video_path)
     download_end = time.time()
 
     # 비디오 파일을 수평으로 뒤집고 임시 파일로 저장
@@ -143,7 +148,12 @@ async def saveVideDataByUserFile(
         convert_start = time.time()
         # 뒤집힌 비디오 파일을 mp4로 변환
         clip = VideoFileClip(flipped_temp_video_path)
-        clip.write_videofile(final_video_path, codec="libx264")
+
+        # 원본 라인 (Jinwoo)
+        # clip.write_videofile(final_video_path, codec="libx264")
+
+        await asyncio.to_thread(clip.write_videofile, final_video_path, codec="libx264")
+
         convert_end = time.time()
 
         extract_audio_from_video(youtube_video_path, youtube_audio_path)
@@ -170,3 +180,8 @@ def extract_audio_from_video(video_file_path, audio_file_path):
     except Exception as e:
         print(f"Audio extraction error: {str(e)}")
         raise
+
+async def save_file(file: UploadFile, path: str):
+    async with aiofiles.open(path, 'wb') as out_file:
+        while content := await file.read(1024):  # 파일을 비동기로 읽기
+            await out_file.write(content)  # 파일을 비동기로 쓰기
