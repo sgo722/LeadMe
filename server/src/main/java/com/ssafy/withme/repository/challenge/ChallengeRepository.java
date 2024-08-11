@@ -4,6 +4,9 @@ import com.ssafy.withme.domain.challenge.Challenge;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
@@ -15,4 +18,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     Page<Challenge> findAll(Pageable pageable);
 
     Page<Challenge> findByTitle(Pageable pageable, String title);
+
+    @Query("select c from Challenge c where c.thumbnailUrl is null")
+    List<Challenge> findAllWithThumbnailUrlIsNull();
 }

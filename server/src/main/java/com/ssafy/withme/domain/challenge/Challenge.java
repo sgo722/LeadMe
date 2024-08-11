@@ -29,6 +29,8 @@ public class Challenge extends BaseEntity {
 
     private String thumbnailPath;
 
+    private String thumbnailUrl;
+
 
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<UserChallenge> userChallenges;
@@ -45,5 +47,13 @@ public class Challenge extends BaseEntity {
         this.thumbnailPath = thumbnailPath;
     }
 
+    public ChallengeEditor.ChallengeEditorBuilder toEditor() {
+        return ChallengeEditor.builder()
+                .thumbnailUrl(thumbnailUrl);
+    }
+
+    public void edit(ChallengeEditor challengeEditor) {
+        thumbnailUrl = challengeEditor.getThumbnailUrl();
+    }
 
 }
