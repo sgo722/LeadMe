@@ -22,6 +22,7 @@ public interface UserRepository extends JpaRepository<User,Long>, UserRepository
 
     List<User> findByNicknameContaining(String nickname);
 
+    @Override
     Optional<User> findByNickname(String nickname);
 
     // 유저를 좋아요 순으로 정렬하고 페이징 적용하여 가져오기

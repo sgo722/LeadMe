@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface UserRepositoryCustom {
 
     List<User> findByNameContaining(String name);
+
+    Optional<User> findByNickname(String nickname);
 }
