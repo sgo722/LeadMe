@@ -4,6 +4,7 @@ import com.ssafy.withme.repository.competition.CompetitionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.core.RedisOperations;
@@ -28,6 +29,7 @@ class CompetitionServiceTest {
     @Mock
     private RedisOperations<String, String> redisOperations;
 
+    @InjectMocks
     private CompetitionService competitionService;
 
     private CompetitionRepository competitionRepository;
@@ -36,11 +38,6 @@ class CompetitionServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-
-        competitionService = new CompetitionService(
-                competitionRepository,
-                redisTemplate
-        );
     }
 
 
