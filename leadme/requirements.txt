@@ -13,3 +13,4 @@ ray
 python-multipart
 moviepy
 ffmpeg-python
+aiofiles
