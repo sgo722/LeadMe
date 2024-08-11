@@ -16,16 +16,6 @@ interface ListData {
   profileImg: string;
 }
 
-const generateDummyData = (total: number): ListData[] => {
-  return Array.from({ length: total }, (_, idx) => ({
-    userId: idx + 1,
-    userNickname: `user${idx + 1}`,
-    liked: Math.floor(Math.random() * 1000),
-    followers: Math.floor(Math.random() * 500),
-    profileImg: `https://placeimg.com/100/100/people?${idx + 1}`,
-  }));
-};
-
 const Rank: React.FC = () => {
   const [total, setTotal] = useState<number>(0);
   const [rankList, setRankList] = useState<ListData[]>([]);
@@ -69,15 +59,13 @@ const Rank: React.FC = () => {
   });
 
   useEffect(() => {
-    mutationTotal.mutate();
-    mutationRank.mutate(currentPage);
+    mutationTotal.mutate(); // 전체 유저 수 조회
+    mutationRank.mutate(currentPage); // 첫 페이지의 랭킹 리스트 조회
+  }, [currentPage]);
 
-    setTotal(50);
-    const allUsers = generateDummyData(total);
-    const startIdx = (currentPage - 1) * usersPerPage;
-    const pagedUsers = allUsers.slice(startIdx, startIdx + usersPerPage);
-    setRankList(pagedUsers);
-  }, [currentPage, total]);
+  useEffect(() => {
+    mutationRank.mutate(currentPage); // 페이지 이동 시 새로운 랭킹 리스트 조회
+  }, [currentPage]);
 
   const handlePageClick = (page: number) => {
     setCurrentPage(page);
@@ -146,7 +134,7 @@ const Rank: React.FC = () => {
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
               >
-                <IoChevronBackSharp />
+                <IoChevronBackSharp style={{ transform: "rotate(180deg)" }} />
               </SideButton>
             </div>
           </Pagination>

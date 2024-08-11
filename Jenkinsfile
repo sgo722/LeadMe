@@ -99,12 +99,12 @@ pipeline {
                         // 컨테이너 실행
                         sh '''
                         docker run -d --name python-container -p 4567:4567 \
-                                -v /home/ubuntu/python/video/temporary:/home/ubuntu/python/video/temporary \
-                                -v /home/ubuntu/python/video/user:/home/ubuntu/python/video/user \
-                                -v /home/ubuntu/python/video/challenge:/home/ubuntu/python/video/challenge \
-                                -v /home/ubuntu/python/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
-                                -v /home/ubuntu/python/video/challenge/thumbnail:/home/ubuntu/python/video/challenge/thumbnail \
-                                -v /home/ubuntu/python/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
+                                -v /home/ubuntu/leadme/video/temporary:/home/ubuntu/python/video/temporary \
+                                -v /home/ubuntu/leadme/video/user:/home/ubuntu/python/video/user \
+                                -v /home/ubuntu/leadme/video/challenge:/home/ubuntu/python/video/challenge \
+                                -v /home/ubuntu/leadme/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
+                                -v /home/ubuntu/leadme/video/challenge/thumbnail:/home/ubuntu/python/video/challenge/thumbnail \
+                                -v /home/ubuntu/leadme/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
                                 ${DOCKERHUB_USERNAME}/python-image:latest
                         '''
                     }
@@ -130,12 +130,12 @@ pipeline {
                                         docker stop ${DOCKERHUB_NAME} || true
                                         docker rm ${DOCKERHUB_NAME} || true
                                         docker run --name ${DOCKERHUB_NAME} -d --network my-network -p 8090:8090 \
-                                -v /home/ubuntu/python/video/temporary:/home/ubuntu/python/video/temporary \
-                                -v /home/ubuntu/python/video/user:/home/ubuntu/python/video/user \
-                                -v /home/ubuntu/python/video/challenge:/home/ubuntu/python/video/challenge \
-                                -v /home/ubuntu/python/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
-                                -v /home/ubuntu/python/video/challenge/thumbnail:/home/ubuntu/python/video/challenge/thumbnail \
-                                -v /home/ubuntu/python/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
+                                -v /home/ubuntu/leadme/video/temporary:/home/ubuntu/python/video/temporary \
+                                -v /home/ubuntu/leadme/video/user:/home/ubuntu/python/video/user \
+                                -v /home/ubuntu/leadme/video/challenge:/home/ubuntu/python/video/challenge \
+                                -v /home/ubuntu/leadme/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
+                                -v /home/ubuntu/leadme/video/challenge/thumbnail:/home/ubuntu/python/video/challenge/thumbnail \
+                                -v /home/ubuntu/leadme/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
                                 -v /home/ubuntu:/host \
                                 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" \
                                 ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest

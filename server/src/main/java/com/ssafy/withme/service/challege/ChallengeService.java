@@ -6,12 +6,14 @@ import com.ssafy.withme.domain.challenge.ChallengeEditor;
 import com.ssafy.withme.domain.challengeHashtag.ChallengeHashTag;
 import com.ssafy.withme.domain.hashtag.Hashtag;
 import com.ssafy.withme.domain.landmark.Landmark;
+import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.challengeHashtag.ChallengeHashtagRepository;
 import com.ssafy.withme.repository.hashtag.HashtagRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
+import com.ssafy.withme.service.challege.response.ChallengeBattleListResponse;
 import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import com.ssafy.withme.service.youtube.YouTubeService;
@@ -23,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -39,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -122,10 +126,14 @@ public class ChallengeService {
         // 저장된 영상의 해시태그를 저장한다.
         ArrayList<String> hashtags = request.getHashtags();
         for(String hashtag : hashtags){
-            Hashtag savedHashtag = hashtagRepository.save(new Hashtag(hashtag));
+            Hashtag findHashtagByName = hashtagRepository.findByName(hashtag);
+            if(findHashtagByName == null){
+                findHashtagByName = hashtagRepository.save(new Hashtag(hashtag));
+            }
+
             ChallengeHashTag challengeHashTag = ChallengeHashTag.builder()
                     .challenge(savedChallenge)
-                    .hashtag(savedHashtag)
+                    .hashtag(findHashtagByName)
                     .build();
             challengeHashTagRepository.save(challengeHashTag);
         }
@@ -133,7 +141,7 @@ public class ChallengeService {
 
         // 썸네일을 파일로 생성하고, 썸네일 경로를 데이터베이스(MySQL)에 저장한다.
         try{
-            String finalFileName = request.getYoutubeId() + ".png";
+            String finalFileName = request.getYoutubeId() + ".mp4";
             Path permanentVideoPath = Paths.get(CHALLENGE_DIRECTORY, finalFileName);
 
             String challengeThumbnail = extractThumbnail(permanentVideoPath, request.getYoutubeId());
@@ -177,12 +185,12 @@ public class ChallengeService {
      * @param pageable
      * @return
      */
-    public List<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
+    public Page<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
         // 페이징 조회로 Challenge를 가져온다.
         Page<Challenge> findChallengeByPaging = challengeRepository.findAll(pageable);
 
         // 썸네일 경로의 파일을 바이트코드로 변환하고, ResponseDto를 만들어서 반환한다.
-        return findChallengeByPaging.stream()
+        List<ChallengeViewResponse> challengeResponses = findChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
                         byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
@@ -193,7 +201,10 @@ public class ChallengeService {
                         return null; // 또는 다른 적절한 예외 처리 방법
                     }
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
+        return new PageImpl<>(challengeResponses, pageable, findChallengeByPaging.getTotalElements());
     }
 
 
@@ -205,11 +216,11 @@ public class ChallengeService {
      * @param keyword
      * @return
      */
-    public List<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String keyword) {
+    public Page<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String keyword) {
 
         // 키워드로 Challenge를 조회한다.
         Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitle(pageable, keyword);
-        return searchChallengeByPaging.stream()
+        List<ChallengeViewResponse> searchChallenges = searchChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
                         byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
@@ -221,6 +232,10 @@ public class ChallengeService {
                     }
                 })
                 .collect(Collectors.toList());
+
+        return new PageImpl<>(searchChallenges,pageable, searchChallengeByPaging.getTotalElements());
+
+
     }
 
     /**
@@ -304,6 +319,16 @@ public class ChallengeService {
 
             challenge.edit(challengeEditor);
         }
+
+
+    }
+
+    public List<ChallengeBattleListResponse> findAllChallenge() {
+
+        List<Challenge> findAllChallenges = challengeRepository.findAll();
+        return findAllChallenges.stream()
+                .map(challenge -> ChallengeBattleListResponse.ofResponse(challenge))
+                .collect(Collectors.toList());
 
 
     }

@@ -42,36 +42,32 @@ public class CommentService {
      * user도 파라미터로 추가해야함.
      * @param request
      */
-    public CommentCreateResponse create(CommentCreateRequest request) {
+    public CommentCreateResponse create(User user, CommentCreateRequest request) {
 
         UserChallenge userChallenge = userChallengeRepository.findById(request.getUserChallengeId()).get();
         Comment newComment = Comment.builder()
                 .content(request.getContent())
-//                .user(user)
+                .user(user)
                 .userChallenge(userChallenge)
                 .build();
         Comment saveComment = commentRepository.save(newComment);
         return CommentCreateResponse.of(saveComment);
     }
 
-    public CommentDeleteResponse delete(CommentDeleteRequest request) {
+    public CommentDeleteResponse delete(User user, CommentDeleteRequest request) {
         Comment comment = commentRepository.findById(request.getCommentId()).get();
-        Long userId = request.getUserId();
-        User findUser = userRepository.findById(userId).get();
         // 댓글 작성하 유저가 아니고, 관리자도 아니라면?
-        if(findUser != comment.getUser() || findUser.getRoleType() != RoleType.ADMIN){
+        if(user != comment.getUser() || user.getRoleType() != RoleType.ADMIN){
             throw new AuthorizationException(ErrorCode.NOT_AUTHORIZATION);
         }
         commentRepository.delete(comment);
         return CommentDeleteResponse.of(comment);
     }
 
-    public CommentUpdateResponse update(CommentUpdateRequest request) {
+    public CommentUpdateResponse update(User user, CommentUpdateRequest request) {
         Comment comment = commentRepository.findById(request.getCommentId()).get();
-        Long userId = request.getUserId();
-        User findUser = userRepository.findById(userId).get();
         // 댓글 작성하 유저가 아니고, 관리자도 아니라면?
-        if(findUser != comment.getUser() || findUser.getRoleType() != RoleType.ADMIN){
+        if(user != comment.getUser() || user.getRoleType() != RoleType.ADMIN){
             throw new AuthorizationException(ErrorCode.NOT_AUTHORIZATION);
         }
         comment.changeContent(request.getContent());

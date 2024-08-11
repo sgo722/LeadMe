@@ -40,7 +40,7 @@ const useAuth = () => {
   // 로그아웃
   const logout = () => {
     axios
-      .post(`${baseUrl}/api/v1/user/session/remove`)
+      .post(`${baseUrl}/api/v1/user/session/remove`, null, {})
       .then(() => {
         setAccessToken(null);
         setAccessTokenExpireTime(null);
@@ -61,6 +61,8 @@ const useAuth = () => {
           clearInterval(intervalId);
           setIntervalId(null);
         }
+
+        // 홈으로 리다이렉트
         navigate("/home");
       })
       .catch((err) => {
