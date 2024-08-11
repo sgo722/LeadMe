@@ -22,6 +22,7 @@ interface SignalData {
   selectedVideoId?: number | null;
   isVideoConfirmed?: boolean;
   start?: boolean;
+  selectedYoutubeId?: string;
 }
 
 interface VideoDataItem {
@@ -90,13 +91,14 @@ export const BattleRoom: React.FC = () => {
 
   const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
   const [battleStart, setBattleStart] = useState<boolean>(false); // 배틀 시작 상태
+  const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
 
   const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
-
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  const webcamCanvasRef = useRef<HTMLCanvasElement>(null); // 캔버스 참조
 
   // 서버에 저장된 영상 가져오기
   const { data: videoList, isLoading: isVideoLoading } = useQuery({
@@ -213,7 +215,10 @@ export const BattleRoom: React.FC = () => {
     // 비디오 선택 확인 정보를 다른 참가자에게 전송
     if (session) {
       session.signal({
-        data: JSON.stringify({ isVideoConfirmed: true }),
+        data: JSON.stringify({
+          isVideoConfirmed: true,
+          selectedYoutubeId: selectedVideo?.youtubeId,
+        }),
         type: "video-confirmed",
       });
     }
@@ -356,7 +361,7 @@ export const BattleRoom: React.FC = () => {
       // 처리 후 초기화
       recordedChunksRef.current = [];
     }
-  }, [isRecording, selectedVideo, submitRecordedVideoMutation]);
+  }, [isRecording, selectedVideo, submitRecordedVideoMutation, userProfile]);
 
   // 녹화 중지 함수
   const stopRecording = useCallback(() => {
@@ -444,6 +449,9 @@ export const BattleRoom: React.FC = () => {
             console.log("비디오 확인됨:", signalData);
             if (signalData.isVideoConfirmed !== undefined) {
               setIsVideoConfirmed(signalData.isVideoConfirmed);
+              if (signalData.selectedYoutubeId) {
+                setSelectedYoutubeId(signalData.selectedYoutubeId);
+              }
             }
             break;
           case "video-cancelled":
@@ -547,6 +555,121 @@ export const BattleRoom: React.FC = () => {
     );
   }, [videoList?.data, searchTerm]);
 
+  // BlazePose 데이터 그리기 함수
+  const drawBlazePoseData = useCallback(
+    (frameIndex: number) => {
+      if (!webcamCanvasRef.current || !challengeQuery.data?.data?.landmarks)
+        return;
+      const ctx = webcamCanvasRef.current.getContext("2d");
+      if (!ctx) return;
+
+      ctx.clearRect(
+        0,
+        0,
+        webcamCanvasRef.current.width,
+        webcamCanvasRef.current.height
+      );
+      const landmarks = challengeQuery.data.data.landmarks[frameIndex];
+      if (!landmarks) return;
+
+      const connections = [
+        [11, 12],
+        [11, 13],
+        [13, 15],
+        [12, 14],
+        [14, 16],
+        [11, 23],
+        [12, 24],
+        [23, 24],
+        [23, 25],
+        [25, 27],
+        [27, 29],
+        [29, 31],
+        [24, 26],
+        [26, 28],
+        [28, 30],
+        [30, 32],
+      ];
+
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      connections.forEach(([i, j]) => {
+        const start = landmarks[i];
+        const end = landmarks[j];
+        if (start && end) {
+          ctx.beginPath();
+          ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
+          ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
+          ctx.stroke();
+        }
+      });
+
+      const bodyJoints = [
+        11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+      ];
+      bodyJoints.forEach((index) => {
+        const landmark = landmarks[index];
+        ctx.beginPath();
+        ctx.arc(
+          landmark.x * webcamCanvasRef.current!.width,
+          landmark.y * webcamCanvasRef.current!.height,
+          5,
+          0,
+          2 * Math.PI
+        );
+        ctx.fillStyle = "red";
+        ctx.fill();
+      });
+    },
+    [challengeQuery.data]
+  );
+
+  // 캔버스 애니메이션 로직
+  useEffect(() => {
+    let animationFrameId: number;
+    const fps = 30;
+    const frameInterval = 1000 / fps;
+    let lastTime = 0;
+
+    const animate = (currentTime: number) => {
+      if (
+        !youtubePlayerRef.current ||
+        !isYouTubePlaying ||
+        !challengeQuery.data?.data?.landmarks ||
+        challengeQuery.data.data.landmarks.length === 0
+      ) {
+        animationFrameId = requestAnimationFrame(animate);
+        return;
+      }
+
+      if (currentTime - lastTime >= frameInterval) {
+        const currentVideoTime = youtubePlayerRef.current.getCurrentTime();
+        const frameIndex = Math.floor(currentVideoTime * fps);
+        drawBlazePoseData(frameIndex);
+        lastTime = currentTime;
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isYouTubePlaying, challengeQuery.data, drawBlazePoseData]);
+
+  // youtube 이벤트 핸들러
+  const handleYouTubeStateChange = (e: {
+    target: YouTubePlayer;
+    data: number;
+  }) => {
+    setIsYouTubePlaying(e.data === YouTube.PlayerState.PLAYING);
+    if (e.data === YouTube.PlayerState.PLAYING) {
+      startRecording();
+    } else if (e.data === YouTube.PlayerState.ENDED) {
+      stopRecording();
+    }
+  };
+
   if (isCheckingHost) {
     return <div>방장 여부 확인 중...</div>;
   }
@@ -588,13 +711,7 @@ export const BattleRoom: React.FC = () => {
                 onReady={(e: YouTubePlayer) => {
                   youtubePlayerRef.current = e.target;
                 }}
-                onStateChange={(e: { target: YouTubePlayer; data: number }) => {
-                  if (e.data === YouTube.PlayerState.PLAYING) {
-                    startRecording();
-                  } else if (e.data === YouTube.PlayerState.ENDED) {
-                    stopRecording();
-                  }
-                }}
+                onStateChange={handleYouTubeStateChange}
               />
               {countdown !== null && (
                 <CountdownOverlay>
@@ -656,6 +773,7 @@ export const BattleRoom: React.FC = () => {
                 autoPlay={true}
                 ref={(video) => video && publisher.addVideoElement(video)}
               />
+              <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
               {myReady && <ReadyOverlay>READY</ReadyOverlay>}
             </>
           ) : (
@@ -1006,4 +1124,12 @@ const CountdownText = styled.div`
   font-size: 100px;
   color: white;
   font-weight: bold;
+`;
+
+const WebcamCanvas = styled.canvas`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 `;
