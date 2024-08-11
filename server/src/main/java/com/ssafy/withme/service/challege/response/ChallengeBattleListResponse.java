@@ -14,11 +14,14 @@ public class ChallengeBattleListResponse {
 
     private String title;
 
+    private String thumbnailUrl;
+
     @Builder
-    private ChallengeBattleListResponse(Long challengeId, String youtubeId, String title) {
+    private ChallengeBattleListResponse(Long challengeId, String youtubeId, String title, String thumbnailUrl) {
         this.challengeId = challengeId;
         this.youtubeId = youtubeId;
         this.title = title;
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     public static ChallengeBattleListResponse ofResponse(Challenge challenge){
@@ -26,6 +29,7 @@ public class ChallengeBattleListResponse {
                 .challengeId(challenge.getId())
                 .title(challenge.getTitle())
                 .youtubeId(challenge.getYoutubeId())
+                .thumbnailUrl(challenge.getThumbnailUrl())
                 .build();
     }
 }
