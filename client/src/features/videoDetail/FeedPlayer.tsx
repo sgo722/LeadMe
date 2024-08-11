@@ -49,7 +49,7 @@ const VideoThumbnail = styled.img`
   max-height: 100%;
   object-fit: cover;
   aspect-ratio: 9 / 16; // 9:16 비율 유지
-  border-radius: 14px;
+  border-radius: 8px;
 `;
 const VideoContent = styled.div`
   position: relative;

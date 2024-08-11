@@ -48,3 +48,12 @@ export interface Comment {
   createdData: string;
   lastModifiedDate: string;
 }
+
+// 챌린지영상
+export interface Challenge {
+  challengeId: number;
+  youtubeId: string;
+  url: string;
+  title: string;
+  thumbnail: string;
+}
