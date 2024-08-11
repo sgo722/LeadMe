@@ -216,10 +216,10 @@ public class ChallengeService {
      * @param keyword
      * @return
      */
-    public Page<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String keyword) {
+    public Page<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String title) {
 
         // 키워드로 Challenge를 조회한다.
-        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitle(pageable, keyword);
+        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitleContaining(pageable, title);
         List<ChallengeViewResponse> searchChallenges = searchChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
