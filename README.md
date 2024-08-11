@@ -42,12 +42,14 @@
 
 ## 🏗 아키텍처
 
+![아키텍처](/uploads/38760df4e89520a10bf307ea44ae7686/image__4_.png)
+
 
 <br/>
 
 ## 📐 ERD
 
-![image](/uploads/d353ae5e0f69e5de0ea6e4e4127d2081/image.png)
+![ERD](/uploads/d353ae5e0f69e5de0ea6e4e4127d2081/image.png)
 
 
 
