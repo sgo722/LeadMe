@@ -35,6 +35,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -48,6 +49,7 @@ import java.util.stream.Collectors;
 import static com.ssafy.withme.global.error.ErrorCode.*;
 import static com.ssafy.withme.service.userChallenge.UserChallengeService.deserialize;
 
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
 @Slf4j
@@ -75,6 +77,7 @@ public class CompetitionService {
      * @param request
      * @param sessionId
      */
+    @Transactional
     public void create(CompetitionCreateRequest request, String sessionId, @CurrentUser User user) {
 
         log.info("세션 생성 : 유저 아아디" + user.getId() + " 유저 이메일 : " + user.getEmail());
@@ -163,6 +166,7 @@ public class CompetitionService {
      * @param sessionId
      * @return
      */
+    @Transactional
     public boolean incrementIfLessThenTwo(String sessionId) {
         String key = SESSION_KEY_PREFIX + sessionId+":count";
 
@@ -196,6 +200,7 @@ public class CompetitionService {
      * @param sessionId
      * @param user
      */
+    @Transactional
     public void deleteSession(String sessionId, User user) {
 
         log.info("입장한 user id : " + user.getId());
@@ -280,6 +285,7 @@ public class CompetitionService {
         return Double.valueOf((String) calculateResult.get("score"));
     }
 
+    @Transactional
     public Long decrementSessionCount(String sessionId) {
         String key = SESSION_KEY_PREFIX + sessionId + ":count";
         return redisTemplate.opsForValue().decrement(key);
@@ -291,11 +297,13 @@ public class CompetitionService {
         return count != null ? Long.valueOf(count) : 0L;
     }
 
+    @Transactional
     public void setSessionCount(String sessionId, Long count) {
         String key = SESSION_KEY_PREFIX + sessionId + ":count";
         redisTemplate.opsForValue().set(key, String.valueOf(count));
     }
 
+    @Transactional
     public void deleteSessionCount(String sessionId) {
         String key = SESSION_KEY_PREFIX + sessionId + ":count";
         redisTemplate.delete(key);
