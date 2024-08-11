@@ -5,12 +5,14 @@ import com.ssafy.withme.global.config.jwt.TokenProvider;
 import com.ssafy.withme.global.config.oauth.OAuth2AuthorizationRequestBasedOnCookieRepository;
 import com.ssafy.withme.global.config.oauth.OAuth2SuccessHandler;
 import com.ssafy.withme.global.config.oauth.OAuth2UserCustomService;
+import com.ssafy.withme.global.listener.SessionListener;
 import com.ssafy.withme.repository.user.RefreshTokenRepository;
 import com.ssafy.withme.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -38,6 +40,8 @@ public class WebOAuthSecurityConfig {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserService userService;
     private final ObjectMapper objectMapper;
+    private final SessionListener sessionListener;
+    private final RedisTemplate redisTemplate;
 
     // 스프링 시큐리티 기능 비활성화
     @Bean
@@ -110,7 +114,9 @@ public class WebOAuthSecurityConfig {
                 refreshTokenRepository,
                 oAuth2AuthorizationRequestBasedOnCookieRepository(),
                 userService,
-                objectMapper
+                objectMapper,
+                sessionListener,
+                redisTemplate
         );
     }
 

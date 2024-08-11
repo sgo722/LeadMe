@@ -14,8 +14,20 @@ pose = mp_pose.Pose()
 # PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
 PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
 
+
+client = MongoClient(
+    host='localhost',
+    port=27017,
+)
+
 # MongoDB 연결 설정
-client = MongoClient('mongodb://localhost:27017/')
+# client = MongoClient(
+#     host='i11c109.p.ssafy.io',
+#     port=27070,
+#     username='leadme',
+#     password='leadmessafy11',
+#     authSource='admin'  # 인증할 데이터베이스를 지정합니다. 기본적으로 'admin'을 사용합니다.
+# )
 db = client['local']  # 'local' 데이터베이스 이름 설정
 collection = db['landmarks']  # 'landmarks' 컬렉션 이름 설정
 
@@ -74,7 +86,15 @@ def process_video(youtubeId, video_path):
 
     # 고정된 FPS 설정
     target_fps = 30
+    if original_fps <= 0 or target_fps <= 0:
+        print("Error: Invalid FPS values.")
+        cap.release()
+        cv2.destroyAllWindows()
+        return keypoints_list
+
     frame_interval = int(original_fps / target_fps)
+    if frame_interval <= 0:
+        frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
 
     frame_count = 0
 
@@ -86,6 +106,9 @@ def process_video(youtubeId, video_path):
 
         # 매 `frame_interval` 번째 프레임만 처리
         if frame_count % frame_interval == 0:
+
+            
+            
             # BGR 이미지를 RGB 이미지로 변환
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -153,7 +176,15 @@ def process_video_user(video_path):
 
     # 고정된 FPS 설정
     target_fps = 30
+    if original_fps <= 0 or target_fps <= 0:
+        print("Error: Invalid FPS values.")
+        cap.release()
+        cv2.destroyAllWindows()
+        return keypoints_list
+
     frame_interval = int(original_fps / target_fps)
+    if frame_interval <= 0:
+        frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
 
     frame_count = 0
 

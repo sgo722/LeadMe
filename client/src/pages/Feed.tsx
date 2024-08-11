@@ -1,47 +1,170 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "components/Header";
-import axios from "axios";
 import { SearchBar } from "components/SearchBar";
-import { ResponseData } from "types";
-import { useMutation } from "@tanstack/react-query";
-import { baseUrl } from "axiosInstance/constants";
+import FeedPlayer from "features/videoDetail/FeedPlayer";
+import { Comment } from "types/index";
+
+const dummyData = [
+  {
+    id: 1,
+    src: "https://via.placeholder.com/300x500.png?text=Video+1",
+    title: "Dummy Video 1",
+    likes: 1500,
+    comments: [
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+    ] as Comment[],
+  },
+  {
+    id: 2,
+    src: "https://via.placeholder.com/300x500.png?text=Video+2",
+    title: "Dummy Video 2",
+    likes: 2300,
+    comments: [
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다2",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다3",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다2",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다3",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다2",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다3",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다2",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다3",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다2",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다3",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+    ] as Comment[],
+  },
+  {
+    id: 3,
+    src: "https://via.placeholder.com/300x500.png?text=Video+3",
+    title: "Dummy Video 3",
+    likes: 900,
+    comments: [
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다444",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+    ] as Comment[],
+  },
+  {
+    id: 4,
+    src: "https://via.placeholder.com/300x500.png?text=Video+3",
+    title: "Dummy Video 3",
+    likes: 900,
+    comments: [
+      {
+        username: "nickname",
+        profileImg: "profile",
+        content: "댓글 내용입니다444",
+        createdData: "2024-07-29T14:38:44.087699",
+        lastModifiedDate: "2024-07-29T14:38:44.087699",
+      },
+    ] as Comment[],
+  },
+];
 
 const Feed = () => {
-  const [_, setFeed] = useState<feedProps[]>();
-
-  interface feedProps {}
-
-  const mutationFeed = useMutation<feedProps[], Error, number>({
-    mutationFn: async (page: number) => {
-      const response = await axios.get<ResponseData<feedProps[]>>(
-        `${baseUrl}/api/v1/userChallenge/feed`,
-        {
-          params: { page },
-        }
-      );
-      return response.data.data;
-    },
-    onSuccess: (data: feedProps[]) => {
-      console.log(data);
-      setFeed(data);
-    },
-    onError: (error: Error) => {
-      console.error("Error fetching user data:", error);
-    },
-  });
+  const [feed, _] = useState(dummyData);
+  const [showComments, setShowComments] = useState<number | null>(null);
 
   useEffect(() => {
-    mutationFeed.mutate(1);
+    // 서버로부터 데이터 가져오는 부분
+    console.log("초기 데이터 불러오기");
   }, []);
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    console.log(e);
+    // 스크롤이 바닥에 닿으면 다음 페이지를 불러옴 - 무한 스크롤
+  };
+
+  const toggleComments = (id: number) => {
+    setShowComments((prev) => (prev === id ? null : id));
+  };
+
   return (
-    <PageLayout>
+    <PageLayout onScroll={handleScroll}>
       <Header stickyOnly />
       <SearchBarWrapper>
         <SearchBar width={650} navigation />
       </SearchBarWrapper>
-      <VideoContainer></VideoContainer>
+      <VideoContainer>
+        {feed.map((video) => (
+          <FeedPlayer
+            key={video.id}
+            video={video}
+            showComments={showComments === video.id}
+            onToggleComments={() => toggleComments(video.id)}
+          />
+        ))}
+      </VideoContainer>
     </PageLayout>
   );
 };
@@ -52,13 +175,11 @@ const PageLayout = styled.div`
   flex-direction: column;
   overflow-y: auto;
 `;
-
 const SearchBarWrapper = styled.div`
   padding: 20px;
   display: flex;
   justify-content: center;
 `;
-
 const VideoContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -66,9 +187,9 @@ const VideoContainer = styled.div`
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   height: 100vh;
+  padding-bottom: 5vh;
   &::-webkit-scrollbar {
     display: none;
   }
 `;
-
 export default Feed;

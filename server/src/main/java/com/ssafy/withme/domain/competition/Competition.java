@@ -49,4 +49,13 @@ public class Competition {
         this.password = password;
         this.status = CompetitionStatus.OPEN;
     }
+
+    public CompetitionEditor.CompetitionEditorBuilder toEditor() {
+        return CompetitionEditor.builder()
+                .competitionStatus(status);
+    }
+
+    public void edit(CompetitionEditor competitionEditor) {
+        status = competitionEditor.getCompetitionStatus();
+    }
 }

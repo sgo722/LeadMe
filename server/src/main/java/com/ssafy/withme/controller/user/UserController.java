@@ -5,11 +5,15 @@ import com.ssafy.withme.dto.user.SearchUserDto;
 import com.ssafy.withme.dto.user.UserInfoDto;
 import com.ssafy.withme.dto.user.UserUpdateDto;
 import com.ssafy.withme.global.config.jwt.TokenProvider;
+import com.ssafy.withme.global.listener.SessionListener;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +32,8 @@ public class UserController {
 
     private final UserService userService;
     private final TokenProvider tokenProvider;
+    private final SessionListener sessionListener;
+    private final RedisTemplate redisTemplate;
 
     @GetMapping("/user/me")
     public SuccessResponse<?> getInfo(HttpServletRequest request) {
@@ -83,6 +89,10 @@ public class UserController {
 
         Long expiration = tokenProvider.addToBlackList(accessToken);
 
+        redisTemplate.opsForValue().decrement("active_user_count", 1L);
+
+        log.info("로그아웃 후 접속 유저 확인: {}", redisTemplate.opsForValue().get("active_user_count"));
+
         return SuccessResponse.of(expiration);
     }
 
@@ -106,5 +116,12 @@ public class UserController {
         userService.updateUser(accessToken, userUpdateDto);
 
         return SuccessResponse.of("OK");
+    }
+
+    @GetMapping("/user/active/count")
+    public Long getActiveUserCount() {
+
+        Integer activeUserCount = (Integer) redisTemplate.opsForValue().get("active_user_count");
+        return activeUserCount != null ? activeUserCount.longValue() : 0L;
     }
 }

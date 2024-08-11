@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { SiNaver } from "react-icons/si";
+// import { SiNaver } from "react-icons/si";
 import { FcGoogle } from "react-icons/fc";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { baseUrl } from "axiosInstance/constants";
@@ -23,7 +23,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
           </SNSBox>
         </SNSLink>
 
-        <SNSLink href={`${baseUrl}/oauth2/authorization/naver`}>
+        {/* <SNSLink href={`${baseUrl}/oauth2/authorization/naver`}>
           <SNSBox $bgColor="#03CF5D" $hoverColor="#0ec25c">
             <IconWrapper>
               <SiNaver
@@ -32,7 +32,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
             </IconWrapper>
             <span style={{ color: "#ffffff" }}>Naver 로그인</span>
           </SNSBox>
-        </SNSLink>
+        </SNSLink> */}
 
         <SNSLink href={`${baseUrl}/oauth2/authorization/google`}>
           <SNSBox $bgColor="#ffffff" $hoverColor="#f3f3f3">
@@ -63,7 +63,7 @@ const Overlay = styled.div`
 
 const Container = styled.div`
   width: 400px;
-  height: 400px;
+  height: 300px;
   display: flex;
   flex-direction: column;
   justify-content: center;

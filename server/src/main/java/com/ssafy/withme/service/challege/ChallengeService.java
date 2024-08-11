@@ -2,17 +2,21 @@ package com.ssafy.withme.service.challege;
 
 import com.ssafy.withme.controller.challenge.request.ChallengeCreateRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
+import com.ssafy.withme.domain.challenge.ChallengeEditor;
 import com.ssafy.withme.domain.challengeHashtag.ChallengeHashTag;
 import com.ssafy.withme.domain.hashtag.Hashtag;
 import com.ssafy.withme.domain.landmark.Landmark;
+import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
 import com.ssafy.withme.repository.challenge.ChallengeRepository;
 import com.ssafy.withme.repository.challengeHashtag.ChallengeHashtagRepository;
 import com.ssafy.withme.repository.hashtag.HashtagRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
+import com.ssafy.withme.service.challege.response.ChallengeBattleListResponse;
 import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
+import com.ssafy.withme.service.youtube.YouTubeService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -21,9 +25,9 @@ import org.springframework.beans.factory.annotation.Value;
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -38,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -60,6 +65,7 @@ public class ChallengeService {
 
     private final ChallengeHashtagRepository challengeHashTagRepository;
 
+    private final YouTubeService youTubeService;
 
     private final RestTemplate restTemplate;
 
@@ -79,8 +85,12 @@ public class ChallengeService {
      */
     @Transactional
     public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request, MultipartFile videoFile) throws IOException {
+        // 이미 저장되어 있는지 확인한다.
+
+
         String youtubeId = request.getYoutubeId();
         Challenge challengeByYoutubeId = challengeRepository.findByYoutubeId(youtubeId);
+        // 저장된 적이 있다면? 스켈레톤 데이터를 반환한다.
         if(challengeByYoutubeId != null){
             Landmark landmark = landmarkRepository.findByYoutubeId(challengeByYoutubeId.getYoutubeId());
             System.out.println(landmark);
@@ -90,34 +100,48 @@ public class ChallengeService {
             return ChallengeCreateResponse.toResponse(challengeByYoutubeId);
         }
 
+        // 저장된 적이 없다면? 파이썬에 요청을 보내서 영상을 저장하고 데이터베이스(몽고디비, MySQL)에 저장한다.
         String url = FAST_API_URL + "/admin/challenge";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
             @Override
-            public String getFilename() {
+            public String  getFilename() {
                 return videoFile.getOriginalFilename();
             }
         });
         body.add("youtubeId", request.getYoutubeId());
 
 
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        // Fast API 반환값
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+        // 챌린지 정보를 저장한다.
         Challenge challenge = request.toEntity();
         Challenge savedChallenge = challengeRepository.save(challenge);
+
+        // 저장된 영상의 해시태그를 저장한다.
         ArrayList<String> hashtags = request.getHashtags();
         for(String hashtag : hashtags){
-            Hashtag savedHashtag = hashtagRepository.save(new Hashtag(hashtag));
+            Hashtag findHashtagByName = hashtagRepository.findByName(hashtag);
+            if(findHashtagByName == null){
+                findHashtagByName = hashtagRepository.save(new Hashtag(hashtag));
+            }
+
             ChallengeHashTag challengeHashTag = ChallengeHashTag.builder()
                     .challenge(savedChallenge)
-                    .hashtag(savedHashtag)
+                    .hashtag(findHashtagByName)
                     .build();
             challengeHashTagRepository.save(challengeHashTag);
         }
 
 
+        // 썸네일을 파일로 생성하고, 썸네일 경로를 데이터베이스(MySQL)에 저장한다.
         try{
-            String finalFileName = request.getYoutubeId() + ".png";
+            String finalFileName = request.getYoutubeId() + ".mp4";
             Path permanentVideoPath = Paths.get(CHALLENGE_DIRECTORY, finalFileName);
 
             String challengeThumbnail = extractThumbnail(permanentVideoPath, request.getYoutubeId());
@@ -127,7 +151,7 @@ public class ChallengeService {
             e.printStackTrace();
         }
 
-        
+
         return ChallengeCreateResponse.toResponse(savedChallenge);
     }
 
@@ -146,13 +170,57 @@ public class ChallengeService {
 
         // youtubeId로 몽고디비로부터 스켈레톤 데이터를 조회합니다.
         Landmark findLandmarkByYoutubeId = landmarkRepository.findByYoutubeId(youtubeId);
+
+        // MySQL엔 저장된 정보가 있지만, 몽고디비엔 저장되지않은 경우 예외를 발생시킨다.
+        if(findLandmarkByYoutubeId == null){
+            throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE_SKELETON_DATA);
+        }
         return LandmarkResponse.ofResponse(findLandmarkByYoutubeId, challenge.getId());
     }
 
 
-    public List<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
+    /**
+     * 직접 저장한 유튜브 챌린지 영상들을 페이징 조회한다.
+     *  기본적으로 4개의 영상정보를 반환한다.
+     * @param pageable
+     * @return
+     */
+    public Page<ChallengeViewResponse> findChallengeByPaging(Pageable pageable) {
+        // 페이징 조회로 Challenge를 가져온다.
         Page<Challenge> findChallengeByPaging = challengeRepository.findAll(pageable);
-        return findChallengeByPaging.stream()
+
+        // 썸네일 경로의 파일을 바이트코드로 변환하고, ResponseDto를 만들어서 반환한다.
+        List<ChallengeViewResponse> challengeResponses = findChallengeByPaging.stream()
+                .map(challenge -> {
+                    try {
+                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
+                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
+                    } catch (Exception e) {
+                        // 예외 처리 로직을 여기에 추가
+                        e.printStackTrace();
+                        return null; // 또는 다른 적절한 예외 처리 방법
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(challengeResponses, pageable, findChallengeByPaging.getTotalElements());
+    }
+
+
+    /**
+     * [메인페이지 챌린지 검색 기능]
+     * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
+     *  기본적으로 4개의 영상 정보를 반환한다.
+     * @param pageable
+     * @param keyword
+     * @return
+     */
+    public Page<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String title) {
+
+        // 키워드로 Challenge를 조회한다.
+        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitleContaining(pageable, title);
+        List<ChallengeViewResponse> searchChallenges = searchChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
                         byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
@@ -164,25 +232,21 @@ public class ChallengeService {
                     }
                 })
                 .collect(Collectors.toList());
+
+        return new PageImpl<>(searchChallenges,pageable, searchChallengeByPaging.getTotalElements());
+
+
     }
 
-
-    public List<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String searchTitle) {
-        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitle(pageable, searchTitle);
-        return searchChallengeByPaging.stream()
-                .map(challenge -> {
-                    try {
-                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
-                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
-                    } catch (Exception e) {
-                        // 예외 처리 로직을 여기에 추가
-                        e.printStackTrace();
-                        return null; // 또는 다른 적절한 예외 처리 방법
-                    }
-                })
-                .collect(Collectors.toList());
-    }
-
+    /**
+     * 썸네일 추출 메서드
+     * 썸네일은 영상 길이의 3/5 구간의 이미지를 추출한다.
+     * @param videoPath
+     * @param fileName
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     */
 
     private String extractThumbnail(Path videoPath, String fileName) throws IOException, InterruptedException {
         // 비디오 길이 확인
@@ -237,4 +301,36 @@ public class ChallengeService {
 
         return thumbnailPath.toString();
     }
+
+    /**
+     * 챌린지 목록에서 유튜브 썸네일 이미지 주소가 없는 목록을 가져와 유튜브 api를 활용해 썸네일 주소를 입력해준다.
+     */
+    @Transactional
+    public void updateChallengeThumbnailUrl() {
+
+        List<Challenge> challenges = challengeRepository.findAllWithThumbnailUrlIsNull();
+        for(Challenge challenge: challenges) {
+
+            ChallengeEditor.ChallengeEditorBuilder challengeEditorBuilder = challenge.toEditor();
+            ChallengeEditor challengeEditor =  challengeEditorBuilder.
+                    thumbnailUrl(youTubeService
+                            .getYoutubeThumbnailUrl(challenge.getYoutubeId()))
+                    .build();
+
+            challenge.edit(challengeEditor);
+        }
+
+
+    }
+
+    public List<ChallengeBattleListResponse> findAllChallenge() {
+
+        List<Challenge> findAllChallenges = challengeRepository.findAll();
+        return findAllChallenges.stream()
+                .map(challenge -> ChallengeBattleListResponse.ofResponse(challenge))
+                .collect(Collectors.toList());
+
+
+    }
+
 }

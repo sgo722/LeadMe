@@ -40,15 +40,6 @@ public class ChatRoomService {
     }
 
     public List<ChatRoomGetResponse> getChatRoomListByUserId(Long userId) {
-        // 처음 HTTP 요청에서는 무조건 레디스 초기화 진행하도록 로직 수정
-
-        // Feign Client를 사용하는 것이 아닌 직접 redis에서 채팅내역 조회
-        // TODO: Redis -> RDBMS
-
-//        List<ChatRoom> chatRoomList = chatRoomRepository.findByUserId(userId);
-//        chatRoomList.forEach(chatRoom -> Hibernate.initialize(chatRoom.getUser()));
-
-
         List<ChatRoomGetResponse> chatRoomListGetResponseList =
                 chatRoomRepository.findByUserId(userId).stream()
                         .map(ChatRoomGetResponse::from)

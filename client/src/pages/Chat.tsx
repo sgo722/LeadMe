@@ -101,15 +101,15 @@ export const Chat: React.FC = () => {
           if (Array.isArray(chatRooms)) {
             setChatList(chatRooms);
 
-            // 각 채팅에 대해 소켓 구독 요청 - 3
-            chatRooms.forEach((chatRoom) => {
-              subscribeToChannel(
-                `/sub/chat/message/${chatRoom.roomId}`,
-                (message) => {
-                  console.log("New message received: ", message);
-                }
-              );
-            });
+            // // 각 채팅에 대해 소켓 구독 요청 - 3
+            // chatRooms.forEach((chatRoom) => {
+            //   subscribeToChannel(
+            //     `/sub/chat/message/${chatRoom.roomId}`,
+            //     (message) => {
+            //       console.log("New message received: ", message);
+            //     }
+            //   );
+            // });
           } else {
             console.error("Unexpected response data format:", response.data);
           }

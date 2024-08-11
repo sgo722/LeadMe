@@ -27,7 +27,7 @@ RUN mkdir -p /home/ubuntu/python/video/temporary /home/ubuntu/python/video/user 
 COPY . .
 
 # 지속적인 데이터 저장을 위해 볼륨 설정
-VOLUME ["/home/ubuntu/python/video/temporary", "/home/ubuntu/python/video/user","/home/ubuntu/python/video/challenge","/home/ubuntu/python/video/challenge/audio", "/home/ubuntu/python/video/user/thumbnail", "/home/ubuntu/python/video/challenge/thumbnail", ]
+VOLUME ["/home/ubuntu/python/video/temporary", "/home/ubuntu/python/video/user","/home/ubuntu/python/video/challenge","/home/ubuntu/python/video/challenge/audio", "/home/ubuntu/python/video/user/thumbnail", "/home/ubuntu/python/video/challenge/thumbnail"]
 
 
 # ffmpeg 다운로드

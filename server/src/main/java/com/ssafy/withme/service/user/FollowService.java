@@ -70,7 +70,7 @@ public class FollowService {
     public void unfollowing(Long toId, Long fromId) {
 
         Follow follow = followRepository.findByFromUserIdAndToUserId(fromId, toId)
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.USER_NOT_EXISTS));
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.NOT_EXISTS_FOLLOW));
 
         followRepository.delete(follow);
     }

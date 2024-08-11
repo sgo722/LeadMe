@@ -91,6 +91,7 @@ const useWebSocket = () => {
           ...prevSubscriptions,
           [channel]: subscription,
         }));
+        console.log("구독 중인 채널", subscribeToChannel);
 
         console.log(`Subscribed to channel ${channel}`);
       } else {
