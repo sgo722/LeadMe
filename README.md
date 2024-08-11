@@ -1,5 +1,7 @@
 # SSAFY 11기 공통프로젝트 : LeadMe
 
+
+
 <br/>
 
 ## 🖥️ 프로젝트 소개
@@ -15,7 +17,7 @@
 
 <br/>
 
-## 📹 프로젝트 시연
+## 📹 프로젝트 시연 영상
 
 <br/>
 
@@ -34,9 +36,60 @@
 
 ## ⚙️ 개발 환경
 
+FE
+---
+
+
+BE
+---
+1. 자바 버전 : 
+2. Springboot 버전 : 
+3. 빌드 & 빌드 도구 :
+4. Git branch 전략 :  
+
+
+
+
+
+
 <br/>
 
 ## 🛠️ 기술 스택
+
+FE
+---
+
+
+BE
+---
+
+**Framework**
+<br/>
+![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
+
+**DB**
+<br/>
+![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+
+**Library**
+<br/>
+
+
+**Protocol & Message Queue**
+<br/>
+
+
+**Server**
+<br/>
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+
+
+Comunication
+---
+![Notion](https://img.shields.io/badge/Notion-%23000000.svg?style=for-the-badge&logo=notion&logoColor=white)
+![GitLab](https://img.shields.io/badge/gitlab-%23181717.svg?style=for-the-badge&logo=gitlab&logoColor=white)
 
 
 
@@ -44,7 +97,7 @@
 
 ## 📋 기능 소개
 
-### 📌
+📌
 
 <br/>
 
