@@ -193,8 +193,12 @@ public class ChallengeService {
         List<ChallengeViewResponse> challengeResponses = findChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
-                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
-                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
+                        List<ChallengeHashTag> findHashtagByChallengeId = challengeHashTagRepository.findAllByChallengeId(challenge.getId());
+                        List<String> hashtags = findHashtagByChallengeId.stream()
+                                .filter(challengeHashtag -> challengeHashtag == null)
+                                .map(challengeHashtag -> hashtagRepository.findById(challengeHashtag.getId()).get().getName())
+                                .toList();
+                        return ChallengeViewResponse.ofResponse(challenge, hashtags);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
@@ -207,35 +211,47 @@ public class ChallengeService {
         return new PageImpl<>(challengeResponses, pageable, findChallengeByPaging.getTotalElements());
     }
 
+    public List<ChallengeViewResponse> findAll() {
+        // 페이징 조회로 Challenge를 가져온다.
+        List<Challenge> findAllChallenge = challengeRepository.findAll();
 
-    /**
-     * [메인페이지 챌린지 검색 기능]
-     * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
-     *  기본적으로 4개의 영상 정보를 반환한다.
-     * @param pageable
-     * @param title
-     * @return
-     */
-    public Page<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String title) {
-
-        // 키워드로 Challenge를 조회한다.
-        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitleContaining(pageable, title);
-        List<ChallengeViewResponse> searchChallenges = searchChallengeByPaging.stream()
+        // 썸네일 경로의 파일을 바이트코드로 변환하고, ResponseDto를 만들어서 반환한다.
+        List<ChallengeViewResponse> challengeResponses = findAllChallenge.stream()
                 .map(challenge -> {
                     try {
-                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
-                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
+                        List<ChallengeHashTag> findHashtagByChallengeIds = challengeHashTagRepository.findAllByChallengeId(challenge.getId());
+                        List<String> hashtags = findHashtagByChallengeIds.stream()
+                                .map(challengeHashtag -> hashtagRepository.findById(challengeHashtag.getId())
+                                        .map(Hashtag::getName)
+                                        .orElse(null))
+                                .filter(Objects::nonNull) // null인 해시태그를 필터링
+                                .toList();
+                        return ChallengeViewResponse.ofResponse(challenge, hashtags);
                     } catch (Exception e) {
-                        // 예외 처리 로직을 여기에 추가
+                        // 예외 처리 로직
                         e.printStackTrace();
                         return null; // 또는 다른 적절한 예외 처리 방법
                     }
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(searchChallenges,pageable, searchChallengeByPaging.getTotalElements());
+        return challengeResponses;
+    }
 
 
+    /**
+     * [메인페이지 챌린지 검색 기능]
+     * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
+     * @param title
+     * @return
+     */
+    public ChallengeYoutubeIdResponse searchChallengeYoutubeList(String title) {
+
+        // 키워드로 Challenge를 조회한다.
+        challengeRepository.findByTitleContaining(title);
+        List<String> searchChallengeYoutubeId = challengeRepository.findByTitleContaining(title);
+        return new ChallengeYoutubeIdResponse(searchChallengeYoutubeId);
     }
 
     /**
@@ -356,6 +372,5 @@ public class ChallengeService {
     public ChallengeYoutubeIdResponse findAllChallengeYoutubeId() {
         return new ChallengeYoutubeIdResponse(challengeRepository.findAllYoutubeId());
     }
-
 
 }

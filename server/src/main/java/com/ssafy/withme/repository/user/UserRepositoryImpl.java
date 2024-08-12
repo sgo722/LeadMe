@@ -5,10 +5,12 @@ import com.ssafy.withme.domain.user.QFollow;
 import com.ssafy.withme.domain.user.QUser;
 import com.ssafy.withme.domain.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
 
+import static com.ssafy.withme.domain.user.QFollow.follow;
 import static com.ssafy.withme.domain.user.QUser.user;
 
 @RequiredArgsConstructor
@@ -27,10 +29,25 @@ public class UserRepositoryImpl implements UserRepositoryCustom{
     @Override
     public Optional<User> findByNickname(String nickname) {
 
-        return Optional.ofNullable(qf.selectFrom(user)
-                .leftJoin(QFollow.follow).fetchJoin()
-                .where(user.nickname.eq(nickname))
-                .fetchOne()
+        return Optional.ofNullable(
+                qf.selectFrom(user)
+                        .leftJoin(user.toFollowList, follow)
+                        .fetchJoin()
+                        .where(user.nickname.eq(nickname))
+                        .orderBy(user.userLikeCnt.desc())
+                        .fetchOne()
         );
+    }
+
+    @Override
+    public List<User> findTopUsersByLikes(Pageable pageable) {
+
+        return qf.selectFrom(user)
+                .leftJoin(user.toFollowList, follow)
+                .fetchJoin()
+                .orderBy(user.userLikeCnt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
     }
 }

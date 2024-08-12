@@ -60,6 +60,14 @@ FE
 ---
 
 
+**Library**
+<br/>
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![Threejs](https://img.shields.io/badge/threejs-black?style=for-the-badge&logo=three.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+<br/>
+![React Query](https://img.shields.io/badge/-React%20Query-FF4154?style=for-the-badge&logo=react%20query&logoColor=white)
+
 BE
 ---
 
@@ -106,7 +114,38 @@ Comunication
 
 ## 📋 기능 소개
 
-📌
+**📌 회원**
+
+> Kakao, Google를 통해 소셜 로그인을 진행한다. <br>
+> JWT 토큰을 이용하여 인증,인가를 진행하며 인가 시간이 초과한 경우 재로그인을 해야 한다.<br>
+> 아이디와,비밀번호를 통하여 인증을 진행하며 일치하지 않을 경우 서비스 사용을 할 수 없다.<br>
+
+**📌 마이페이지**
+
+> 사용자는 마이페이지에서 자신이 올린 챌린지 영상을 조회할 수 있다. <br>
+> 자신이 팔로워 한 유저 목록, 자신을 팔로잉한 유저 목록을 조회할 수 있다. <br>
+> 채팅 페이지로 이동 및 프로필 편집을 할 수 있다. <br>
+
+**📌 챌린지 검색**
+
+
+**📌 챌린지 연습하기**
+
+**📌 챌린지 배틀**
+
+**📌 채팅**
+
+> 사용자는 마이페이지의 메시지목록에서 채팅을 진행할 수 있다.<br>
+> 사용자는 가입된 다른 사용자를 검색하여 채팅방을 개설할 수 있다.<br>
+> 채팅방 생성 및 삭제 시 채팅방 리스트 및 마지막 메세지가 최신화된다.<br>
+> 메시지목록 페이지 진입 시, 사용자가 읽지않은 메시지가 있다면 채팅방에 표시된다.<br>
+
+**📌 랭킹**
+
+> 사용자가 게시한 챌린지 영상에서 받은 좋아요수의 총 합계를 계산하여 랭킹이 집계된다. <br>
+> 순위가 높은 유저부터 확인할 수 있고, 해당 유저를 클릭시 유저의 피드로 이동할 수 있다. <br>
+> 유저의 프로필 정보, 해당 유저가 받은 좋아요 수, 해당 유저의 팔로워 수를 확인할 수 있다. <br>
+
 
 <br/>
 
