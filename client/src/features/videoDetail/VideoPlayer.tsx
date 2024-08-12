@@ -27,7 +27,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           onToggleComments={onToggleComments}
         />
       </VideoContent>
-      <CommentSection show={showComments} comments={video.comments} />
+      <CommentSection show={showComments} userChallengeId={video.id} />
     </VideoPlayerWrapper>
   );
 };

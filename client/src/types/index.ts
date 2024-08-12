@@ -57,10 +57,11 @@ export interface Comment {
 }
 
 // 챌린지영상
-export interface Challenge {
+export interface ChallengeItem {
   challengeId: number;
   youtubeId: string;
   url: string;
   title: string;
   thumbnail: string;
+  hashtags: string[];
 }

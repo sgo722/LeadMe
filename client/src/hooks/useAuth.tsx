@@ -39,8 +39,14 @@ const useAuth = () => {
 
   // 로그아웃
   const logout = () => {
+    const token = sessionStorage.getItem("access_token");
+
     axios
-      .post(`${baseUrl}/api/v1/user/logout`, null, {})
+      .post(`${baseUrl}/api/v1/user/logout`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then(() => {
         setAccessToken(null);
         setAccessTokenExpireTime(null);

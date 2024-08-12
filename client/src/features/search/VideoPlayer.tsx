@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance } from "axiosInstance/apiClient";
-import { useMutation } from "@tanstack/react-query";
-import { useSetRecoilState } from "recoil";
-import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
+// import { axiosInstance } from "axiosInstance/apiClient";
+// import { useMutation } from "@tanstack/react-query";
+// import { useSetRecoilState } from "recoil";
+// import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 
 interface VideoPlayerProps {
   video: {
@@ -21,49 +21,52 @@ interface VideoPlayerProps {
   };
   isActive: boolean;
   onIntersection: (videoId: string, isIntersecting: boolean) => void;
+  challengeVideoIds: string[];
 }
 
-// 유튜브id를 서버로 보내서 랜드마크를 따서 mongoDB에 저장
-const postChallenge = async (data: Record<string, unknown>) => {
-  const res = await axiosInstance.post("/api/v1/challenge", data);
-  return res.data;
-};
+// const postChallenge = async (data: Record<string, unknown>) => {
+//   const res = await axiosInstance.post("/api/v1/challenge", data);
+//   return res.data;
+// };
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   video,
   isActive,
   onIntersection,
+  challengeVideoIds,
 }) => {
   const [canEmbed, setCanEmbed] = useState(true);
   const videoRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const nav = useNavigate();
-  const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
-  const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
+  // const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
+  // const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);
+  const [showMessage, setShowMessage] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
-  const mutation = useMutation({
-    mutationFn: postChallenge,
-    onMutate: () => {
-      setIsCompletionAlertModalOpen(true);
-      setIsWebcamVisible(true);
-      setCurrentYoutubeId(video.videoId);
-    },
-    onSuccess: () => {
-      console.log("MongoDB에 저장 성공");
-      setIsWebcamVisible(false);
-      setCurrentYoutubeId("");
-      nav(`/practice/${video.videoId}`);
-    },
-    onError: (error) => {
-      console.error("에러", error);
-      setIsWebcamVisible(false);
-      setIsCompletionAlertModalOpen(false);
-      setCurrentYoutubeId("");
-      nav("/home");
-    },
-  });
+  // const mutation = useMutation({
+  //   mutationFn: postChallenge,
+  //   onMutate: () => {
+  //     setIsCompletionAlertModalOpen(true);
+  //     setIsWebcamVisible(true);
+  //     setCurrentYoutubeId(video.videoId);
+  //   },
+  //   onSuccess: () => {
+  //     console.log("MongoDB에 저장 성공");
+  //     setIsWebcamVisible(false);
+  //     setCurrentYoutubeId("");
+  //     nav(`/practice/${video.videoId}`);
+  //   },
+  //   onError: (error) => {
+  //     console.error("에러", error);
+  //     setIsWebcamVisible(false);
+  //     setIsCompletionAlertModalOpen(false);
+  //     setCurrentYoutubeId("");
+  //     nav("/home");
+  //   },
+  // });
 
   useEffect(() => {
     const currentVideoRef = videoRef.current;
@@ -92,17 +95,20 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const handlePracticeClick = () => {
-    const challengeData = {
-      youtubeId: video.videoId,
-      url: `https://www.youtube.com/shorts/${video.videoId}`,
-    };
-
-    mutation.mutate(challengeData);
+    nav(`/practice/${video.videoId}`);
   };
 
   const handleCloseCompletionAlertModal = () => {
     setIsCompletionAlertModalOpen(false);
     nav("/home");
+  };
+
+  const handleSubClick = () => {
+    setIsButtonDisabled(true);
+    setShowMessage(true);
+    setTimeout(() => {
+      setShowMessage(false);
+    }, 2000);
   };
 
   return (
@@ -129,12 +135,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             />
           )}
         </VideoContent>
-        <PracticeButton onClick={handlePracticeClick}>
-          <ButtonText>
-            <span>챌린지 도전</span>
-            <span>Go !</span>
-          </ButtonText>
-        </PracticeButton>
+        {challengeVideoIds.includes(video.videoId) ? (
+          <PracticeButton onClick={handlePracticeClick}>
+            <ButtonText>
+              <span>챌린지 도전</span>
+              <span>Go !</span>
+            </ButtonText>
+          </PracticeButton>
+        ) : (
+          <SubButton
+            onClick={handleSubClick}
+            disabled={isButtonDisabled}
+            $isDisabled={isButtonDisabled}
+          >
+            <SubText>Challenge</SubText>
+            <SubText>등록 신청</SubText>
+          </SubButton>
+        )}
+        {showMessage && (
+          <Message>빠른 시일 내로 영상이 준비 될 거에요!</Message>
+        )}
       </ContentWrapper>
       <CompletionAlertModal
         isOpen={isCompletionAlertModalOpen}
@@ -225,4 +245,65 @@ const ButtonText = styled.div`
     font-weight: 700;
   }
 `;
-export default VideoPlayer;
+
+const SubButton = styled.button<{ $isDisabled: boolean }>`
+  position: absolute;
+  bottom: 3px;
+  right: -120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 93px;
+  height: 52px;
+  color: ${({ $isDisabled }) => ($isDisabled ? "#a0a0a0" : "#c0c0c0")};
+  border: none;
+  padding: 20px 20px;
+  cursor: ${({ $isDisabled }) => ($isDisabled ? "not-allowed" : "pointer")};
+  border-radius: 8px;
+  background: ${({ $isDisabled }) =>
+    $isDisabled ? "rgba(241, 241, 241, 0.8)" : "rgba(255, 255, 255, 0.8)"};
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  transition: 0.3s ease;
+
+  &:hover {
+    background: ${({ $isDisabled }) =>
+      $isDisabled ? "rgba(241, 241, 241, 0.8)" : "rgba(255, 255, 255, 1)"};
+    transform: ${({ $isDisabled }) => ($isDisabled ? "none" : "scale(1.05)")};
+  }
+`;
+
+const SubText = styled.div`
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 12px;
+
+  &:first-child {
+    color: #686868;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+`;
+
+const Message = styled.div`
+  position: absolute;
+  background-color: rgba(255, 255, 255, 1);
+  color: #303030;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 13px;
+  animation: fadeOut 2s forwards;
+
+  @keyframes fadeOut {
+    0% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+`;

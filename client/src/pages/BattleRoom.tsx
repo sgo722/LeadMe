@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRecoilValue } from "recoil";
 import { userProfileState } from "stores/authAtom";
 import countdownSound from "assets/audio/countdown.mp3";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import YouTube, { YouTubePlayer } from "react-youtube";
 import { getJWTHeader } from "axiosInstance/apiClient";
 import type {
@@ -23,6 +23,8 @@ interface SignalData {
   isVideoConfirmed?: boolean;
   start?: boolean;
   selectedYoutubeId?: string;
+  score?: number;
+  resetScores?: boolean;
 }
 
 interface VideoDataItem {
@@ -95,6 +97,14 @@ export const BattleRoom: React.FC = () => {
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
 
   const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // 녹화영상 제출 대기 상태
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [myScore, setMyScore] = useState<number | null>(null); // 내 점수
+  const [peerScore, setPeerScore] = useState<number | null>(null); // 상대 점수
+  const [battleResult, setBattleResult] = useState<
+    "win" | "lose" | "draw" | null
+  >(null); // 배틀 결과
+
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -110,11 +120,26 @@ export const BattleRoom: React.FC = () => {
   // 영상을 제출하고 점수를 반환하는 뮤테이션
   const submitRecordedVideoMutation = useMutation({
     mutationFn: submitRecordedVideo,
+    onMutate: () => {
+      setIsSubmitting(true);
+    },
     onSuccess: (data) => {
-      console.log("성공했음 반환값:", data);
+      const score = Math.floor(data.data * 100);
+      console.log("성공했음 반환값:", score);
+      // 내 점수 입력
+      setMyScore(score);
+      setIsSubmitting(false);
+      // 내 점수 상대방에게 전송
+      if (session) {
+        session.signal({
+          data: JSON.stringify({ score }),
+          type: "score",
+        });
+      }
     },
     onError: (error) => {
       console.log("녹화영상 제출 실패", error);
+      setIsSubmitting(false);
     },
   });
 
@@ -129,7 +154,8 @@ export const BattleRoom: React.FC = () => {
     },
     enabled: !!selectedYoutubeId,
   });
-  // 지울꺼
+
+  // 블레이즈포즈 안정화되면 지우기
   useEffect(() => {
     if (challengeQuery.isSuccess) {
       console.log("블레이즈포즈 데이터:", challengeQuery.data.data.landmarks);
@@ -250,11 +276,20 @@ export const BattleRoom: React.FC = () => {
         data: JSON.stringify({
           isVideoConfirmed: false,
           selectedVideoId: null,
+          resetScores: true,
         }),
         type: "video-cancelled",
       });
     }
+    resetScores();
   };
+
+  // 스코어, 배틀결과 초기화 시키는 함수
+  const resetScores = useCallback(() => {
+    setMyScore(null);
+    setPeerScore(null);
+    setBattleResult(null);
+  }, []);
 
   // 준비 버튼 클릭 시 상태를 변경하고 다른참가자에게 신호를 보내는 함수
   const toggleReady = useCallback(() => {
@@ -262,11 +297,18 @@ export const BattleRoom: React.FC = () => {
     setMyReady(newReadyState);
     if (session) {
       session.signal({
-        data: JSON.stringify({ ready: newReadyState }),
+        data: JSON.stringify({
+          ready: newReadyState,
+          resetScores:
+            myScore !== null && peerScore !== null && battleResult !== null,
+        }),
         type: "user-ready",
       });
     }
-  }, [myReady, session]);
+    if (myScore && peerScore && battleResult) {
+      resetScores();
+    }
+  }, [myReady, session, battleResult, myScore, peerScore, resetScores]);
 
   // 시작신호를 보내는 함수
   const sendStartSignal = () => {
@@ -323,6 +365,14 @@ export const BattleRoom: React.FC = () => {
           }
         };
 
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunksRef.current, {
+            type: "video/webm",
+          });
+          setRecordedBlob(blob);
+          recordedChunksRef.current = [];
+        };
+
         mediaRecorder.onerror = (error) => {
           console.error("MediaRecorder 에러:", error);
         };
@@ -340,43 +390,31 @@ export const BattleRoom: React.FC = () => {
 
   // 녹화 데이터 처리, 영상 제출 api 호출
   useEffect(() => {
-    if (!isRecording && recordedChunksRef.current.length > 0) {
-      const recordedBlob = new Blob(recordedChunksRef.current, {
-        type: "video/webm",
-      });
+    if (recordedBlob && recordedBlob.size > 0) {
       console.log("녹화된 영상 크기:", recordedBlob.size);
-      // 여기서 영상 제출 API 호출
 
       const formData = new FormData();
-      formData.append(
-        "request",
-        JSON.stringify({
-          userId: userProfile?.id,
-          challengeId: selectedVideo?.challengeId,
-        })
+      const blob = new Blob(
+        [
+          JSON.stringify({
+            userId: userProfile?.id,
+            challengeId: selectedVideo?.challengeId,
+          }),
+        ],
+        {
+          type: "application/json",
+        }
       );
-      formData.append("videoFile", recordedBlob, "record.webm");
-      // const blob = new Blob(
-      //   [
-      //     JSON.stringify({
-      //       userId: 5,
-      //       challengeId: selectedVideo?.challengeId,
-      //     }),
-      //   ],
-      //   {
-      //     type: "application/json",
-      //   }
-      // );
-      // formData.append("request", blob);
-      // formData.append("videoFile", recordedBlob, "record.mp4");
+      formData.append("request", blob);
+      formData.append("videoFile", recordedBlob, "record.mp4");
 
       // 영상 제출 mutation 실행
       submitRecordedVideoMutation.mutate(formData);
 
       // 처리 후 초기화
-      recordedChunksRef.current = [];
+      setRecordedBlob(null);
     }
-  }, [isRecording, selectedVideo, submitRecordedVideoMutation, userProfile]);
+  }, [recordedBlob, selectedVideo, submitRecordedVideoMutation, userProfile]);
 
   // 녹화 중지 함수
   const stopRecording = useCallback(() => {
@@ -384,6 +422,13 @@ export const BattleRoom: React.FC = () => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       console.log("녹화 끝");
+
+      // 녹화 중지 후 Blob 생성
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      setRecordedBlob(blob);
+
+      // recordedChunksRef 초기화
+      recordedChunksRef.current = [];
     }
   }, [isRecording]);
 
@@ -443,6 +488,9 @@ export const BattleRoom: React.FC = () => {
               setPeerReady(signalData.ready);
               console.log("상대방 준비 상태:", signalData.ready);
             }
+            if (signalData.resetScores) {
+              resetScores();
+            }
             break;
           case "video-selected":
             console.log("비디오 선택됨:", signalData);
@@ -473,11 +521,19 @@ export const BattleRoom: React.FC = () => {
             console.log("비디오 취소됨");
             setIsVideoConfirmed(false);
             setSelectedVideo(null);
+            if (signalData.resetScores) {
+              resetScores();
+            }
             break;
           case "battle-start":
             console.log("배틀 시작 신호 수신:", signalData);
             if (signalData.start) {
               startBattle();
+            }
+            break;
+          case "score":
+            if (typeof signalData.score === "number") {
+              setPeerScore(signalData.score);
             }
             break;
           default:
@@ -491,7 +547,23 @@ export const BattleRoom: React.FC = () => {
         session.off("signal", handleSignal);
       };
     }
-  }, [session, startBattle, videoList]);
+  }, [session]);
+  //startBattle, videoList 이것도 원래 같이 넣었었음
+
+  // 점수 비교 및 결과 설정
+  useEffect(() => {
+    if (myScore !== null && peerScore !== null) {
+      if (myScore > peerScore) {
+        setBattleResult("win");
+      }
+      if (myScore < peerScore) {
+        setBattleResult("lose");
+      }
+      if (myScore === peerScore) {
+        setBattleResult("draw");
+      }
+    }
+  }, [myScore, peerScore]);
 
   // 컴포넌트가 마운트될때나 token이 변경될 때 실행
   useEffect(() => {
@@ -694,152 +766,214 @@ export const BattleRoom: React.FC = () => {
   }
 
   return (
-    <Container>
-      <BattleArea>
-        <LeftWebcamBox $isSmall={selectedVideo !== null && !isVideoConfirmed}>
-          {subscribers[0] ? (
-            <>
-              <video
-                autoPlay={true}
-                ref={(video) => video && subscribers[0].addVideoElement(video)}
-              />
-              {peerReady && <ReadyOverlay>READY</ReadyOverlay>}
-            </>
-          ) : (
-            <EmptyBoxContent>대기중...</EmptyBoxContent>
-          )}
-        </LeftWebcamBox>
-        <DataBox
-          $isShifted={selectedVideo !== null && !isVideoConfirmed}
-          $isSelected={isVideoConfirmed && selectedVideo !== null}
-        >
-          {isVideoConfirmed && selectedVideo ? (
-            <FullScreenYouTubeContainer>
-              <BackIcon onClick={handleCancel}>&larr;</BackIcon>
-              <YouTube
-                videoId={selectedVideo.youtubeId}
-                opts={{
-                  height: "622",
-                  width: "350",
-                  playerVars: { autoplay: 0, controls: 0 },
-                }}
-                onReady={(e: YouTubePlayer) => {
-                  youtubePlayerRef.current = e.target;
-                }}
-                onStateChange={handleYouTubeStateChange}
-              />
-              {countdown !== null && (
-                <CountdownOverlay>
-                  <CountdownText>
-                    {countdown === 0 ? "START!" : countdown}
-                  </CountdownText>
-                </CountdownOverlay>
-              )}
-            </FullScreenYouTubeContainer>
-          ) : (
-            <>
-              <Title>Battle!</Title>
-              <SearchInput
-                type="text"
-                placeholder="검색어를 입력해주세요"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {isVideoLoading ? (
-                <div>로딩중</div>
-              ) : (
-                <ScrollableList>
-                  {filteredVideoList.map((item: VideoDataItem) => (
-                    <ListItem
-                      key={item.challengeId}
-                      onClick={() => handleItemClick(item.challengeId)}
-                      $isSelected={
-                        selectedVideo?.challengeId === item.challengeId
+    <>
+      <Container>
+        <BattleArea>
+          <LeftWebcamBox $isSmall={selectedVideo !== null && !isVideoConfirmed}>
+            {subscribers[0] ? (
+              <>
+                <video
+                  autoPlay={true}
+                  ref={(video) =>
+                    video && subscribers[0].addVideoElement(video)
+                  }
+                />
+                {peerReady && <ReadyOverlay>READY</ReadyOverlay>}
+                {battleResult && peerScore !== null && (
+                  <ResultOverlay
+                    $result={
+                      battleResult === "win"
+                        ? "lose"
+                        : battleResult === "lose"
+                        ? "win"
+                        : "draw"
+                    }
+                  >
+                    <NeonText
+                      $color={
+                        battleResult === "win"
+                          ? "red"
+                          : battleResult === "lose"
+                          ? "blue"
+                          : "yellow"
                       }
                     >
-                      {item.title}
-                    </ListItem>
-                  ))}
-                </ScrollableList>
-              )}
-            </>
-          )}
-        </DataBox>
-        {selectedVideo && !isVideoConfirmed && (
-          <YouTubeBox $isVisible={true}>
-            <CloseButton onClick={handleClose}>×</CloseButton>
-            <YouTubeContainer>
-              <YouTube
-                videoId={selectedVideo.youtubeId}
-                opts={{
-                  height: "480",
-                  width: "270",
-                  playerVars: { autoplay: 1 },
-                }}
-              />
-            </YouTubeContainer>
-            <StartButton onClick={handleConfirm}>select</StartButton>
-          </YouTubeBox>
-        )}
-        <RightWebcamBox $isSmall={selectedVideo !== null && !isVideoConfirmed}>
-          {publisher ? (
-            <>
-              <video
-                autoPlay={true}
-                ref={(video) => video && publisher.addVideoElement(video)}
-              />
-              <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
-              {myReady && <ReadyOverlay>READY</ReadyOverlay>}
-            </>
-          ) : (
-            <EmptyBoxContent>연결중...</EmptyBoxContent>
-          )}
-        </RightWebcamBox>
-
-        {(!selectedVideo || isVideoConfirmed) && (
-          <ButtonContainer>
-            {isVideoConfirmed && selectedVideo ? (
-              <>
-                {isHost && myReady && peerReady && !isRecording && (
-                  <ActionButton
-                    onClick={handleStart}
-                    disabled={!(myReady && peerReady)}
-                  >
-                    시작
-                  </ActionButton>
-                )}
-                {!isRecording && (
-                  <>
-                    <ActionButton onClick={toggleReady}>
-                      {myReady ? "준비 취소" : "준비"}
-                    </ActionButton>
-                    <ActionButton
-                      onClick={() => {
-                        if (session) {
-                          exitSessionMutation.mutate(session.sessionId);
-                        }
-                      }}
-                    >
-                      나가기
-                    </ActionButton>
-                  </>
+                      {battleResult === "win"
+                        ? "YOU LOSE!"
+                        : battleResult === "lose"
+                        ? "YOU WIN!"
+                        : "DRAW!"}
+                      <ScoreText>{peerScore}</ScoreText>
+                    </NeonText>
+                  </ResultOverlay>
                 )}
               </>
             ) : (
-              <ActionButton
-                onClick={() => {
-                  if (session) {
-                    exitSessionMutation.mutate(session.sessionId);
-                  }
-                }}
-              >
-                나가기
-              </ActionButton>
+              <EmptyBoxContent>대기중...</EmptyBoxContent>
             )}
-          </ButtonContainer>
-        )}
-      </BattleArea>
-    </Container>
+          </LeftWebcamBox>
+          <DataBox
+            $isShifted={selectedVideo !== null && !isVideoConfirmed}
+            $isSelected={isVideoConfirmed && selectedVideo !== null}
+          >
+            {isVideoConfirmed && selectedVideo ? (
+              <FullScreenYouTubeContainer>
+                <BackIcon onClick={handleCancel}>&larr;</BackIcon>
+                <YouTube
+                  videoId={selectedVideo.youtubeId}
+                  opts={{
+                    height: "622",
+                    width: "350",
+                    playerVars: { autoplay: 0, controls: 0 },
+                  }}
+                  onReady={(e: YouTubePlayer) => {
+                    youtubePlayerRef.current = e.target;
+                  }}
+                  onStateChange={handleYouTubeStateChange}
+                />
+                {countdown !== null && (
+                  <CountdownOverlay>
+                    <CountdownText>
+                      {countdown === 0 ? "START!" : countdown}
+                    </CountdownText>
+                  </CountdownOverlay>
+                )}
+              </FullScreenYouTubeContainer>
+            ) : (
+              <>
+                <Title>Battle!</Title>
+                <SearchInput
+                  type="text"
+                  placeholder="검색어를 입력해주세요"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {isVideoLoading ? (
+                  <div>로딩중</div>
+                ) : (
+                  <ScrollableList>
+                    {filteredVideoList.map((item: VideoDataItem) => (
+                      <ListItem
+                        key={item.challengeId}
+                        onClick={() => handleItemClick(item.challengeId)}
+                        $isSelected={
+                          selectedVideo?.challengeId === item.challengeId
+                        }
+                      >
+                        {item.title}
+                      </ListItem>
+                    ))}
+                  </ScrollableList>
+                )}
+              </>
+            )}
+          </DataBox>
+          {selectedVideo && !isVideoConfirmed && (
+            <YouTubeBox $isVisible={true}>
+              <CloseButton onClick={handleClose}>×</CloseButton>
+              <YouTubeContainer>
+                <YouTube
+                  videoId={selectedVideo.youtubeId}
+                  opts={{
+                    height: "480",
+                    width: "270",
+                    playerVars: { autoplay: 1 },
+                  }}
+                />
+              </YouTubeContainer>
+              <StartButton onClick={handleConfirm}>select</StartButton>
+            </YouTubeBox>
+          )}
+          <RightWebcamBox
+            $isSmall={selectedVideo !== null && !isVideoConfirmed}
+          >
+            {publisher ? (
+              <>
+                <video
+                  autoPlay={true}
+                  ref={(video) => video && publisher.addVideoElement(video)}
+                />
+                <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
+                {myReady && <ReadyOverlay>READY</ReadyOverlay>}
+                {battleResult && myScore !== null && (
+                  <ResultOverlay $result={battleResult}>
+                    <NeonText
+                      $color={
+                        battleResult === "win"
+                          ? "blue"
+                          : battleResult === "lose"
+                          ? "red"
+                          : "yellow"
+                      }
+                    >
+                      {battleResult === "win"
+                        ? "YOU WIN!"
+                        : battleResult === "lose"
+                        ? "YOU LOSE!"
+                        : "DRAW!"}
+                      <ScoreText>{myScore}</ScoreText>
+                    </NeonText>
+                  </ResultOverlay>
+                )}
+              </>
+            ) : (
+              <EmptyBoxContent>연결중...</EmptyBoxContent>
+            )}
+          </RightWebcamBox>
+
+          {(!selectedVideo || isVideoConfirmed) && (
+            <ButtonContainer>
+              {isVideoConfirmed && selectedVideo ? (
+                <>
+                  {isHost && myReady && peerReady && !isRecording && (
+                    <ActionButton
+                      onClick={handleStart}
+                      disabled={!(myReady && peerReady)}
+                    >
+                      시작
+                    </ActionButton>
+                  )}
+                  {!isRecording && countdown === null && (
+                    <>
+                      <ActionButton onClick={toggleReady}>
+                        {myReady ? "준비 취소" : "준비"}
+                      </ActionButton>
+                      <ActionButton
+                        onClick={() => {
+                          if (session) {
+                            exitSessionMutation.mutate(session.sessionId);
+                          }
+                        }}
+                      >
+                        나가기
+                      </ActionButton>
+                    </>
+                  )}
+                </>
+              ) : (
+                <ActionButton
+                  onClick={() => {
+                    if (session) {
+                      exitSessionMutation.mutate(session.sessionId);
+                    }
+                  }}
+                >
+                  나가기
+                </ActionButton>
+              )}
+            </ButtonContainer>
+          )}
+        </BattleArea>
+      </Container>
+      {isSubmitting && (
+        <LoadingOverlay>
+          <LoadingContent>
+            <LoadingSpinner />
+            <LoadingText>점수 계산중..</LoadingText>
+          </LoadingContent>
+        </LoadingOverlay>
+      )}
+    </>
   );
 };
 
@@ -1159,4 +1293,107 @@ const WebcamCanvas = styled.canvas`
   left: 0;
   width: 100%;
   height: 100%;
+`;
+
+const LoadingOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+`;
+
+const LoadingContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const LoadingText = styled.div`
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 20px;
+`;
+
+const LoadingSpinner = styled.div`
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #ee5050;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const flicker = keyframes`
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow:
+      0 0 4px #fff,
+      0 0 11px #fff,
+      0 0 19px #fff,
+      0 0 40px var(--color),
+      0 0 80px var(--color),
+      0 0 90px var(--color),
+      0 0 100px var(--color),
+      0 0 150px var(--color);
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+  }
+`;
+
+const ResultOverlay = styled.div<{ $result: "win" | "lose" | "draw" }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 10;
+`;
+
+const NeonText = styled.div<{ $color: "blue" | "red" | "yellow" }>`
+  font-family: "DOSIyagiMedium", sans-serif;
+  font-size: 50px;
+  font-weight: bold;
+  --color: ${(props) =>
+    props.$color === "blue"
+      ? "#1041FF"
+      : props.$color === "red"
+      ? "#FF3131"
+      : "#FFFF00"};
+  color: #fff;
+  padding: 10px 15px;
+  border: 0.1rem solid #fff;
+  border-radius: 1rem;
+  text-transform: uppercase;
+  animation: ${flicker} 1.5s infinite alternate;
+  text-shadow: 0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff, 0 0 40px var(--color),
+    0 0 80px var(--color), 0 0 90px var(--color), 0 0 100px var(--color),
+    0 0 150px var(--color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const ScoreText = styled.div`
+  font-size: 70px;
+  margin-top: 10px;
 `;
