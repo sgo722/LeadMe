@@ -122,7 +122,7 @@ export const BattleRoom: React.FC = () => {
       setIsSubmitting(true);
     },
     onSuccess: (data) => {
-      const score = data.data;
+      const score = Math.floor(data.data * 100);
       console.log("성공했음 반환값:", score);
       // 내 점수 입력
       setMyScore(score);
@@ -755,7 +755,7 @@ export const BattleRoom: React.FC = () => {
                   }
                 />
                 {peerReady && <ReadyOverlay>READY</ReadyOverlay>}
-                {battleResult && (
+                {battleResult && peerScore !== null && (
                   <ResultOverlay
                     $result={
                       battleResult === "win"
@@ -779,6 +779,7 @@ export const BattleRoom: React.FC = () => {
                         : battleResult === "lose"
                         ? "YOU WIN!"
                         : "DRAW!"}
+                      <ScoreText>{peerScore}</ScoreText>
                     </NeonText>
                   </ResultOverlay>
                 )}
@@ -870,7 +871,7 @@ export const BattleRoom: React.FC = () => {
                 />
                 <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
                 {myReady && <ReadyOverlay>READY</ReadyOverlay>}
-                {battleResult && (
+                {battleResult && myScore !== null && (
                   <ResultOverlay $result={battleResult}>
                     <NeonText
                       $color={
@@ -886,6 +887,7 @@ export const BattleRoom: React.FC = () => {
                         : battleResult === "lose"
                         ? "YOU LOSE!"
                         : "DRAW!"}
+                      <ScoreText>{myScore}</ScoreText>
                     </NeonText>
                   </ResultOverlay>
                 )}
@@ -1345,7 +1347,7 @@ const ResultOverlay = styled.div<{ $result: "win" | "lose" | "draw" }>`
 
 const NeonText = styled.div<{ $color: "blue" | "red" | "yellow" }>`
   font-family: "DOSIyagiMedium", sans-serif;
-  font-size: 40px;
+  font-size: 50px;
   font-weight: bold;
   --color: ${(props) =>
     props.$color === "blue"
@@ -1362,4 +1364,12 @@ const NeonText = styled.div<{ $color: "blue" | "red" | "yellow" }>`
   text-shadow: 0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff, 0 0 40px var(--color),
     0 0 80px var(--color), 0 0 90px var(--color), 0 0 100px var(--color),
     0 0 150px var(--color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const ScoreText = styled.div`
+  font-size: 70px;
+  margin-top: 10px;
 `;
