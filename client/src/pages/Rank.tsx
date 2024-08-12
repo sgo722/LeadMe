@@ -9,6 +9,7 @@ import { IoChevronBackSharp } from "react-icons/io5";
 import axios from "axios";
 
 interface ListData {
+  ranking: number;
   userId: number;
   userNickname: string;
   liked: number;
@@ -17,11 +18,11 @@ interface ListData {
 }
 
 const Rank: React.FC = () => {
-  const [total, setTotal] = useState<number>(0);
+  const [total, setTotal] = useState<number | null>(null);
   const [rankList, setRankList] = useState<ListData[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const usersPerPage = 10; // 페이지당 유저 수
+  const usersPerPage = 10;
 
   const mutationTotal = useMutation<number, Error>({
     mutationFn: async () => {
@@ -59,8 +60,10 @@ const Rank: React.FC = () => {
   });
 
   useEffect(() => {
-    mutationTotal.mutate(); // 전체 유저 수 조회
-    mutationRank.mutate(currentPage); // 첫 페이지의 랭킹 리스트 조회
+    if (total === null) {
+      mutationTotal.mutate(); // 전체 유저 수 조회
+      mutationRank.mutate(currentPage); // 첫 페이지의 랭킹 리스트 조회
+    }
   }, [currentPage]);
 
   useEffect(() => {
@@ -71,17 +74,15 @@ const Rank: React.FC = () => {
     setCurrentPage(page);
   };
 
-  const handleNextPage = () => {
-    setCurrentPage((prevPage) =>
-      Math.min(prevPage + 1, Math.ceil(total / usersPerPage))
-    );
-  };
-
   const handlePreviousPage = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
-  const totalPages = Math.ceil(total / usersPerPage);
+  const totalPages = Math.ceil((total ?? 0) / usersPerPage);
+
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => Math.min(prevPage + 1, Math.ceil(totalPages)));
+  };
 
   return (
     <>
@@ -100,12 +101,13 @@ const Rank: React.FC = () => {
                 </TableRow>
               </thead>
               <tbody>
-                {rankList.map((item, idx) => (
+                {rankList.map((item) => (
                   <TableRow key={item.userId}>
+                    <TableCell>{item.ranking}</TableCell>
                     <TableCell>
-                      {(currentPage - 1) * usersPerPage + idx + 1}
+                      {/* <img src={item.profileImg} alt="." /> */}
+                      {item.userNickname}
                     </TableCell>
-                    <TableCell>{item.userNickname}</TableCell>
                     <TableCell>{item.liked}</TableCell>
                     <TableCell>{item.followers}</TableCell>
                   </TableRow>
@@ -207,6 +209,11 @@ const TableHeader = styled.th`
 const TableCell = styled.td`
   padding: 14px;
   font-size: 16px;
+
+  & > img {
+    width: 30px;
+    height: 30px;
+  }
 `;
 
 const Pagination = styled.div`
