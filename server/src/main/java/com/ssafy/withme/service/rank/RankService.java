@@ -50,7 +50,7 @@ public class RankService {
                             user.getId(),
                             user.getNickname(),
                             user.getUserLikeCnt(),
-                            (long) user.getFromFollowList().size(),
+                            (long) user.getToFollowList().size(),
                             user.getProfileImg()
                     ))
                     .collect(Collectors.toList());
@@ -82,7 +82,7 @@ public class RankService {
                                     user.getId(),
                                     nickname,
                                     score, // 좋아요 수
-                                    (long) user.getFromFollowList().size(), // 팔로워 수
+                                    (long) user.getToFollowList().size(), // 팔로워 수
                                     user.getProfileImg() // 프로필 이미지
                             ))
                             .orElse(null);
