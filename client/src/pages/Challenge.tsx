@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Header from "components/Header";
 import styled from "styled-components";
 import playButtonIcon from "assets/icons/playButton.png";
@@ -6,10 +6,10 @@ import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { ChallengeItem, ResponseData } from "types";
 import { baseUrl } from "axiosInstance/constants";
-import { useState } from "react";
 
 const Challenge: React.FC = () => {
   const [challenges, setChallenges] = useState<ChallengeItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // 로딩 상태 관리
 
   const mutationChallenge = useMutation<ChallengeItem[], Error, void>({
     mutationFn: async () => {
@@ -21,9 +21,11 @@ const Challenge: React.FC = () => {
     onSuccess: (data: ChallengeItem[]) => {
       console.log(data);
       setChallenges(data);
+      setIsLoading(false); // 데이터 로드 완료
     },
     onError: (error: Error) => {
       console.error("Error fetching Challenge:", error);
+      setIsLoading(false); // 에러 발생 시 로딩 종료
     },
   });
 
@@ -40,20 +42,24 @@ const Challenge: React.FC = () => {
     <>
       <Header />
       <Container>
-        {sections.map((section, index) => (
-          <MainSection key={index}>
-            {section.map((img) => (
-              <ContentSection key={img.challengeId}>
-                <TitleSection>
-                  <MainTitle>{img.title}</MainTitle>
-                  <PlayButton src={playButtonIcon} />
-                </TitleSection>
-                <SubTitle>{img.hashtags}</SubTitle>
-                <FeedImage src={img.thumbnail} />
-              </ContentSection>
-            ))}
-          </MainSection>
-        ))}
+        {isLoading ? (
+          <PlaceholderMainSection></PlaceholderMainSection>
+        ) : (
+          sections.map((section, index) => (
+            <MainSection key={index}>
+              {section.map((img) => (
+                <ContentSection key={img.challengeId}>
+                  <TitleSection>
+                    <MainTitle>{img.title}</MainTitle>
+                    <PlayButton src={playButtonIcon} />
+                  </TitleSection>
+                  <SubTitle>{img.hashtags.join(" ")}</SubTitle>{" "}
+                  <FeedImage src={img.thumbnail} />
+                </ContentSection>
+              ))}
+            </MainSection>
+          ))
+        )}
       </Container>
     </>
   );
@@ -69,6 +75,48 @@ const Container = styled.div`
   margin: 50px auto;
   flex-direction: column;
   gap: 30px;
+`;
+
+const PlayButton = styled.img`
+  width: 50px;
+  height: 50px;
+  margin-bottom: -5px;
+  margin-right: -6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+`;
+
+const FeedImage = styled.img`
+  width: 200px;
+  height: 358px;
+  border-radius: 8px;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+`;
+
+const MainTitle = styled.h1`
+  font-size: 19px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-weight: 600;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: transform 0.2s ease;
+`;
+
+const SubTitle = styled.div`
+  font-size: 14px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-weight: 500;
+  margin-top: -10px;
+  margin-bottom: 18px;
+  width: 100%;
+  height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: transform 0.2s ease;
 `;
 
 const MainSection = styled.div`
@@ -92,54 +140,29 @@ const ContentSection = styled.div`
   flex-direction: column;
   gap: 10px;
   cursor: pointer;
+  width: 201px;
 
-  &:hover {
-    img {
-      transform: scale(1.05);
-    }
+  &:hover
+    ${PlayButton},
+    &:hover
+    ${FeedImage},
+    &:hover
+    ${MainTitle},
+    &:hover
+    ${SubTitle} {
+    transform: scale(1.05);
   }
 `;
 
 const TitleSection = styled.div`
   display: flex;
   align-items: center;
+  width: 200px;
+  height: 40px;
+  margin-bottom: 8px;
+`;
+
+const PlaceholderMainSection = styled(MainSection)`
+  height: 529px;
   justify-content: space-between;
-  width: 200px;
-`;
-
-const MainTitle = styled.h1`
-  font-size: 21px;
-  font-weight: 600;
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const PlayButton = styled.img`
-  width: 55px;
-  height: 55px;
-  margin-bottom: -8px;
-  margin-right: -8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  &:hover {
-    transform: scale(1.2);
-  }
-`;
-
-const SubTitle = styled.div`
-  font-size: 16px;
-  font-family: "Noto Sans KR", sans-serif;
-  font-weight: 500;
-  margin-top: -6px;
-  margin-bottom: 22px;
-`;
-
-const FeedImage = styled.img`
-  width: 200px;
-  height: 355.5px;
-  border-radius: 8px;
-  object-fit: cover;
-  transition: transform 0.3s ease;
 `;

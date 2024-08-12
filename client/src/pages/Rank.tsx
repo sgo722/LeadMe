@@ -160,6 +160,7 @@ const Container = styled.div`
 
 const MainSection = styled.div`
   width: 1080px;
+  height: 673px;
   border-radius: 20px;
   background: linear-gradient(
     108deg,
@@ -185,6 +186,7 @@ const TableWrapper = styled.div`
   );
   backdrop-filter: blur(10px);
   margin-top: 12px;
+  height: 521.6px;
 `;
 
 const Table = styled.table`
@@ -206,6 +208,7 @@ const TableHeader = styled.th`
   padding: 10px;
   font-size: 12px;
   font-weight: 700;
+  background-color: rgba(255, 255, 255, 0.4);
 `;
 
 const TableCell = styled.td`
