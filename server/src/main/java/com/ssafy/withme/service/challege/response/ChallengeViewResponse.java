@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 public class ChallengeViewResponse {
 
@@ -21,22 +23,25 @@ public class ChallengeViewResponse {
 
     private byte[] thumbnail;
 
+    private List<String> hashtags;
     @Builder
-    private ChallengeViewResponse(Long challengeId, String youtubeId, String url, String title, byte[] thumbnail) {
+    private ChallengeViewResponse(Long challengeId, String youtubeId, String url, String title, byte[] thumbnail, List<String> hashtags) {
         this.challengeId = challengeId;
         this.youtubeId = youtubeId;
         this.url = url;
         this.thumbnail = thumbnail;
         this.title = title;
+        this.hashtags = hashtags;
     }
 
-    public static ChallengeViewResponse ofResponse(Challenge challenge, byte[] thumbnail) {
+    public static ChallengeViewResponse ofResponse(Challenge challenge, byte[] thumbnail, List<String> hashtags) {
         return ChallengeViewResponse.builder()
                 .challengeId(challenge.getId())
                 .thumbnail(thumbnail)
                 .url(challenge.getUrl())
                 .youtubeId(challenge.getYoutubeId())
                 .title(challenge.getTitle())
+                .hashtags(hashtags)
                 .build();
     }
 }

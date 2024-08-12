@@ -194,7 +194,11 @@ public class ChallengeService {
                 .map(challenge -> {
                     try {
                         byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
-                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
+                        List<ChallengeHashTag> findHashtagByChallengeId = challengeHashTagRepository.findAllByChallengeId(challenge.getId());
+                        List<String> hashtags = findHashtagByChallengeId.stream()
+                                .map(hashtag -> hashtagRepository.findById(hashtag.getId()).get().getName())
+                                .toList();
+                        return ChallengeViewResponse.ofResponse(challenge, thumbnail, hashtags);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
@@ -205,6 +209,33 @@ public class ChallengeService {
                 .collect(Collectors.toList());
 
         return new PageImpl<>(challengeResponses, pageable, findChallengeByPaging.getTotalElements());
+    }
+
+    public List<ChallengeViewResponse> findAll() {
+        // 페이징 조회로 Challenge를 가져온다.
+        List<Challenge> findAllChallenge = challengeRepository.findAll();
+
+        // 썸네일 경로의 파일을 바이트코드로 변환하고, ResponseDto를 만들어서 반환한다.
+        List<ChallengeViewResponse> challengeResponses = findAllChallenge.stream()
+                .map(challenge -> {
+                    try {
+                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
+                        List<ChallengeHashTag> findHashtagByChallengeId = challengeHashTagRepository.findAllByChallengeId(challenge.getId());
+                        List<String> hashtags = findHashtagByChallengeId.stream()
+                                .filter(challengeHashtag -> challengeHashtag == null)
+                                .map(challengeHashtag -> hashtagRepository.findById(challengeHashtag.getId()).get().getName())
+                                .toList();
+                        return ChallengeViewResponse.ofResponse(challenge, thumbnail, hashtags);
+                    } catch (Exception e) {
+                        // 예외 처리 로직을 여기에 추가
+                        e.printStackTrace();
+                        return null; // 또는 다른 적절한 예외 처리 방법
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return challengeResponses;
     }
 
 
