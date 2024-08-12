@@ -178,10 +178,9 @@ def process_video_user(video_path):
         cv2.destroyAllWindows()
         return keypoints_list
 
-    frame_interval = int(original_fps / target_fps)
-    if frame_interval <= 0:
-        frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
 
+    frame_interval = round(original_fps / target_fps)
+    
     frame_count = 0
 
     # 프레임 별로 비디오 처리
