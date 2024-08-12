@@ -21,11 +21,11 @@ public class ChallengeViewResponse {
 
     private String title;
 
-    private byte[] thumbnail;
+    private String thumbnail;
 
     private List<String> hashtags;
     @Builder
-    private ChallengeViewResponse(Long challengeId, String youtubeId, String url, String title, byte[] thumbnail, List<String> hashtags) {
+    private ChallengeViewResponse(Long challengeId, String youtubeId, String url, String title, String thumbnail, List<String> hashtags) {
         this.challengeId = challengeId;
         this.youtubeId = youtubeId;
         this.url = url;
@@ -34,10 +34,10 @@ public class ChallengeViewResponse {
         this.hashtags = hashtags;
     }
 
-    public static ChallengeViewResponse ofResponse(Challenge challenge, byte[] thumbnail, List<String> hashtags) {
+    public static ChallengeViewResponse ofResponse(Challenge challenge, List<String> hashtags) {
         return ChallengeViewResponse.builder()
                 .challengeId(challenge.getId())
-                .thumbnail(thumbnail)
+                .thumbnail(challenge.getThumbnailUrl())
                 .url(challenge.getUrl())
                 .youtubeId(challenge.getYoutubeId())
                 .title(challenge.getTitle())

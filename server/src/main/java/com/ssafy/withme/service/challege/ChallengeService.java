@@ -193,12 +193,12 @@ public class ChallengeService {
         List<ChallengeViewResponse> challengeResponses = findChallengeByPaging.stream()
                 .map(challenge -> {
                     try {
-                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
                         List<ChallengeHashTag> findHashtagByChallengeId = challengeHashTagRepository.findAllByChallengeId(challenge.getId());
                         List<String> hashtags = findHashtagByChallengeId.stream()
-                                .map(hashtag -> hashtagRepository.findById(hashtag.getId()).get().getName())
+                                .filter(challengeHashtag -> challengeHashtag == null)
+                                .map(challengeHashtag -> hashtagRepository.findById(challengeHashtag.getId()).get().getName())
                                 .toList();
-                        return ChallengeViewResponse.ofResponse(challenge, thumbnail, hashtags);
+                        return ChallengeViewResponse.ofResponse(challenge, hashtags);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
@@ -225,7 +225,7 @@ public class ChallengeService {
                                 .filter(challengeHashtag -> challengeHashtag == null)
                                 .map(challengeHashtag -> hashtagRepository.findById(challengeHashtag.getId()).get().getName())
                                 .toList();
-                        return ChallengeViewResponse.ofResponse(challenge, thumbnail, hashtags);
+                        return ChallengeViewResponse.ofResponse(challenge, hashtags);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
