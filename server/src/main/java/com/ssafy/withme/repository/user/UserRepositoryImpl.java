@@ -30,8 +30,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom{
     public Optional<User> findByNickname(String nickname) {
 
         return Optional.ofNullable(
-                qf.selectDistinct(user)
-                        .from(user)
+                qf.selectFrom(user)
                         .leftJoin(user.fromFollowList, follow)
                         .fetchJoin()
                         .where(user.nickname.eq(nickname))
@@ -43,8 +42,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom{
     @Override
     public List<User> findTopUsersByLikes(Pageable pageable) {
 
-        return qf.selectDistinct(user)
-                .from(user)
+        return qf.selectFrom(user)
                 .leftJoin(user.fromFollowList, follow)
                 .fetchJoin()
                 .orderBy(user.userLikeCnt.desc())
