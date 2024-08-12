@@ -90,6 +90,8 @@ BE
 
 **Server**
 <br/>
+<img src="https://img.shields.io/badge/AWS EC2-FF9900?style=for-the-badge&logo=amazon ec2&logoColor=white">
+<img src="https://img.shields.io/badge/AWS S3-569A31?style=for-the-badge&logo=amazon s3&logoColor=white">
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
 
