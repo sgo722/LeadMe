@@ -15,15 +15,26 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static com.ssafy.withme.domain.rank.QRank.rank;
+
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/rank")
+@RequestMapping("/api/v1")
 public class RankController {
 
     private static final Logger log = LoggerFactory.getLogger(RankController.class);
     private final RankService rankService;
+    private final UserService userService;
 
-    @GetMapping("/list")
+    @GetMapping("/rank/list")
+    public SuccessResponse<?> getTotalUser() {
+
+        Long totalUserCnt = (long) userService.findAll().size();
+
+        return SuccessResponse.of(totalUserCnt);
+    }
+
+    @GetMapping("/rank")
     public SuccessResponse<?> getRanking(@RequestParam("pageNo") Long pageNo) {
 
         List<RankResponseDto> rank = rankService.rankList(pageNo);
