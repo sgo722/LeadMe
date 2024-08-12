@@ -129,7 +129,8 @@ export const BattleRoom: React.FC = () => {
     },
     enabled: !!selectedYoutubeId,
   });
-  // 지울꺼
+
+  // 블레이즈포즈 안정화되면 지우기
   useEffect(() => {
     if (challengeQuery.isSuccess) {
       console.log("블레이즈포즈 데이터:", challengeQuery.data.data.landmarks);
