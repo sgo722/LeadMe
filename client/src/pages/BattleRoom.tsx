@@ -126,7 +126,7 @@ export const BattleRoom: React.FC = () => {
     },
     onSuccess: (data) => {
       const score = Math.floor(data.data * 100);
-      console.log("성공했음 반환값:", score);
+      console.log("영상제출 성공, 반환값:", score);
       // 내 점수 입력
       setMyScore(score);
       setIsSubmitting(false);
@@ -344,6 +344,9 @@ export const BattleRoom: React.FC = () => {
       // 준비 상태 초기화
       setMyReady(false);
       setPeerReady(false);
+      //녹화 상태 초기화
+      setIsRecording(false);
+      setRecordedBlob(null);
     }
   }, [youtubePlayerRef]);
 
@@ -400,7 +403,7 @@ export const BattleRoom: React.FC = () => {
 
   // 녹화 데이터 처리, 영상 제출 api 호출
   useEffect(() => {
-    if (recordedBlob && recordedBlob.size > 0) {
+    if (battleStart && recordedBlob && recordedBlob.size > 0) {
       console.log("녹화된 영상 크기:", recordedBlob.size);
 
       const formData = new FormData();
@@ -424,7 +427,13 @@ export const BattleRoom: React.FC = () => {
       // 처리 후 초기화
       setRecordedBlob(null);
     }
-  }, [recordedBlob, selectedVideo, submitRecordedVideoMutation, userProfile]);
+  }, [
+    recordedBlob,
+    selectedVideo,
+    submitRecordedVideoMutation,
+    userProfile,
+    battleStart,
+  ]);
 
   // 녹화 중지 함수
   const stopRecording = useCallback(() => {
@@ -578,7 +587,6 @@ export const BattleRoom: React.FC = () => {
     startBattle,
     videoList?.data,
   ]);
-  //startBattle, videoList 이것도 원래 같이 넣었었음
 
   // 점수 비교 및 결과 설정
   useEffect(() => {
@@ -592,6 +600,7 @@ export const BattleRoom: React.FC = () => {
       if (myScore === peerScore) {
         setBattleResult("draw");
       }
+      setBattleStart(false);
     }
   }, [myScore, peerScore]);
 
@@ -780,10 +789,12 @@ export const BattleRoom: React.FC = () => {
     data: number;
   }) => {
     setIsYouTubePlaying(e.data === YouTube.PlayerState.PLAYING);
-    if (e.data === YouTube.PlayerState.PLAYING) {
-      startRecording();
-    } else if (e.data === YouTube.PlayerState.ENDED) {
-      stopRecording();
+    if (battleStart) {
+      if (e.data === YouTube.PlayerState.PLAYING) {
+        startRecording();
+      } else if (e.data === YouTube.PlayerState.ENDED) {
+        stopRecording();
+      }
     }
   };
 
