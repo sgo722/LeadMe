@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRecoilValue } from "recoil";
 import { userProfileState } from "stores/authAtom";
 import countdownSound from "assets/audio/countdown.mp3";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import YouTube, { YouTubePlayer } from "react-youtube";
 import { getJWTHeader } from "axiosInstance/apiClient";
 import type {
@@ -765,11 +765,21 @@ export const BattleRoom: React.FC = () => {
                         : "draw"
                     }
                   >
-                    {battleResult === "win"
-                      ? "LOSE"
-                      : battleResult === "lose"
-                      ? "WIN"
-                      : "DRAW"}
+                    <NeonText
+                      $color={
+                        battleResult === "win"
+                          ? "red"
+                          : battleResult === "lose"
+                          ? "blue"
+                          : "yellow"
+                      }
+                    >
+                      {battleResult === "win"
+                        ? "YOU LOSE!"
+                        : battleResult === "lose"
+                        ? "YOU WIN!"
+                        : "DRAW!"}
+                    </NeonText>
                   </ResultOverlay>
                 )}
               </>
@@ -862,7 +872,21 @@ export const BattleRoom: React.FC = () => {
                 {myReady && <ReadyOverlay>READY</ReadyOverlay>}
                 {battleResult && (
                   <ResultOverlay $result={battleResult}>
-                    {battleResult.toUpperCase()}
+                    <NeonText
+                      $color={
+                        battleResult === "win"
+                          ? "blue"
+                          : battleResult === "lose"
+                          ? "red"
+                          : "yellow"
+                      }
+                    >
+                      {battleResult === "win"
+                        ? "YOU WIN!"
+                        : battleResult === "lose"
+                        ? "YOU LOSE!"
+                        : "DRAW!"}
+                    </NeonText>
                   </ResultOverlay>
                 )}
               </>
@@ -1289,20 +1313,53 @@ const LoadingSpinner = styled.div`
   }
 `;
 
+const flicker = keyframes`
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow:
+      0 0 4px #fff,
+      0 0 11px #fff,
+      0 0 19px #fff,
+      0 0 40px var(--color),
+      0 0 80px var(--color),
+      0 0 90px var(--color),
+      0 0 100px var(--color),
+      0 0 150px var(--color);
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+  }
+`;
+
 const ResultOverlay = styled.div<{ $result: "win" | "lose" | "draw" }>`
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: ${(props) =>
-    props.$result === "win"
-      ? "rgba(0, 255, 0, 0.7)"
-      : props.$result === "lose"
-      ? "rgba(255, 0, 0, 0.7)"
-      : "rgba(255, 165, 0, 0.7)"};
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-weight: bold;
-  font-size: 30px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: 10;
+`;
+
+const NeonText = styled.div<{ $color: "blue" | "red" | "yellow" }>`
+  font-family: "DOSIyagiMedium", sans-serif;
+  font-size: 40px;
+  font-weight: bold;
+  --color: ${(props) =>
+    props.$color === "blue"
+      ? "#1041FF"
+      : props.$color === "red"
+      ? "#FF3131"
+      : "#FFFF00"};
+  color: #fff;
+  padding: 10px 15px;
+  border: 0.1rem solid #fff;
+  border-radius: 1rem;
+  text-transform: uppercase;
+  animation: ${flicker} 1.5s infinite alternate;
+  text-shadow: 0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff, 0 0 40px var(--color),
+    0 0 80px var(--color), 0 0 90px var(--color), 0 0 100px var(--color),
+    0 0 150px var(--color);
 `;
