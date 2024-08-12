@@ -24,6 +24,7 @@ interface SignalData {
   start?: boolean;
   selectedYoutubeId?: string;
   score?: number;
+  resetScores?: boolean;
 }
 
 interface VideoDataItem {
@@ -275,16 +276,20 @@ export const BattleRoom: React.FC = () => {
         data: JSON.stringify({
           isVideoConfirmed: false,
           selectedVideoId: null,
+          resetScores: true,
         }),
         type: "video-cancelled",
       });
     }
-    if (myScore && peerScore && battleResult) {
-      setMyScore(null);
-      setPeerScore(null);
-      setBattleResult(null);
-    }
+    resetScores();
   };
+
+  // 스코어, 배틀결과 초기화 시키는 함수
+  const resetScores = useCallback(() => {
+    setMyScore(null);
+    setPeerScore(null);
+    setBattleResult(null);
+  }, []);
 
   // 준비 버튼 클릭 시 상태를 변경하고 다른참가자에게 신호를 보내는 함수
   const toggleReady = useCallback(() => {
@@ -292,16 +297,18 @@ export const BattleRoom: React.FC = () => {
     setMyReady(newReadyState);
     if (session) {
       session.signal({
-        data: JSON.stringify({ ready: newReadyState }),
+        data: JSON.stringify({
+          ready: newReadyState,
+          resetScores:
+            myScore !== null && peerScore !== null && battleResult !== null,
+        }),
         type: "user-ready",
       });
     }
     if (myScore && peerScore && battleResult) {
-      setMyScore(null);
-      setPeerScore(null);
-      setBattleResult(null);
+      resetScores();
     }
-  }, [myReady, session, battleResult, myScore, peerScore]);
+  }, [myReady, session, battleResult, myScore, peerScore, resetScores]);
 
   // 시작신호를 보내는 함수
   const sendStartSignal = () => {
@@ -481,6 +488,9 @@ export const BattleRoom: React.FC = () => {
               setPeerReady(signalData.ready);
               console.log("상대방 준비 상태:", signalData.ready);
             }
+            if (signalData.resetScores) {
+              resetScores();
+            }
             break;
           case "video-selected":
             console.log("비디오 선택됨:", signalData);
@@ -511,6 +521,9 @@ export const BattleRoom: React.FC = () => {
             console.log("비디오 취소됨");
             setIsVideoConfirmed(false);
             setSelectedVideo(null);
+            if (signalData.resetScores) {
+              resetScores();
+            }
             break;
           case "battle-start":
             console.log("배틀 시작 신호 수신:", signalData);
