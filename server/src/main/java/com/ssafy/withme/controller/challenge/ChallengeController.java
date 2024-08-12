@@ -71,6 +71,13 @@ public class ChallengeController extends BaseEntity {
     }
 
 
+    @GetMapping("/api/v1/challenge/list")
+    public SuccessResponse<ChallengeYoutubeIdResponse> findByChallengeYoutubeId(){
+        return SuccessResponse.of(challengeService.findAllChallengeYoutubeId());
+    }
+
+
+
     /**
      * [메인페이지 챌린지 조회 기능]
      * 직접 저장한 유튜브 챌린지 영상들을 페이징 조회한다.

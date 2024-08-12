@@ -25,4 +25,8 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
     @Query("select c from Challenge c where c.thumbnailUrl is null")
     List<Challenge> findAllWithThumbnailUrlIsNull();
+
+    @Query("select c.youtubeId from Challenge c")
+    List<String> findAllYoutubeId();
+
 }

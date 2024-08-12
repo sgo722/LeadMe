@@ -349,4 +349,8 @@ public class ChallengeService {
 
     }
 
+    public ChallengeYoutubeIdResponse findAllChallengeYoutubeId() {
+        return new ChallengeYoutubeIdResponse(challengeRepository.findAllYoutubeId());
+    }
+
 }
