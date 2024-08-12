@@ -25,6 +25,7 @@ interface SignalData {
   selectedYoutubeId?: string;
   score?: number;
   resetScores?: boolean;
+  hostLeft?: boolean;
 }
 
 interface VideoDataItem {
@@ -222,7 +223,16 @@ export const BattleRoom: React.FC = () => {
   // 방 나가는 뮤테이션
   const exitSessionMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      await axiosInstance.delete(`/api/v1/session/${sessionId}`);
+      // 방장이 나갈때 전송할 시그널
+      if (isHost && session) {
+        await session.signal({
+          data: JSON.stringify({ hostLeft: true }),
+          type: "host-left",
+        });
+      }
+      await axiosInstance.delete(`/api/v1/session/${sessionId}`, {
+        headers: getJWTHeader(),
+      });
     },
     onSuccess: () => {
       console.log("세션 종료 성공");
@@ -454,6 +464,14 @@ export const BattleRoom: React.FC = () => {
     };
   }, [battleStart, countdown]);
 
+  // 방장이 나가면 방 폭파시키는 함수
+  const handleHostLeft = useCallback(async () => {
+    alert("방장이 퇴장했습니다. 배틀룸을 나갑니다.");
+    if (session) {
+      await exitSessionMutation.mutateAsync(session.sessionId);
+    }
+  }, [session, exitSessionMutation]);
+
   // 신호 처리를 위한 useEffect
   useEffect(() => {
     if (session) {
@@ -536,6 +554,11 @@ export const BattleRoom: React.FC = () => {
               setPeerScore(signalData.score);
             }
             break;
+          case "host-left":
+            if (signalData.hostLeft) {
+              handleHostLeft();
+            }
+            break;
           default:
             console.log("알 수 없는 시그널 타입:", signalType);
         }
@@ -547,7 +570,14 @@ export const BattleRoom: React.FC = () => {
         session.off("signal", handleSignal);
       };
     }
-  }, [session]);
+  }, [
+    session,
+    exitSessionMutation,
+    handleHostLeft,
+    resetScores,
+    startBattle,
+    videoList?.data,
+  ]);
   //startBattle, videoList 이것도 원래 같이 넣었었음
 
   // 점수 비교 및 결과 설정
