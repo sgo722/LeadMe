@@ -25,4 +25,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
     @Query("select c.youtubeId from Challenge c")
     List<String> findAllYoutubeId();
+
+    @Query("select c from Challenge c where c.createdBy is not null")
+    List<Challenge> findAllWithNeedToUpdate();
 }

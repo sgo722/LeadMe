@@ -122,4 +122,10 @@ public class ChallengeController extends BaseEntity {
         return SuccessResponse.of(true);
     }
 
+    @GetMapping("/api/v1/challenge/blazepose")
+    public SuccessResponse<?> updateBlazePoseData() {
+        challengeService.updateBlazePoseData();
+        return SuccessResponse.of(true);
+    }
+
 }
