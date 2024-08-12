@@ -17,13 +17,13 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/rank")
 public class RankController {
 
     private static final Logger log = LoggerFactory.getLogger(RankController.class);
     private final RankService rankService;
 
-    @GetMapping("/rank")
+    @GetMapping("/list")
     public SuccessResponse<?> getRanking(@RequestParam("pageNo") Long pageNo) {
 
         List<RankResponseDto> rank = rankService.rankList(pageNo);
