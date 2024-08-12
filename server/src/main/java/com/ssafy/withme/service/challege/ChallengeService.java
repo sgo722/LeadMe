@@ -13,8 +13,12 @@ import com.ssafy.withme.repository.challengeHashtag.ChallengeHashtagRepository;
 import com.ssafy.withme.repository.hashtag.HashtagRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
+<<<<<<< Updated upstream
 import com.ssafy.withme.service.challege.response.ChallengeBattleListResponse;
 import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
+=======
+import com.ssafy.withme.service.challege.response.ChallengeYoutubeIdResponse;
+>>>>>>> Stashed changes
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import com.ssafy.withme.service.youtube.YouTubeService;
 import jakarta.transaction.Transactional;
@@ -42,10 +46,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+<<<<<<< Updated upstream
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+=======
+>>>>>>> Stashed changes
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELETON_DATA;
@@ -178,6 +185,7 @@ public class ChallengeService {
         return LandmarkResponse.ofResponse(findLandmarkByYoutubeId, challenge.getId());
     }
 
+<<<<<<< Updated upstream
 
     /**
      * 직접 저장한 유튜브 챌린지 영상들을 페이징 조회한다.
@@ -333,4 +341,9 @@ public class ChallengeService {
 
     }
 
+=======
+    public ChallengeYoutubeIdResponse findAllChallengeYoutubeId() {
+        return new ChallengeYoutubeIdResponse(challengeRepository.findAllYoutubeId());
+    }
+>>>>>>> Stashed changes
 }

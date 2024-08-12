@@ -55,6 +55,7 @@ public class UserChallengeController {
         return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user, viewUserId));
     }
 
+<<<<<<< Updated upstream
     /**
      ** 유저영상을 스켈레톤 데이터를 저장하고 영상파일을 임시저장 한다.
      * @param request
@@ -114,4 +115,13 @@ public class UserChallengeController {
     }
 
 
+=======
+    @DeleteMapping("/{userChallengeId}")
+    public void delete(
+            @CurrentUser User user,
+            @PathVariable("userChallengeId") Long userChallengeId){
+        userChallengeService.delete(user, userChallengeId);
+    }
+
+>>>>>>> Stashed changes
 }
