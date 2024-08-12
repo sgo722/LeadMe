@@ -227,57 +227,67 @@ public class CompetitionService {
         }
     }
 
+    /**
+     * 경쟁전 점수 반환
+     * @param request
+     * @param videoFile
+     * @return
+     * @throws IOException
+     */
     public double getCompetitionResult(UserChallengeAnalyzeRequest request, MultipartFile videoFile) throws IOException {
         // 챌린지 아이디
         Long challengeId = request.getChallengeId();
-        log.info("챌린지 id: {}", challengeId);
 
         // 챌린지 아이디를 기반으로 저장되어 있는 챌린지 정보 조회
-        Challenge challenge = challengeRepository.findById(challengeId)
-                .orElseThrow(() -> {
-                    log.info("조회할 챌린지가 없어 예외 발생.");
-                    throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
-                });
+        Challenge challenge = challengeRepository.findById(challengeId).orElse(null);
 
-        log.info("비디오 파일 정보 : {}", videoFile.getOriginalFilename());
+        // 조회한 챌린지가 없는 경우 예외처리
+        if (challenge == null) {
+            throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
+        }
 
+        // 원본 영상 저장, 수평 반전한 영상 저장, 오디오 추출
         String url = FAST_API_URL + "/upload/userFile";
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-        CompletableFuture<ResponseEntity<String>> responseFuture = CompletableFuture.supplyAsync(() -> {
-
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-
-            try {
-                body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
-                    @Override
-                    public String getFilename() {
-                        return videoFile.getOriginalFilename();
-                    }
-                });
-            } catch (IOException e) {
-                log.error("videoFile IOException: {}", e.getMessage());
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("videoFile", new ByteArrayResource(videoFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return videoFile.getOriginalFilename();
             }
-            body.add("youtubeId", challenge.getYoutubeId());
-
-            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-            return restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
         });
+        body.add("youtubeId", challenge.getYoutubeId());
 
-
-        // Fast API 반환값
-        ResponseEntity<String> response = responseFuture.join();
-
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
         String result = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(result);
         String uuid = rootNode.path("uuid").asText();
 
+        // =====================================================================================================
+
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        body = new LinkedMultiValueMap<>();
+        body.add("youtubeId", challenge.getYoutubeId());
+        body.add("uuid", uuid);
+
+        // 블레이즈 포즈 추출
+        url = FAST_API_URL + "/upload/blazepose";
+
+
+        requestEntity = new HttpEntity<>(body, headers);
+        // Fast API 반환값
+        response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+        result = response.getBody();
+
         // 역직렬화한 유저 포즈 정보
         List<Frame> userFrames = deserialize(result);
-        log.info("유저 영상 프레임 수 : {} ", userFrames.size());
+
 
         // 저장된 챌린지 포즈 정보
         Landmark landmark = landmarkRepository.findByYoutubeId(challenge.getYoutubeId());
@@ -285,7 +295,6 @@ public class CompetitionService {
 
         // 기존 챌린지 정보를 List<Frame> 형태로 캐스팅
         List<Frame> challengeFrames = landmark.getLandmarks().stream()
-                .parallel()
                 .map(keypoints -> keypoints.stream()
                         .map(p -> new Keypoint(p.getX(), p.getY(), p.getZ(), p.getVisibility()))
                         .collect(Collectors.toList()))
@@ -293,8 +302,9 @@ public class CompetitionService {
                 .collect(Collectors.toList());
 
         Map<String, Object> calculateResult = PoseComparison.calculatePoseScore(userFrames, challengeFrames);
-        log.info(" 반환 점수 : {}", calculateResult.get("score"));
-        return Double.valueOf((String) calculateResult.get("score"));
+
+        log.info(" 반환 점수 : {}", calculateResult.get("totalScore"));
+        return (double) calculateResult.get("totalScore");
     }
 
     @Transactional

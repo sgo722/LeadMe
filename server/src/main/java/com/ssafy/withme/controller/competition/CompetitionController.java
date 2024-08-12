@@ -160,6 +160,14 @@ public class CompetitionController {
         competitionService.deleteSession(sessionId, user);
     }
 
+    /**
+     * 경쟁전 점수 반환
+     * @param request
+     * @param videoFile
+     * @param user
+     * @return
+     * @throws IOException
+     */
     @PostMapping("api/v1/competition/result")
     public SuccessResponse<?> getCompetitionResult(
             @RequestPart("request") UserChallengeAnalyzeRequest request,
