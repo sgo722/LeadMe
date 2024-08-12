@@ -95,6 +95,7 @@ export const BattleRoom: React.FC = () => {
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
 
   const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -324,6 +325,14 @@ export const BattleRoom: React.FC = () => {
           }
         };
 
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunksRef.current, {
+            type: "video/webm",
+          });
+          setRecordedBlob(blob);
+          recordedChunksRef.current = [];
+        };
+
         mediaRecorder.onerror = (error) => {
           console.error("MediaRecorder 에러:", error);
         };
@@ -341,43 +350,31 @@ export const BattleRoom: React.FC = () => {
 
   // 녹화 데이터 처리, 영상 제출 api 호출
   useEffect(() => {
-    if (!isRecording && recordedChunksRef.current.length > 0) {
-      const recordedBlob = new Blob(recordedChunksRef.current, {
-        type: "video/webm",
-      });
+    if (recordedBlob && recordedBlob.size > 0) {
       console.log("녹화된 영상 크기:", recordedBlob.size);
-      // 여기서 영상 제출 API 호출
 
       const formData = new FormData();
-      formData.append(
-        "request",
-        JSON.stringify({
-          userId: userProfile?.id,
-          challengeId: selectedVideo?.challengeId,
-        })
+      const blob = new Blob(
+        [
+          JSON.stringify({
+            userId: userProfile?.id,
+            challengeId: selectedVideo?.challengeId,
+          }),
+        ],
+        {
+          type: "application/json",
+        }
       );
-      formData.append("videoFile", recordedBlob, "record.webm");
-      // const blob = new Blob(
-      //   [
-      //     JSON.stringify({
-      //       userId: 5,
-      //       challengeId: selectedVideo?.challengeId,
-      //     }),
-      //   ],
-      //   {
-      //     type: "application/json",
-      //   }
-      // );
-      // formData.append("request", blob);
-      // formData.append("videoFile", recordedBlob, "record.mp4");
+      formData.append("request", blob);
+      formData.append("videoFile", recordedBlob, "record.mp4");
 
       // 영상 제출 mutation 실행
       submitRecordedVideoMutation.mutate(formData);
 
       // 처리 후 초기화
-      recordedChunksRef.current = [];
+      setRecordedBlob(null);
     }
-  }, [isRecording, selectedVideo, submitRecordedVideoMutation, userProfile]);
+  }, [recordedBlob, selectedVideo, submitRecordedVideoMutation, userProfile]);
 
   // 녹화 중지 함수
   const stopRecording = useCallback(() => {
@@ -385,6 +382,13 @@ export const BattleRoom: React.FC = () => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       console.log("녹화 끝");
+
+      // 녹화 중지 후 Blob 생성
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      setRecordedBlob(blob);
+
+      // recordedChunksRef 초기화
+      recordedChunksRef.current = [];
     }
   }, [isRecording]);
 
