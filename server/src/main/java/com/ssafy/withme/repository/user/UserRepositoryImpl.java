@@ -40,8 +40,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom{
     public List<User> findTopUsersByLikes(Pageable pageable) {
 
         return qf.selectFrom(user).distinct()
-                .leftJoin(user.fromFollowList, follow)
-                .on(follow.fromUser.eq(user)).fetchJoin()
+                .leftJoin(user.fromFollowList, follow).fetchJoin()
                 .orderBy(user.userLikeCnt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
