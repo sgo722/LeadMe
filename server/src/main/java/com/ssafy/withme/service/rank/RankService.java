@@ -39,7 +39,7 @@ public class RankService {
         Pageable pageable = PageRequest.of(pageNo.intValue() - 1, (int) itemsPerPage);
 
         // RDBMS에서 유저 정보 가져오기
-        log.info("RDBMS에서 유저 정보 조회");
+        log.info("RDBMS에서 유저 정보 조회 pageNo : {}", pageNo);
         return userRepository.findTopUsersByLikes(pageable).stream()
                 .map(user -> new RankResponseDto(
                         user.getId(),
