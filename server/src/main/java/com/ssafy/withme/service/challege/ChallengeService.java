@@ -11,6 +11,7 @@ import com.ssafy.withme.repository.challengeHashtag.ChallengeHashtagRepository;
 import com.ssafy.withme.repository.hashtag.HashtagRepository;
 import com.ssafy.withme.repository.landmark.LandmarkRepository;
 
+import com.ssafy.withme.service.challege.response.ChallengeYoutubeIdResponse;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELETON_DATA;
@@ -113,5 +115,9 @@ public class ChallengeService {
         // youtubeId로 몽고디비로부터 스켈레톤 데이터를 조회합니다.
         Landmark findLandmarkByYoutubeId = landmarkRepository.findByYoutubeId(youtubeId);
         return LandmarkResponse.ofResponse(findLandmarkByYoutubeId, challenge.getId());
+    }
+
+    public ChallengeYoutubeIdResponse findAllChallengeYoutubeId() {
+        return new ChallengeYoutubeIdResponse(challengeRepository.findAllYoutubeId());
     }
 }

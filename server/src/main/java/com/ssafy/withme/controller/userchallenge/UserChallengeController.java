@@ -95,4 +95,11 @@ public class UserChallengeController {
         return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user, viewUserId));
     }
 
+    @DeleteMapping("/{userChallengeId}")
+    public void delete(
+            @CurrentUser User user,
+            @PathVariable("userChallengeId") Long userChallengeId){
+        userChallengeService.delete(user, userChallengeId);
+    }
+
 }
