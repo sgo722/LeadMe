@@ -373,4 +373,5 @@ public class ChallengeService {
         return new ChallengeYoutubeIdResponse(challengeRepository.findAllYoutubeId());
     }
 
+
 }
