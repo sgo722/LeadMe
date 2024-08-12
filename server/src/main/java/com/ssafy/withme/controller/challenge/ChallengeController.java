@@ -70,11 +70,6 @@ public class ChallengeController extends BaseEntity {
         return SuccessResponse.of(challengeService.getLandMarkByYoutubeId(youtubeId));
     }
 
-    @GetMapping("/api/v1/challenge/list")
-    public SuccessResponse<ChallengeYoutubeIdResponse> findByChallengeYoutubeId(){
-        return SuccessResponse.of(challengeService.findAllChallengeYoutubeId());
-    }
-
 
     /**
      * [메인페이지 챌린지 조회 기능]
@@ -92,16 +87,13 @@ public class ChallengeController extends BaseEntity {
     /**
      * [메인페이지 챌린지 검색 기능]
      * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
-     *  기본적으로 4개의 영상 정보를 반환한다.
-     * @param pageable
      * @param title
      * @return
      */
     @GetMapping("/api/v1/challenge/search")
-    public SuccessResponse<Page<ChallengeViewResponse>> searchChallengeByPaging(
-            @PageableDefault(size = 4) Pageable pageable,
+    public SuccessResponse<ChallengeYoutubeIdResponse> searchChallengeByPaging(
             @RequestParam(name = "title") String title) {
-        return SuccessResponse.of(challengeService.searchChallengeByPaging(pageable,title));
+        return SuccessResponse.of(challengeService.searchChallengeYoutubeList(title));
     }
 
     /**

@@ -211,31 +211,15 @@ public class ChallengeService {
     /**
      * [메인페이지 챌린지 검색 기능]
      * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
-     *  기본적으로 4개의 영상 정보를 반환한다.
-     * @param pageable
      * @param title
      * @return
      */
-    public Page<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String title) {
+    public ChallengeYoutubeIdResponse searchChallengeYoutubeList(String title) {
 
         // 키워드로 Challenge를 조회한다.
-        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitleContaining(pageable, title);
-        List<ChallengeViewResponse> searchChallenges = searchChallengeByPaging.stream()
-                .map(challenge -> {
-                    try {
-                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
-                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
-                    } catch (Exception e) {
-                        // 예외 처리 로직을 여기에 추가
-                        e.printStackTrace();
-                        return null; // 또는 다른 적절한 예외 처리 방법
-                    }
-                })
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(searchChallenges,pageable, searchChallengeByPaging.getTotalElements());
-
-
+        challengeRepository.findByTitleContaining(title);
+        List<String> searchChallengeYoutubeId = challengeRepository.findByTitleContaining(title);
+        return new ChallengeYoutubeIdResponse(searchChallengeYoutubeId);
     }
 
     /**
@@ -333,7 +317,4 @@ public class ChallengeService {
 
     }
 
-    public ChallengeYoutubeIdResponse findAllChallengeYoutubeId() {
-        return new ChallengeYoutubeIdResponse(challengeRepository.findAllYoutubeId());
-    }
 }
