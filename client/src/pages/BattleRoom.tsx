@@ -24,6 +24,8 @@ interface SignalData {
   start?: boolean;
   selectedYoutubeId?: string;
   score?: number;
+  resetScores?: boolean;
+  hostLeft?: boolean;
 }
 
 interface VideoDataItem {
@@ -124,7 +126,7 @@ export const BattleRoom: React.FC = () => {
     },
     onSuccess: (data) => {
       const score = Math.floor(data.data * 100);
-      console.log("성공했음 반환값:", score);
+      console.log("영상제출 성공, 반환값:", score);
       // 내 점수 입력
       setMyScore(score);
       setIsSubmitting(false);
@@ -221,7 +223,16 @@ export const BattleRoom: React.FC = () => {
   // 방 나가는 뮤테이션
   const exitSessionMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      await axiosInstance.delete(`/api/v1/session/${sessionId}`);
+      // 방장이 나갈때 전송할 시그널
+      if (isHost && session) {
+        await session.signal({
+          data: JSON.stringify({ hostLeft: true }),
+          type: "host-left",
+        });
+      }
+      await axiosInstance.delete(`/api/v1/session/${sessionId}`, {
+        headers: getJWTHeader(),
+      });
     },
     onSuccess: () => {
       console.log("세션 종료 성공");
@@ -275,16 +286,20 @@ export const BattleRoom: React.FC = () => {
         data: JSON.stringify({
           isVideoConfirmed: false,
           selectedVideoId: null,
+          resetScores: true,
         }),
         type: "video-cancelled",
       });
     }
-    if (myScore && peerScore && battleResult) {
-      setMyScore(null);
-      setPeerScore(null);
-      setBattleResult(null);
-    }
+    resetScores();
   };
+
+  // 스코어, 배틀결과 초기화 시키는 함수
+  const resetScores = useCallback(() => {
+    setMyScore(null);
+    setPeerScore(null);
+    setBattleResult(null);
+  }, []);
 
   // 준비 버튼 클릭 시 상태를 변경하고 다른참가자에게 신호를 보내는 함수
   const toggleReady = useCallback(() => {
@@ -292,16 +307,18 @@ export const BattleRoom: React.FC = () => {
     setMyReady(newReadyState);
     if (session) {
       session.signal({
-        data: JSON.stringify({ ready: newReadyState }),
+        data: JSON.stringify({
+          ready: newReadyState,
+          resetScores:
+            myScore !== null && peerScore !== null && battleResult !== null,
+        }),
         type: "user-ready",
       });
     }
     if (myScore && peerScore && battleResult) {
-      setMyScore(null);
-      setPeerScore(null);
-      setBattleResult(null);
+      resetScores();
     }
-  }, [myReady, session, battleResult, myScore, peerScore]);
+  }, [myReady, session, battleResult, myScore, peerScore, resetScores]);
 
   // 시작신호를 보내는 함수
   const sendStartSignal = () => {
@@ -327,6 +344,9 @@ export const BattleRoom: React.FC = () => {
       // 준비 상태 초기화
       setMyReady(false);
       setPeerReady(false);
+      //녹화 상태 초기화
+      setIsRecording(false);
+      setRecordedBlob(null);
     }
   }, [youtubePlayerRef]);
 
@@ -383,7 +403,7 @@ export const BattleRoom: React.FC = () => {
 
   // 녹화 데이터 처리, 영상 제출 api 호출
   useEffect(() => {
-    if (recordedBlob && recordedBlob.size > 0) {
+    if (battleStart && recordedBlob && recordedBlob.size > 0) {
       console.log("녹화된 영상 크기:", recordedBlob.size);
 
       const formData = new FormData();
@@ -407,7 +427,13 @@ export const BattleRoom: React.FC = () => {
       // 처리 후 초기화
       setRecordedBlob(null);
     }
-  }, [recordedBlob, selectedVideo, submitRecordedVideoMutation, userProfile]);
+  }, [
+    recordedBlob,
+    selectedVideo,
+    submitRecordedVideoMutation,
+    userProfile,
+    battleStart,
+  ]);
 
   // 녹화 중지 함수
   const stopRecording = useCallback(() => {
@@ -447,6 +473,14 @@ export const BattleRoom: React.FC = () => {
     };
   }, [battleStart, countdown]);
 
+  // 방장이 나가면 방 폭파시키는 함수
+  const handleHostLeft = useCallback(async () => {
+    alert("방장이 퇴장했습니다. 배틀룸을 나갑니다.");
+    if (session) {
+      await exitSessionMutation.mutateAsync(session.sessionId);
+    }
+  }, [session, exitSessionMutation]);
+
   // 신호 처리를 위한 useEffect
   useEffect(() => {
     if (session) {
@@ -481,6 +515,9 @@ export const BattleRoom: React.FC = () => {
               setPeerReady(signalData.ready);
               console.log("상대방 준비 상태:", signalData.ready);
             }
+            if (signalData.resetScores) {
+              resetScores();
+            }
             break;
           case "video-selected":
             console.log("비디오 선택됨:", signalData);
@@ -511,6 +548,9 @@ export const BattleRoom: React.FC = () => {
             console.log("비디오 취소됨");
             setIsVideoConfirmed(false);
             setSelectedVideo(null);
+            if (signalData.resetScores) {
+              resetScores();
+            }
             break;
           case "battle-start":
             console.log("배틀 시작 신호 수신:", signalData);
@@ -521,6 +561,11 @@ export const BattleRoom: React.FC = () => {
           case "score":
             if (typeof signalData.score === "number") {
               setPeerScore(signalData.score);
+            }
+            break;
+          case "host-left":
+            if (signalData.hostLeft) {
+              handleHostLeft();
             }
             break;
           default:
@@ -534,8 +579,14 @@ export const BattleRoom: React.FC = () => {
         session.off("signal", handleSignal);
       };
     }
-  }, [session]);
-  //startBattle, videoList 이것도 원래 같이 넣었었음
+  }, [
+    session,
+    exitSessionMutation,
+    handleHostLeft,
+    resetScores,
+    startBattle,
+    videoList?.data,
+  ]);
 
   // 점수 비교 및 결과 설정
   useEffect(() => {
@@ -549,6 +600,7 @@ export const BattleRoom: React.FC = () => {
       if (myScore === peerScore) {
         setBattleResult("draw");
       }
+      setBattleStart(false);
     }
   }, [myScore, peerScore]);
 
@@ -737,10 +789,12 @@ export const BattleRoom: React.FC = () => {
     data: number;
   }) => {
     setIsYouTubePlaying(e.data === YouTube.PlayerState.PLAYING);
-    if (e.data === YouTube.PlayerState.PLAYING) {
-      startRecording();
-    } else if (e.data === YouTube.PlayerState.ENDED) {
-      stopRecording();
+    if (battleStart) {
+      if (e.data === YouTube.PlayerState.PLAYING) {
+        startRecording();
+      } else if (e.data === YouTube.PlayerState.ENDED) {
+        stopRecording();
+      }
     }
   };
 

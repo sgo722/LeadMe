@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance } from "axiosInstance/apiClient";
-import { useMutation } from "@tanstack/react-query";
-import { useSetRecoilState } from "recoil";
-import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
+// import { axiosInstance } from "axiosInstance/apiClient";
+// import { useMutation } from "@tanstack/react-query";
+// import { useSetRecoilState } from "recoil";
+// import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 
 interface VideoPlayerProps {
   video: {
@@ -24,10 +24,10 @@ interface VideoPlayerProps {
   challengeVideoIds: string[];
 }
 
-const postChallenge = async (data: Record<string, unknown>) => {
-  const res = await axiosInstance.post("/api/v1/challenge", data);
-  return res.data;
-};
+// const postChallenge = async (data: Record<string, unknown>) => {
+//   const res = await axiosInstance.post("/api/v1/challenge", data);
+//   return res.data;
+// };
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   video,
@@ -39,34 +39,34 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const videoRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const nav = useNavigate();
-  const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
-  const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
+  // const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
+  // const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);
   const [showMessage, setShowMessage] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
-  const mutation = useMutation({
-    mutationFn: postChallenge,
-    onMutate: () => {
-      setIsCompletionAlertModalOpen(true);
-      setIsWebcamVisible(true);
-      setCurrentYoutubeId(video.videoId);
-    },
-    onSuccess: () => {
-      console.log("MongoDB에 저장 성공");
-      setIsWebcamVisible(false);
-      setCurrentYoutubeId("");
-      nav(`/practice/${video.videoId}`);
-    },
-    onError: (error) => {
-      console.error("에러", error);
-      setIsWebcamVisible(false);
-      setIsCompletionAlertModalOpen(false);
-      setCurrentYoutubeId("");
-      nav("/home");
-    },
-  });
+  // const mutation = useMutation({
+  //   mutationFn: postChallenge,
+  //   onMutate: () => {
+  //     setIsCompletionAlertModalOpen(true);
+  //     setIsWebcamVisible(true);
+  //     setCurrentYoutubeId(video.videoId);
+  //   },
+  //   onSuccess: () => {
+  //     console.log("MongoDB에 저장 성공");
+  //     setIsWebcamVisible(false);
+  //     setCurrentYoutubeId("");
+  //     nav(`/practice/${video.videoId}`);
+  //   },
+  //   onError: (error) => {
+  //     console.error("에러", error);
+  //     setIsWebcamVisible(false);
+  //     setIsCompletionAlertModalOpen(false);
+  //     setCurrentYoutubeId("");
+  //     nav("/home");
+  //   },
+  // });
 
   useEffect(() => {
     const currentVideoRef = videoRef.current;
@@ -95,12 +95,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const handlePracticeClick = () => {
-    const challengeData = {
-      youtubeId: video.videoId,
-      url: `https://www.youtube.com/shorts/${video.videoId}`,
-    };
-
-    mutation.mutate(challengeData);
+    nav(`/practice/${video.videoId}`);
   };
 
   const handleCloseCompletionAlertModal = () => {

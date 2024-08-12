@@ -335,8 +335,28 @@ public class ChallengeService {
 
             challenge.edit(challengeEditor);
         }
+    }
 
+    /**
+     *  블레이즈 포즈 정보를 업데이트 한다.
+     */
+    public void updateBlazePoseData() {
+        List<Challenge> challenges = challengeRepository.findAllWithNeedToUpdate();
 
+        for(Challenge challenge: challenges) {
+
+            // 저장된 적이 없다면? 파이썬에 요청을 보내서 영상을 저장하고 데이터베이스(몽고디비, MySQL)에 저장한다.
+            String url = FAST_API_URL + "/admin/challenge/mongodb";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("youtubeId", challenge.getYoutubeId());
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            // Fast API 반환값
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+        }
     }
 
     public List<ChallengeBattleListResponse> findAllChallenge() {
@@ -352,5 +372,6 @@ public class ChallengeService {
     public ChallengeYoutubeIdResponse findAllChallengeYoutubeId() {
         return new ChallengeYoutubeIdResponse(challengeRepository.findAllYoutubeId());
     }
+
 
 }
