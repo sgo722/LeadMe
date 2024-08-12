@@ -65,7 +65,14 @@ public class User extends BaseEntity implements UserDetails {
     private List<UserChallengeLike> userChallengeLikeList = new ArrayList<>();
 
     @Column(name = "user_like_cnt")
-    private Long userLikeCnt = 0L;
+    private Long userLikeCnt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.userLikeCnt == null) {
+            this.userLikeCnt = 0L;
+        }
+    }
 
     public User update(String name) {
         this.name = name;
