@@ -7,7 +7,7 @@ import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeReq
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.exception.AuthorizationException;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeFeedResponse;
+import com.ssafy.withme.service.userChallenge.response.*;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.landmark.Landmark;
@@ -24,10 +24,6 @@ import com.ssafy.withme.repository.landmark.LandmarkRepository;
 import com.ssafy.withme.repository.report.ReportRepository;
 import com.ssafy.withme.repository.user.UserRepository;
 import com.ssafy.withme.repository.userChallenge.UserChallengeRepository;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeAnalyzeResponse;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeReportResponse;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeSaveResponse;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeMyPageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -317,15 +313,14 @@ public class UserChallengeService {
      * @param pageable
      * @return
      */
-    public List<UserChallengeFeedResponse> findUserChallengeByPageable(Pageable pageable) {
+    public UserChallengeFeedResponses findUserChallengeByPageable(Pageable pageable) {
         //유저 영상 중 access = "public" 인 영상들을 페이징 조회한다.
         Page<UserChallenge> findUserChallenge = userChallengeRepository.findByAccessOrderByCreatedDateDesc("public", pageable);
-
-        return findUserChallenge.stream()
+        List<UserChallengeFeedResponse> userChallengeFeedResponse = findUserChallenge.stream()
                 .map(userChallenge -> {
                     try {
-                        byte[] thumbnail = Files.readAllBytes(Paths.get(userChallenge.getThumbnailPath()));
-                        return UserChallengeFeedResponse.ofResponse(userChallenge, thumbnail);
+                        byte[] video = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
+                        return UserChallengeFeedResponse.ofResponse(userChallenge, video);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
@@ -334,6 +329,13 @@ public class UserChallengeService {
                 })
                 .filter(Objects::nonNull) // null 값을 필터링하여 스트림에서 제외
                 .collect(Collectors.toList());
+
+        int pageSize = findUserChallenge.getPageable().getPageSize();
+        long totalElements = findUserChallenge.getTotalElements();
+        int totalPages = findUserChallenge.getTotalPages();
+        int size = findUserChallenge.getSize();
+
+        return new UserChallengeFeedResponses(size, totalElements, totalPages, pageSize, userChallengeFeedResponse);
     }
 
     /**

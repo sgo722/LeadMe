@@ -34,8 +34,8 @@ public class UserChallengeController {
      * @return
      */
     @GetMapping("/feed")
-    public SuccessResponse<List<UserChallengeFeedResponse>> findUserChallengeByPageable(
-            @PageableDefault(size = 3) Pageable pageable) {
+    public SuccessResponse<UserChallengeFeedResponses> findUserChallengeByPageable(
+            @PageableDefault(size = 1) Pageable pageable) {
         return SuccessResponse.of(userChallengeService.findUserChallengeByPageable(pageable));
     }
 
