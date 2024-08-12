@@ -9,7 +9,6 @@ import { IoChevronBackSharp } from "react-icons/io5";
 import axios from "axios";
 
 interface ListData {
-  ranking: number;
   userId: number;
   userNickname: string;
   liked: number;
@@ -18,7 +17,7 @@ interface ListData {
 }
 
 const Rank: React.FC = () => {
-  const [total, setTotal] = useState<number | null>(null);
+  const [total, setTotal] = useState<number>(0);
   const [rankList, setRankList] = useState<ListData[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
@@ -74,22 +73,24 @@ const Rank: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) =>
+      Math.min(prevPage + 1, Math.ceil(total / usersPerPage))
+    );
+  };
+
   const handlePreviousPage = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
-  const totalPages = Math.ceil((total ?? 0) / usersPerPage);
-
-  const handleNextPage = () => {
-    setCurrentPage((prevPage) => Math.min(prevPage + 1, Math.ceil(totalPages)));
-  };
+  const totalPages = Math.ceil(total / usersPerPage);
 
   return (
     <>
       <Header />
       <Container>
         <MainSection>
-          <SearchBar width={464} icon />
+          {/* <Title>Top 100</Title> */}
           <TableWrapper>
             <Table>
               <thead>
@@ -101,9 +102,11 @@ const Rank: React.FC = () => {
                 </TableRow>
               </thead>
               <tbody>
-                {rankList.map((item) => (
+                {rankList.map((item, idx) => (
                   <TableRow key={item.userId}>
-                    <TableCell>{item.ranking}</TableCell>
+                    <TableCell>
+                      {(currentPage - 1) * usersPerPage + idx + 1}
+                    </TableCell>
                     <TableCell>
                       {/* <img src={item.profileImg} alt="." /> */}
                       {item.userNickname}
@@ -248,3 +251,11 @@ const SideButton = styled.button`
   background-color: inherit;
   cursor: pointer;
 `;
+
+// const Title = styled.div`
+//   font-family: "Rajdhani", sans-serif;
+//   text-align: center;
+//   font-weight: 600;
+//   font-size: 48px;
+//   color: #ee5050;
+// `;
