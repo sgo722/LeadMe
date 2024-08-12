@@ -87,8 +87,6 @@ public class ChallengeController extends BaseEntity {
     /**
      * [메인페이지 챌린지 검색 기능]
      * 직접 저장한 유튜브 챌린지 영상들을 검색한다.
-     *  기본적으로 4개의 영상 정보를 반환한다.
-     * @param pageable
      * @param title
      * @return
      */
