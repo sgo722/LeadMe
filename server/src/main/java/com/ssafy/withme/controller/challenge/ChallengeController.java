@@ -9,7 +9,11 @@ import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.challege.ChallengeService;
 import com.ssafy.withme.service.challege.response.ChallengeBattleListResponse;
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
+<<<<<<< Updated upstream
 import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
+=======
+import com.ssafy.withme.service.challege.response.ChallengeYoutubeIdResponse;
+>>>>>>> Stashed changes
 import com.ssafy.withme.service.userChallenge.UserChallengeService;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +71,11 @@ public class ChallengeController extends BaseEntity {
             @CurrentUser User user,
             @PathVariable String youtubeId) throws Exception {
         return SuccessResponse.of(challengeService.getLandMarkByYoutubeId(youtubeId));
+    }
+
+    @GetMapping("/api/v1/challenge/list")
+    public SuccessResponse<ChallengeYoutubeIdResponse> findByChallengeYoutubeId(){
+        return SuccessResponse.of(challengeService.findAllChallengeYoutubeId());
     }
 
 

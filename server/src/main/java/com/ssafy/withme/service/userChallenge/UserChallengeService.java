@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
 import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.exception.AuthorizationException;
 import com.ssafy.withme.service.userChallenge.response.UserChallengeFeedResponse;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
@@ -495,5 +496,19 @@ public class UserChallengeService {
 
         }
         return null;
+    }
+
+    public void delete(User user, Long userChallengeId) {
+        UserChallenge userChallenge = userChallengeRepository.findById(userChallengeId).orElseThrow(() -> {
+            throw new EntityNotFoundException(NOT_EXISTS_USER_CHALLENGE_FILE);
+        });
+
+
+        User userChallengeMakeUser = userChallenge.getUser();
+        if(user != userChallengeMakeUser){
+            throw new AuthorizationException(NOT_AUTHORIZATION);
+        }
+
+        userChallengeRepository.deleteById(userChallengeId);
     }
 }

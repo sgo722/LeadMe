@@ -65,7 +65,8 @@ BE
 
 **Framework**
 <br/>
-![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
+<img src="https://img.shields.io/badge/springboot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
+<img src="https://img.shields.io/badge/Spring Security-6DB33F?style=for-the-badge&logo=Spring Security&logoColor=white">
 
 **DB**
 <br/>
@@ -75,14 +76,22 @@ BE
 
 **Library**
 <br/>
+<img src="https://img.shields.io/badge/spring data jpa-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
+<img src="https://img.shields.io/badge/QueryDSL-0078C0?style=for-the-badge&logo=quora&logoColor=white">
+![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 
 
 **Protocol & Message Queue**
 <br/>
+<img src="https://img.shields.io/badge/WebSocket-010101?style=for-the-badge&logo=socket.io&logoColor=white">
+<img src="https://img.shields.io/badge/Stomp-008CDD?style=for-the-badge&logo=stripe&logoColor=white">
+<img src="https://img.shields.io/badge/Redis PUB/SUB-FF4438?style=for-the-badge&logo=redis&logoColor=white">
 
 
 **Server**
 <br/>
+<img src="https://img.shields.io/badge/AWS EC2-FF9900?style=for-the-badge&logo=amazon ec2&logoColor=white">
+<img src="https://img.shields.io/badge/AWS S3-569A31?style=for-the-badge&logo=amazon s3&logoColor=white">
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
 

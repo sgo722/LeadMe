@@ -15,10 +15,15 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
      */
     Challenge findByYoutubeId(String youtubeId);
 
+<<<<<<< Updated upstream
     Page<Challenge> findAll(Pageable pageable);
 
     Page<Challenge> findByTitleContaining(Pageable pageable, String title);
 
     @Query("select c from Challenge c where c.thumbnailUrl is null")
     List<Challenge> findAllWithThumbnailUrlIsNull();
+=======
+    @Query("select c.youtubeId from Challenge c")
+    List<String> findAllYoutubeId();
+>>>>>>> Stashed changes
 }
