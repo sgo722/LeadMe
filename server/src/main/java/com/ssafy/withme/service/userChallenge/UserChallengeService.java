@@ -111,7 +111,9 @@ public class UserChallengeService {
             throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
         }
 
+        // 원본 영상 저장, 수평 반전한 영상 저장, 오디오 추출
         String url = FAST_API_URL + "/upload/userFile";
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -124,17 +126,33 @@ public class UserChallengeService {
         body.add("youtubeId", challenge.getYoutubeId());
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-        // Fast API 반환값
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-
         String result = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(result);
         String uuid = rootNode.path("uuid").asText();
 
+        // =====================================================================================================
+
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        body = new LinkedMultiValueMap<>();
+        body.add("youtubeId", challenge.getYoutubeId());
+        body.add("uuid", uuid);
+
+        // 블레이즈 포즈 추출
+        url = FAST_API_URL + "/upload/blazepose";
+
+
+        requestEntity = new HttpEntity<>(body, headers);
+        // Fast API 반환값
+        response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+        result = response.getBody();
+
         // 역직렬화한 유저 포즈 정보
         List<Frame> userFrames = deserialize(result);
+
 
         // 저장된 챌린지 포즈 정보
         Landmark landmark = landmarkRepository.findByYoutubeId(challenge.getYoutubeId());

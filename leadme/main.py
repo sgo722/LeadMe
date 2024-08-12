@@ -32,12 +32,16 @@ class Video(BaseModel):
     url : str
     youtubeId : str
 
+class UserChallenge(BaseModel):
+    uuid : str
+    youtubeId : str
+
 UPLOAD_DIRECTORY = "."
-#TEMP_DIRECTORY = "video/temporary"
-#PERMANENT_DIRECTORY_USER = "video/user"
-#PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
-#PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
-#THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
+# TEMP_DIRECTORY = "video/temporary"
+# PERMANENT_DIRECTORY_USER = "video/user"
+# PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
+# PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
+# THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
 
 
 TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
@@ -93,11 +97,30 @@ async def saveChallenge(
     return {"youtubeId": youtubeId}
 
 
+@app.post("/upload/blazepose")
+async def saveVideDataByUserFile(
+    youtubeId: str = Form(...),
+    uuid: str = Form(...)):
+
+    final_video_path = os.path.join(TEMP_DIRECTORY, f"{uuid}.mp4")
+
+    start_time = time.time()
+
+    # 비디오 처리 실행 및 결과 대기
+    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video_user.remote(final_video_path)))
+
+    total_time = time.time() - start_time
+    logger.info(f"userFile API - UUID: {uuid}, Total Time: {total_time:.4f} seconds")
+
+    return {"uuid": uuid, "keypoints": keypoints}
+    
+
 
 @app.post("/upload/userFile")
 async def saveVideDataByUserFile(
     videoFile: UploadFile = File(...),
     youtubeId: str = Form(...)):
+
     start_time = time.time()
     unique_id = str(uuid.uuid4())
 
@@ -157,6 +180,9 @@ async def saveVideDataByUserFile(
         convert_end = time.time()
 
         extract_audio_from_video(youtube_video_path, youtube_audio_path)
+
+        return {"uuid": unique_id}
+    
     except Exception as e:
         return {"error": str(e)}
     
@@ -164,13 +190,7 @@ async def saveVideDataByUserFile(
     # os.remove(original_video_path)
     # os.remove(flipped_temp_video_path)
 
-    # 비디오 처리 실행 및 결과 대기
-    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video_user.remote(final_video_path)))
 
-    total_time = time.time() - start_time
-    logger.info(f"userFile API - UUID: {unique_id}, Total Time: {total_time:.4f} seconds")
-
-    return {"uuid": unique_id, "keypoints": keypoints}
 
 
 def extract_audio_from_video(video_file_path, audio_file_path):
