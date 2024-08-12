@@ -112,6 +112,10 @@ public class ChallengeController extends BaseEntity {
         return SuccessResponse.of(challengeService.findAllChallenge());
     }
 
+    /**
+     * 썸네일이 없는 챌린지에 썸네일을 넣는다.
+     * @return
+     */
     @PutMapping("/api/v1/challenge/thumbnail-url")
     public SuccessResponse<?> updateChallengeThumbnailUrl() {
         challengeService.updateChallengeThumbnailUrl();
