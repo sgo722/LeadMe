@@ -64,7 +64,7 @@ public class User extends BaseEntity implements UserDetails {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<UserChallengeLike> userChallengeLikeList = new ArrayList<>();
 
-    @Column(name = "user_like_cnt", nullable = false)
+    @Column(name = "user_like_cnt")
     private Long userLikeCnt = 0L;
 
     public User update(String name) {
