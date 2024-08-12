@@ -103,6 +103,7 @@ export const BattleRoom: React.FC = () => {
   const [battleResult, setBattleResult] = useState<
     "win" | "lose" | "draw" | null
   >(null); // 배틀 결과
+
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -278,6 +279,11 @@ export const BattleRoom: React.FC = () => {
         type: "video-cancelled",
       });
     }
+    if (myScore && peerScore && battleResult) {
+      setMyScore(null);
+      setPeerScore(null);
+      setBattleResult(null);
+    }
   };
 
   // 준비 버튼 클릭 시 상태를 변경하고 다른참가자에게 신호를 보내는 함수
@@ -290,7 +296,12 @@ export const BattleRoom: React.FC = () => {
         type: "user-ready",
       });
     }
-  }, [myReady, session]);
+    if (myScore && peerScore && battleResult) {
+      setMyScore(null);
+      setPeerScore(null);
+      setBattleResult(null);
+    }
+  }, [myReady, session, battleResult, myScore, peerScore]);
 
   // 시작신호를 보내는 함수
   const sendStartSignal = () => {
@@ -909,7 +920,7 @@ export const BattleRoom: React.FC = () => {
                       시작
                     </ActionButton>
                   )}
-                  {!isRecording && (
+                  {!isRecording && countdown === null && (
                     <>
                       <ActionButton onClick={toggleReady}>
                         {myReady ? "준비 취소" : "준비"}
