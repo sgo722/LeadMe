@@ -223,30 +223,45 @@ export const Battle: React.FC = () => {
         <MainSection>
           <SearchBar width={560} icon onSearch={handleSearch} />
           <RoomContainer>
-            {rooms?.competitions.map((room: Room) => (
-              <RoomItem key={room.competitionId}>
-                <RoomTop>
-                  <ProfileSection>
-                    <ProfileImage src={room.profileImg} alt="Profile" />
-                    <div>{room.nickname}</div>
-                  </ProfileSection>
-                  <div>{!room.public && <MdLock />}</div>
-                </RoomTop>
-                <RoomMid>{room.roomName}</RoomMid>
-                <RoomBottom>
-                  <RoomCreatedAt>{formatDate(room.createdDate)}</RoomCreatedAt>
-                  <EnterButton onClick={() => handleEnterRoom(room)}>
-                    enter
-                  </EnterButton>
-                </RoomBottom>
-              </RoomItem>
-            ))}
+            {rooms?.competitions && rooms.competitions.length > 0 ? (
+              rooms.competitions.map((room: Room) => (
+                <RoomItem key={room.competitionId}>
+                  <RoomTop>
+                    <ProfileSection>
+                      <ProfileImage src={room.profileImg} alt="Profile" />
+                      <div>{room.nickname}</div>
+                    </ProfileSection>
+                    <div>{!room.public && <MdLock />}</div>
+                  </RoomTop>
+                  <RoomMid>{room.roomName}</RoomMid>
+                  <RoomBottom>
+                    <RoomCreatedAt>
+                      {formatDate(room.createdDate)}
+                    </RoomCreatedAt>
+                    <EnterButton onClick={() => handleEnterRoom(room)}>
+                      enter
+                    </EnterButton>
+                  </RoomBottom>
+                </RoomItem>
+              ))
+            ) : (
+              <NoRoomsContainer>
+                <NoRoomsContent>
+                  <NoRoomsMessage>아직 생성된 방이 없습니다.</NoRoomsMessage>
+                  <CreateRoomButton onClick={handleCreateRoomClick}>
+                    방생성
+                  </CreateRoomButton>
+                </NoRoomsContent>
+              </NoRoomsContainer>
+            )}
           </RoomContainer>
-          <CreateRoomButtonContainer>
-            <CreateRoomButton onClick={handleCreateRoomClick}>
-              방생성
-            </CreateRoomButton>
-          </CreateRoomButtonContainer>
+          {rooms?.competitions && rooms.competitions.length > 0 && (
+            <CreateRoomButtonContainer>
+              <CreateRoomButton onClick={handleCreateRoomClick}>
+                방생성
+              </CreateRoomButton>
+            </CreateRoomButtonContainer>
+          )}
         </MainSection>
         <Footer>
           <PaginationContainer>
@@ -423,4 +438,25 @@ const CreateRoomButton = styled.button`
   font-style: normal;
   font-weight: 500;
   line-height: 23px;
+`;
+
+const NoRoomsContainer = styled.div`
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px; // RoomContainer의 min-height와 동일하게 설정
+`;
+
+const NoRoomsContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 100px; // 아래쪽 여백 추가
+`;
+
+const NoRoomsMessage = styled.div`
+  font-size: 18px;
+  color: #929292;
 `;
