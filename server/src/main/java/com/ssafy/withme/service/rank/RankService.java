@@ -58,7 +58,13 @@ public class RankService {
             // RDBMS -> Redis로 저장
             // Redis의 정보가 휘발될 경우를 대비
             rankResponseDtoList.forEach(rankResponseDto -> {
-                zSetOperations.add(key, rankResponseDto.getUserNickname(), rankResponseDto.getLiked());
+
+                Long liked = rankResponseDto.getLiked();
+
+                if (liked == null)
+                    liked = 0L;
+
+                zSetOperations.add(key, rankResponseDto.getUserNickname(), liked);
             });
 
             return rankResponseDtoList;
