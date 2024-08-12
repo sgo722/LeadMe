@@ -95,6 +95,7 @@ export const BattleRoom: React.FC = () => {
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
 
   const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // 녹화영상 제출 대기 상태
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
@@ -111,11 +112,16 @@ export const BattleRoom: React.FC = () => {
   // 영상을 제출하고 점수를 반환하는 뮤테이션
   const submitRecordedVideoMutation = useMutation({
     mutationFn: submitRecordedVideo,
+    onMutate: () => {
+      setIsSubmitting(true);
+    },
     onSuccess: (data) => {
-      console.log("성공했음 반환값:", data);
+      console.log("성공했음 반환값:", data.data);
+      setIsSubmitting(false);
     },
     onError: (error) => {
       console.log("녹화영상 제출 실패", error);
+      setIsSubmitting(false);
     },
   });
 
@@ -699,152 +705,166 @@ export const BattleRoom: React.FC = () => {
   }
 
   return (
-    <Container>
-      <BattleArea>
-        <LeftWebcamBox $isSmall={selectedVideo !== null && !isVideoConfirmed}>
-          {subscribers[0] ? (
-            <>
-              <video
-                autoPlay={true}
-                ref={(video) => video && subscribers[0].addVideoElement(video)}
-              />
-              {peerReady && <ReadyOverlay>READY</ReadyOverlay>}
-            </>
-          ) : (
-            <EmptyBoxContent>대기중...</EmptyBoxContent>
-          )}
-        </LeftWebcamBox>
-        <DataBox
-          $isShifted={selectedVideo !== null && !isVideoConfirmed}
-          $isSelected={isVideoConfirmed && selectedVideo !== null}
-        >
-          {isVideoConfirmed && selectedVideo ? (
-            <FullScreenYouTubeContainer>
-              <BackIcon onClick={handleCancel}>&larr;</BackIcon>
-              <YouTube
-                videoId={selectedVideo.youtubeId}
-                opts={{
-                  height: "622",
-                  width: "350",
-                  playerVars: { autoplay: 0, controls: 0 },
-                }}
-                onReady={(e: YouTubePlayer) => {
-                  youtubePlayerRef.current = e.target;
-                }}
-                onStateChange={handleYouTubeStateChange}
-              />
-              {countdown !== null && (
-                <CountdownOverlay>
-                  <CountdownText>
-                    {countdown === 0 ? "START!" : countdown}
-                  </CountdownText>
-                </CountdownOverlay>
-              )}
-            </FullScreenYouTubeContainer>
-          ) : (
-            <>
-              <Title>Battle!</Title>
-              <SearchInput
-                type="text"
-                placeholder="검색어를 입력해주세요"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {isVideoLoading ? (
-                <div>로딩중</div>
-              ) : (
-                <ScrollableList>
-                  {filteredVideoList.map((item: VideoDataItem) => (
-                    <ListItem
-                      key={item.challengeId}
-                      onClick={() => handleItemClick(item.challengeId)}
-                      $isSelected={
-                        selectedVideo?.challengeId === item.challengeId
-                      }
-                    >
-                      {item.title}
-                    </ListItem>
-                  ))}
-                </ScrollableList>
-              )}
-            </>
-          )}
-        </DataBox>
-        {selectedVideo && !isVideoConfirmed && (
-          <YouTubeBox $isVisible={true}>
-            <CloseButton onClick={handleClose}>×</CloseButton>
-            <YouTubeContainer>
-              <YouTube
-                videoId={selectedVideo.youtubeId}
-                opts={{
-                  height: "480",
-                  width: "270",
-                  playerVars: { autoplay: 1 },
-                }}
-              />
-            </YouTubeContainer>
-            <StartButton onClick={handleConfirm}>select</StartButton>
-          </YouTubeBox>
-        )}
-        <RightWebcamBox $isSmall={selectedVideo !== null && !isVideoConfirmed}>
-          {publisher ? (
-            <>
-              <video
-                autoPlay={true}
-                ref={(video) => video && publisher.addVideoElement(video)}
-              />
-              <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
-              {myReady && <ReadyOverlay>READY</ReadyOverlay>}
-            </>
-          ) : (
-            <EmptyBoxContent>연결중...</EmptyBoxContent>
-          )}
-        </RightWebcamBox>
-
-        {(!selectedVideo || isVideoConfirmed) && (
-          <ButtonContainer>
-            {isVideoConfirmed && selectedVideo ? (
+    <>
+      <Container>
+        <BattleArea>
+          <LeftWebcamBox $isSmall={selectedVideo !== null && !isVideoConfirmed}>
+            {subscribers[0] ? (
               <>
-                {isHost && myReady && peerReady && !isRecording && (
-                  <ActionButton
-                    onClick={handleStart}
-                    disabled={!(myReady && peerReady)}
-                  >
-                    시작
-                  </ActionButton>
-                )}
-                {!isRecording && (
-                  <>
-                    <ActionButton onClick={toggleReady}>
-                      {myReady ? "준비 취소" : "준비"}
-                    </ActionButton>
-                    <ActionButton
-                      onClick={() => {
-                        if (session) {
-                          exitSessionMutation.mutate(session.sessionId);
-                        }
-                      }}
-                    >
-                      나가기
-                    </ActionButton>
-                  </>
-                )}
+                <video
+                  autoPlay={true}
+                  ref={(video) =>
+                    video && subscribers[0].addVideoElement(video)
+                  }
+                />
+                {peerReady && <ReadyOverlay>READY</ReadyOverlay>}
               </>
             ) : (
-              <ActionButton
-                onClick={() => {
-                  if (session) {
-                    exitSessionMutation.mutate(session.sessionId);
-                  }
-                }}
-              >
-                나가기
-              </ActionButton>
+              <EmptyBoxContent>대기중...</EmptyBoxContent>
             )}
-          </ButtonContainer>
-        )}
-      </BattleArea>
-    </Container>
+          </LeftWebcamBox>
+          <DataBox
+            $isShifted={selectedVideo !== null && !isVideoConfirmed}
+            $isSelected={isVideoConfirmed && selectedVideo !== null}
+          >
+            {isVideoConfirmed && selectedVideo ? (
+              <FullScreenYouTubeContainer>
+                <BackIcon onClick={handleCancel}>&larr;</BackIcon>
+                <YouTube
+                  videoId={selectedVideo.youtubeId}
+                  opts={{
+                    height: "622",
+                    width: "350",
+                    playerVars: { autoplay: 0, controls: 0 },
+                  }}
+                  onReady={(e: YouTubePlayer) => {
+                    youtubePlayerRef.current = e.target;
+                  }}
+                  onStateChange={handleYouTubeStateChange}
+                />
+                {countdown !== null && (
+                  <CountdownOverlay>
+                    <CountdownText>
+                      {countdown === 0 ? "START!" : countdown}
+                    </CountdownText>
+                  </CountdownOverlay>
+                )}
+              </FullScreenYouTubeContainer>
+            ) : (
+              <>
+                <Title>Battle!</Title>
+                <SearchInput
+                  type="text"
+                  placeholder="검색어를 입력해주세요"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {isVideoLoading ? (
+                  <div>로딩중</div>
+                ) : (
+                  <ScrollableList>
+                    {filteredVideoList.map((item: VideoDataItem) => (
+                      <ListItem
+                        key={item.challengeId}
+                        onClick={() => handleItemClick(item.challengeId)}
+                        $isSelected={
+                          selectedVideo?.challengeId === item.challengeId
+                        }
+                      >
+                        {item.title}
+                      </ListItem>
+                    ))}
+                  </ScrollableList>
+                )}
+              </>
+            )}
+          </DataBox>
+          {selectedVideo && !isVideoConfirmed && (
+            <YouTubeBox $isVisible={true}>
+              <CloseButton onClick={handleClose}>×</CloseButton>
+              <YouTubeContainer>
+                <YouTube
+                  videoId={selectedVideo.youtubeId}
+                  opts={{
+                    height: "480",
+                    width: "270",
+                    playerVars: { autoplay: 1 },
+                  }}
+                />
+              </YouTubeContainer>
+              <StartButton onClick={handleConfirm}>select</StartButton>
+            </YouTubeBox>
+          )}
+          <RightWebcamBox
+            $isSmall={selectedVideo !== null && !isVideoConfirmed}
+          >
+            {publisher ? (
+              <>
+                <video
+                  autoPlay={true}
+                  ref={(video) => video && publisher.addVideoElement(video)}
+                />
+                <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
+                {myReady && <ReadyOverlay>READY</ReadyOverlay>}
+              </>
+            ) : (
+              <EmptyBoxContent>연결중...</EmptyBoxContent>
+            )}
+          </RightWebcamBox>
+
+          {(!selectedVideo || isVideoConfirmed) && (
+            <ButtonContainer>
+              {isVideoConfirmed && selectedVideo ? (
+                <>
+                  {isHost && myReady && peerReady && !isRecording && (
+                    <ActionButton
+                      onClick={handleStart}
+                      disabled={!(myReady && peerReady)}
+                    >
+                      시작
+                    </ActionButton>
+                  )}
+                  {!isRecording && (
+                    <>
+                      <ActionButton onClick={toggleReady}>
+                        {myReady ? "준비 취소" : "준비"}
+                      </ActionButton>
+                      <ActionButton
+                        onClick={() => {
+                          if (session) {
+                            exitSessionMutation.mutate(session.sessionId);
+                          }
+                        }}
+                      >
+                        나가기
+                      </ActionButton>
+                    </>
+                  )}
+                </>
+              ) : (
+                <ActionButton
+                  onClick={() => {
+                    if (session) {
+                      exitSessionMutation.mutate(session.sessionId);
+                    }
+                  }}
+                >
+                  나가기
+                </ActionButton>
+              )}
+            </ButtonContainer>
+          )}
+        </BattleArea>
+      </Container>
+      {isSubmitting && (
+        <LoadingOverlay>
+          <LoadingContent>
+            <LoadingSpinner />
+            <LoadingText>점수 계산중..</LoadingText>
+          </LoadingContent>
+        </LoadingOverlay>
+      )}
+    </>
   );
 };
 
@@ -1164,4 +1184,48 @@ const WebcamCanvas = styled.canvas`
   left: 0;
   width: 100%;
   height: 100%;
+`;
+
+const LoadingOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+`;
+
+const LoadingContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const LoadingText = styled.div`
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 20px;
+`;
+
+const LoadingSpinner = styled.div`
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #ee5050;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
 `;
