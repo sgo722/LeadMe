@@ -750,6 +750,21 @@ export const BattleRoom: React.FC = () => {
     [challengeQuery.data]
   );
 
+  // 캔버스를 초기화하는 함수
+  const clearCanvas = useCallback(() => {
+    if (webcamCanvasRef.current) {
+      const ctx = webcamCanvasRef.current.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(
+          0,
+          0,
+          webcamCanvasRef.current.width,
+          webcamCanvasRef.current.height
+        );
+      }
+    }
+  }, []);
+
   // 캔버스 애니메이션 로직
   useEffect(() => {
     let animationFrameId: number;
@@ -764,6 +779,7 @@ export const BattleRoom: React.FC = () => {
         !challengeQuery.data?.data?.landmarks ||
         challengeQuery.data.data.landmarks.length === 0
       ) {
+        clearCanvas();
         animationFrameId = requestAnimationFrame(animate);
         return;
       }
@@ -780,8 +796,11 @@ export const BattleRoom: React.FC = () => {
 
     animationFrameId = requestAnimationFrame(animate);
 
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isYouTubePlaying, challengeQuery.data, drawBlazePoseData]);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      clearCanvas(); // 컴포넌트가 언마운트될 때 캔버스 초기화
+    };
+  }, [isYouTubePlaying, challengeQuery.data, drawBlazePoseData, clearCanvas]);
 
   // youtube 이벤트 핸들러
   const handleYouTubeStateChange = (e: {
@@ -794,6 +813,7 @@ export const BattleRoom: React.FC = () => {
         startRecording();
       } else if (e.data === YouTube.PlayerState.ENDED) {
         stopRecording();
+        clearCanvas(); // 영상이 끝나면 캔버스 초기화
       }
     }
   };
