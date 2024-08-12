@@ -1,52 +1,59 @@
+import { useEffect } from "react";
 import Header from "components/Header";
 import styled from "styled-components";
 import playButtonIcon from "assets/icons/playButton.png";
-import img1 from "assets/image/img1.png";
-import img2 from "assets/image/img2.png";
-
-interface ImageData {
-  id: number;
-  src: string;
-  title: string;
-  tag: string;
-}
-
-const imageData: ImageData[] = [
-  { id: 1, src: img1, title: "이주은 챌린지이주은챌린지", tag: "#기아" },
-  { id: 2, src: img2, title: "카리나 챌린지", tag: "#에스파" },
-  { id: 3, src: img1, title: "이주은 챌린지", tag: "#치어리더 #기아" },
-  { id: 4, src: img2, title: "카리나 챌린지", tag: "#윈터 #카리나" },
-];
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
+import { ChallengeItem, ResponseData } from "types";
+import { baseUrl } from "axiosInstance/constants";
+import { useState } from "react";
 
 const Challenge: React.FC = () => {
+  const [challenges, setChallenges] = useState<ChallengeItem[]>([]);
+
+  const mutationChallenge = useMutation<ChallengeItem[], Error, void>({
+    mutationFn: async () => {
+      const response = await axios.get<ResponseData<ChallengeItem[]>>(
+        `${baseUrl}/api/v1/challenge`
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: ChallengeItem[]) => {
+      console.log(data);
+      setChallenges(data);
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching Challenge:", error);
+    },
+  });
+
+  useEffect(() => {
+    mutationChallenge.mutate();
+  }, []);
+
+  const sections = [];
+  for (let i = 0; i < challenges.length; i += 4) {
+    sections.push(challenges.slice(i, i + 4));
+  }
+
   return (
     <>
       <Header />
       <Container>
-        <MainSection>
-          {imageData.map((img) => (
-            <ContentSection key={img.id}>
-              <TitleSection>
-                <MainTitle>{img.title}</MainTitle>
-                <PlayButton src={playButtonIcon} />
-              </TitleSection>
-              <SubTitle>{img.tag}</SubTitle>
-              <FeedImage src={img.src} />
-            </ContentSection>
-          ))}
-        </MainSection>
-        <MainSection>
-          {imageData.map((img) => (
-            <ContentSection key={img.id}>
-              <TitleSection>
-                <MainTitle>{img.title}</MainTitle>
-                <PlayButton src={playButtonIcon} />
-              </TitleSection>
-              <SubTitle>{img.tag}</SubTitle>
-              <FeedImage src={img.src} />
-            </ContentSection>
-          ))}
-        </MainSection>
+        {sections.map((section, index) => (
+          <MainSection key={index}>
+            {section.map((img) => (
+              <ContentSection key={img.challengeId}>
+                <TitleSection>
+                  <MainTitle>{img.title}</MainTitle>
+                  <PlayButton src={playButtonIcon} />
+                </TitleSection>
+                <SubTitle>{img.hashtags}</SubTitle>
+                <FeedImage src={img.thumbnail} />
+              </ContentSection>
+            ))}
+          </MainSection>
+        ))}
       </Container>
     </>
   );
@@ -97,7 +104,6 @@ const TitleSection = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   width: 200px;
 `;
 
@@ -129,6 +135,7 @@ const SubTitle = styled.div`
   margin-top: -6px;
   margin-bottom: 22px;
 `;
+
 const FeedImage = styled.img`
   width: 200px;
   height: 355.5px;

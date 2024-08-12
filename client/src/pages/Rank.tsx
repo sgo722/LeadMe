@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "components/Header";
 import styled from "styled-components";
-import { SearchBar } from "components/SearchBar";
 import { ResponseData } from "types";
 import { baseUrl } from "axiosInstance/constants";
 import { useMutation } from "@tanstack/react-query";
@@ -17,7 +16,7 @@ interface ListData {
 }
 
 const Rank: React.FC = () => {
-  const [total, setTotal] = useState<number>(0);
+  const [total, setTotal] = useState<number | null>(null);
   const [rankList, setRankList] = useState<ListData[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
@@ -73,24 +72,23 @@ const Rank: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const totalPages = total !== null ? Math.ceil(total / usersPerPage) : 1;
+
   const handleNextPage = () => {
-    setCurrentPage((prevPage) =>
-      Math.min(prevPage + 1, Math.ceil(total / usersPerPage))
-    );
+    if (total !== null) {
+      setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+    }
   };
 
   const handlePreviousPage = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
-  const totalPages = Math.ceil(total / usersPerPage);
-
   return (
     <>
       <Header />
       <Container>
         <MainSection>
-          {/* <Title>Top 100</Title> */}
           <TableWrapper>
             <Table>
               <thead>
@@ -108,8 +106,8 @@ const Rank: React.FC = () => {
                       {(currentPage - 1) * usersPerPage + idx + 1}
                     </TableCell>
                     <TableCell>
-                      {/* <img src={item.profileImg} alt="." /> */}
-                      {item.userNickname}
+                      <img src={item.profileImg} alt="." />
+                      <div>{item.userNickname}</div>
                     </TableCell>
                     <TableCell>{item.liked}</TableCell>
                     <TableCell>{item.followers}</TableCell>
@@ -186,6 +184,7 @@ const TableWrapper = styled.div`
     rgba(255, 255, 255, 0.2) 100%
   );
   backdrop-filter: blur(10px);
+  margin-top: 12px;
 `;
 
 const Table = styled.table`
@@ -210,12 +209,31 @@ const TableHeader = styled.th`
 `;
 
 const TableCell = styled.td`
-  padding: 14px;
+  padding: 16px;
   font-size: 16px;
+  position: relative;
+
+  &:first-child {
+    width: 140px;
+  }
+
+  &:nth-child(n + 3) {
+    width: 250px;
+  }
 
   & > img {
+    position: absolute;
+    top: 9px;
+    left: 108px;
     width: 30px;
     height: 30px;
+    margin-right: 12px;
+    border-radius: 50%;
+  }
+
+  & > div {
+    position: absolute;
+    left: 160px;
   }
 `;
 
@@ -223,7 +241,6 @@ const Pagination = styled.div`
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-top: 20px;
 `;
 
 const PageButton = styled.button`
@@ -251,11 +268,3 @@ const SideButton = styled.button`
   background-color: inherit;
   cursor: pointer;
 `;
-
-// const Title = styled.div`
-//   font-family: "Rajdhani", sans-serif;
-//   text-align: center;
-//   font-weight: 600;
-//   font-size: 48px;
-//   color: #ee5050;
-// `;
