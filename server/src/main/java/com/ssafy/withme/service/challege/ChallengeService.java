@@ -219,15 +219,16 @@ public class ChallengeService {
         List<ChallengeViewResponse> challengeResponses = findAllChallenge.stream()
                 .map(challenge -> {
                     try {
-                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
-                        List<ChallengeHashTag> findHashtagByChallengeId = challengeHashTagRepository.findAllByChallengeId(challenge.getId());
-                        List<String> hashtags = findHashtagByChallengeId.stream()
-                                .filter(challengeHashtag -> challengeHashtag == null)
-                                .map(challengeHashtag -> hashtagRepository.findById(challengeHashtag.getId()).get().getName())
+                        List<ChallengeHashTag> findHashtagByChallengeIds = challengeHashTagRepository.findAllByChallengeId(challenge.getId());
+                        List<String> hashtags = findHashtagByChallengeIds.stream()
+                                .map(challengeHashtag -> hashtagRepository.findById(challengeHashtag.getId())
+                                        .map(Hashtag::getName)
+                                        .orElse(null))
+                                .filter(Objects::nonNull) // null인 해시태그를 필터링
                                 .toList();
                         return ChallengeViewResponse.ofResponse(challenge, hashtags);
                     } catch (Exception e) {
-                        // 예외 처리 로직을 여기에 추가
+                        // 예외 처리 로직
                         e.printStackTrace();
                         return null; // 또는 다른 적절한 예외 처리 방법
                     }
