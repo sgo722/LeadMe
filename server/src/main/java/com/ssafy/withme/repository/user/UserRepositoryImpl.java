@@ -46,7 +46,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom{
         return qf.selectDistinct(user)
                 .from(user)
                 .leftJoin(user.fromFollowList, follow)
-                .on(follow.fromUser.eq(user)).fetchJoin()
+                .fetchJoin()
                 .orderBy(user.userLikeCnt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
