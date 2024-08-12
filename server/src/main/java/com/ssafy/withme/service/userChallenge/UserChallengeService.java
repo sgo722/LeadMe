@@ -167,7 +167,7 @@ public class UserChallengeService {
                 .collect(Collectors.toList());
 
         Map<String, Object> calculateResult = PoseComparison.calculatePoseScore(userFrames, challengeFrames);
-        log.info(" 반환 점수 : {}", calculateResult.get("score"));
+        log.info(" 반환 점수 : {}", calculateResult.get("totalScore"));
 
         Report report = Report.builder()
                 .uuid(uuid)
@@ -176,7 +176,6 @@ public class UserChallengeService {
                 .challengeId(request.getChallengeId())
                 .build();
         Report save = reportRepository.insert(report);
-        System.out.println(save);
 
         return UserChallengeAnalyzeResponse.builder()
                 .uuid(uuid)
