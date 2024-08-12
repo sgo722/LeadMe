@@ -29,19 +29,24 @@ public class UserRepositoryImpl implements UserRepositoryCustom{
     @Override
     public Optional<User> findByNickname(String nickname) {
 
-        return Optional.ofNullable(qf.selectFrom(user)
-                .leftJoin(follow).fetchJoin()
-                .where(user.nickname.eq(nickname))
-                .fetchOne()
+        return Optional.ofNullable(
+                qf.selectDistinct(user)
+                        .from(user)
+                        .leftJoin(user.fromFollowList, follow)
+                        .fetchJoin()
+                        .where(user.nickname.eq(nickname))
+                        .orderBy(user.userLikeCnt.desc())
+                        .fetchOne()
         );
     }
 
     @Override
     public List<User> findTopUsersByLikes(Pageable pageable) {
 
-        return qf.selectFrom(user).distinct()
+        return qf.selectDistinct(user)
+                .from(user)
                 .leftJoin(user.fromFollowList, follow)
-                .on(follow.fromUser.eq(user)).fetchJoin()
+                .fetchJoin()
                 .orderBy(user.userLikeCnt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
