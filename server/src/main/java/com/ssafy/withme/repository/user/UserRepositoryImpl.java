@@ -31,12 +31,12 @@ public class UserRepositoryImpl implements UserRepositoryCustom{
 
         return Optional.ofNullable(
                 qf.selectDistinct(user)
-                .from(user)
-                .leftJoin(user.fromFollowList, follow)
-                .on(follow.fromUser.eq(user)).fetchJoin()
-                .where(user.nickname.eq(nickname))
-                .orderBy(user.userLikeCnt.desc())
-                .fetchOne()
+                        .from(user)
+                        .leftJoin(user.fromFollowList, follow)
+                        .fetchJoin()
+                        .where(user.nickname.eq(nickname))
+                        .orderBy(user.userLikeCnt.desc())
+                        .fetchOne()
         );
     }
 
