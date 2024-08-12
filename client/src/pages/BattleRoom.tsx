@@ -23,6 +23,7 @@ interface SignalData {
   isVideoConfirmed?: boolean;
   start?: boolean;
   selectedYoutubeId?: string;
+  score?: number;
 }
 
 interface VideoDataItem {
@@ -97,6 +98,11 @@ export const BattleRoom: React.FC = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false); // 녹화 상태
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // 녹화영상 제출 대기 상태
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [myScore, setMyScore] = useState<number | null>(null); // 내 점수
+  const [peerScore, setPeerScore] = useState<number | null>(null); // 상대 점수
+  const [battleResult, setBattleResult] = useState<
+    "win" | "lose" | "draw" | null
+  >(null); // 배틀 결과
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -116,8 +122,18 @@ export const BattleRoom: React.FC = () => {
       setIsSubmitting(true);
     },
     onSuccess: (data) => {
-      console.log("성공했음 반환값:", data.data);
+      const score = data.data;
+      console.log("성공했음 반환값:", score);
+      // 내 점수 입력
+      setMyScore(score);
       setIsSubmitting(false);
+      // 내 점수 상대방에게 전송
+      if (session) {
+        session.signal({
+          data: JSON.stringify({ score }),
+          type: "score",
+        });
+      }
     },
     onError: (error) => {
       console.log("녹화영상 제출 실패", error);
@@ -491,6 +507,11 @@ export const BattleRoom: React.FC = () => {
               startBattle();
             }
             break;
+          case "score":
+            if (typeof signalData.score === "number") {
+              setPeerScore(signalData.score);
+            }
+            break;
           default:
             console.log("알 수 없는 시그널 타입:", signalType);
         }
@@ -502,7 +523,23 @@ export const BattleRoom: React.FC = () => {
         session.off("signal", handleSignal);
       };
     }
-  }, [session, startBattle, videoList]);
+  }, [session]);
+  //startBattle, videoList 이것도 원래 같이 넣었었음
+
+  // 점수 비교 및 결과 설정
+  useEffect(() => {
+    if (myScore !== null && peerScore !== null) {
+      if (myScore > peerScore) {
+        setBattleResult("win");
+      }
+      if (myScore < peerScore) {
+        setBattleResult("lose");
+      }
+      if (myScore === peerScore) {
+        setBattleResult("draw");
+      }
+    }
+  }, [myScore, peerScore]);
 
   // 컴포넌트가 마운트될때나 token이 변경될 때 실행
   useEffect(() => {
@@ -718,6 +755,23 @@ export const BattleRoom: React.FC = () => {
                   }
                 />
                 {peerReady && <ReadyOverlay>READY</ReadyOverlay>}
+                {battleResult && (
+                  <ResultOverlay
+                    $result={
+                      battleResult === "win"
+                        ? "lose"
+                        : battleResult === "lose"
+                        ? "win"
+                        : "draw"
+                    }
+                  >
+                    {battleResult === "win"
+                      ? "LOSE"
+                      : battleResult === "lose"
+                      ? "WIN"
+                      : "DRAW"}
+                  </ResultOverlay>
+                )}
               </>
             ) : (
               <EmptyBoxContent>대기중...</EmptyBoxContent>
@@ -806,6 +860,11 @@ export const BattleRoom: React.FC = () => {
                 />
                 <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
                 {myReady && <ReadyOverlay>READY</ReadyOverlay>}
+                {battleResult && (
+                  <ResultOverlay $result={battleResult}>
+                    {battleResult.toUpperCase()}
+                  </ResultOverlay>
+                )}
               </>
             ) : (
               <EmptyBoxContent>연결중...</EmptyBoxContent>
@@ -1228,4 +1287,22 @@ const LoadingSpinner = styled.div`
       transform: rotate(360deg);
     }
   }
+`;
+
+const ResultOverlay = styled.div<{ $result: "win" | "lose" | "draw" }>`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: ${(props) =>
+    props.$result === "win"
+      ? "rgba(0, 255, 0, 0.7)"
+      : props.$result === "lose"
+      ? "rgba(255, 0, 0, 0.7)"
+      : "rgba(255, 165, 0, 0.7)"};
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 30px;
+  z-index: 10;
 `;
