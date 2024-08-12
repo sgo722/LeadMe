@@ -18,11 +18,10 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
     Page<Challenge> findAll(Pageable pageable);
 
-    Page<Challenge> findByTitleContaining(Pageable pageable, String title);
+
+    @Query("select c.youtubeId from Challenge c where c.title like %:title%")
+    List<String> findByTitleContaining(String title);
 
     @Query("select c from Challenge c where c.thumbnailUrl is null")
     List<Challenge> findAllWithThumbnailUrlIsNull();
-
-    @Query("select c.youtubeId from Challenge c")
-    List<String> findAllYoutubeId();
 }

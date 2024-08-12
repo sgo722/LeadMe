@@ -70,11 +70,6 @@ public class ChallengeController extends BaseEntity {
         return SuccessResponse.of(challengeService.getLandMarkByYoutubeId(youtubeId));
     }
 
-    @GetMapping("/api/v1/challenge/list")
-    public SuccessResponse<ChallengeYoutubeIdResponse> findByChallengeYoutubeId(){
-        return SuccessResponse.of(challengeService.findAllChallengeYoutubeId());
-    }
-
 
     /**
      * [메인페이지 챌린지 조회 기능]
@@ -98,10 +93,9 @@ public class ChallengeController extends BaseEntity {
      * @return
      */
     @GetMapping("/api/v1/challenge/search")
-    public SuccessResponse<Page<ChallengeViewResponse>> searchChallengeByPaging(
-            @PageableDefault(size = 4) Pageable pageable,
+    public SuccessResponse<ChallengeYoutubeIdResponse> searchChallengeByPaging(
             @RequestParam(name = "title") String title) {
-        return SuccessResponse.of(challengeService.searchChallengeByPaging(pageable,title));
+        return SuccessResponse.of(challengeService.searchChallengeYoutubeList(title));
     }
 
     /**

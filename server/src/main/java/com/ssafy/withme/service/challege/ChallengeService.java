@@ -216,26 +216,12 @@ public class ChallengeService {
      * @param title
      * @return
      */
-    public Page<ChallengeViewResponse> searchChallengeByPaging(Pageable pageable, String title) {
+    public ChallengeYoutubeIdResponse searchChallengeYoutubeList(String title) {
 
         // 키워드로 Challenge를 조회한다.
-        Page<Challenge> searchChallengeByPaging = challengeRepository.findByTitleContaining(pageable, title);
-        List<ChallengeViewResponse> searchChallenges = searchChallengeByPaging.stream()
-                .map(challenge -> {
-                    try {
-                        byte[] thumbnail = Files.readAllBytes(Paths.get(challenge.getThumbnailPath()));
-                        return ChallengeViewResponse.ofResponse(challenge, thumbnail);
-                    } catch (Exception e) {
-                        // 예외 처리 로직을 여기에 추가
-                        e.printStackTrace();
-                        return null; // 또는 다른 적절한 예외 처리 방법
-                    }
-                })
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(searchChallenges,pageable, searchChallengeByPaging.getTotalElements());
-
-
+        challengeRepository.findByTitleContaining(title);
+        List<String> searchChallengeYoutubeId = challengeRepository.findByTitleContaining(title);
+        return new ChallengeYoutubeIdResponse(searchChallengeYoutubeId);
     }
 
     /**
@@ -333,7 +319,4 @@ public class ChallengeService {
 
     }
 
-    public ChallengeYoutubeIdResponse findAllChallengeYoutubeId() {
-        return new ChallengeYoutubeIdResponse(challengeRepository.findAllYoutubeId());
-    }
 }
