@@ -13,8 +13,6 @@ pipeline {
         VM_OPTION_PASSWORD = credentials('VM_OPTION_PASSWORD')
         MONGO_USERNAME = credentials('MONGO_USERNAME')
         MONGO_PASSWORD = credentials('MONGO_PASSWORD')
-        VM_OPTIONS_MONGODB_USERNAME = credentials('VM_OPTIONS_MONGODB_USERNAME')
-        VM_OPTIONS_MONGODB_PASSWORD = credentials('VM_OPTIONS_MONGODB_PASSWORD')
     }
 
     stages {
