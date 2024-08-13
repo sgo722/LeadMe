@@ -71,6 +71,13 @@ public class ChallengeController extends BaseEntity {
     }
 
 
+    @GetMapping("/api/v1/challenge/list")
+    public SuccessResponse<ChallengeYoutubeIdResponse> findByChallengeYoutubeId(){
+        return SuccessResponse.of(challengeService.findAllChallengeYoutubeId());
+    }
+
+
+
     /**
      * [메인페이지 챌린지 조회 기능]
      * 직접 저장한 유튜브 챌린지 영상들을 페이징 조회한다.
@@ -110,9 +117,19 @@ public class ChallengeController extends BaseEntity {
         return SuccessResponse.of(challengeService.findAllChallenge());
     }
 
+    /**
+     * 썸네일이 없는 챌린지에 썸네일을 넣는다.
+     * @return
+     */
     @PutMapping("/api/v1/challenge/thumbnail-url")
     public SuccessResponse<?> updateChallengeThumbnailUrl() {
         challengeService.updateChallengeThumbnailUrl();
+        return SuccessResponse.of(true);
+    }
+
+    @GetMapping("/api/v1/challenge/blazepose")
+    public SuccessResponse<?> updateBlazePoseData() {
+        challengeService.updateBlazePoseData();
         return SuccessResponse.of(true);
     }
 

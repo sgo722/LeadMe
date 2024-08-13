@@ -7,25 +7,29 @@ import lombok.Getter;
 @Getter
 public class UserChallengeFeedResponse {
 
+    private Long userId;
+
     private String title;
 
     private Long userChallengeId;
 
-    private byte[] thumbnail;
+    private byte[] video;
 
 
     @Builder
-    private UserChallengeFeedResponse(String title, Long userChallengeId, byte[] thumbnail) {
+    private UserChallengeFeedResponse(Long userId, String title, Long userChallengeId, byte[] video) {
+        this.userId = userId;
         this.title = title;
         this.userChallengeId = userChallengeId;
-        this.thumbnail = thumbnail;
+        this.video = video;
     }
 
-    public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, byte[] thumbnail){
+    public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, byte[] video){
         return UserChallengeFeedResponse.builder()
+                .userId(userChallenge.getUser().getId())
                 .title(userChallenge.getFileName())
                 .userChallengeId(userChallenge.getId())
-                .thumbnail(thumbnail)
+                .video(video)
                 .build();
     }
 }

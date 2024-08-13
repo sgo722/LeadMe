@@ -5,6 +5,7 @@ import numpy as np
 import os
 from yt_dlp import YoutubeDL
 from pymongo import MongoClient
+import math
 
 # MediaPipe의 포즈 감지 모델 초기화
 mp_pose = mp.solutions.pose
@@ -77,6 +78,10 @@ def process_video(youtubeId, video_path):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = total_frames / original_fps  # 비디오 길이(초)
 
+    print(str(original_fps) + " : original_fps")
+    print(str(total_frames) + " : total_frames")
+    print(str(duration) + " : duration")
+
     # 고정된 FPS 설정
     target_fps = 30
     if original_fps <= 0 or target_fps <= 0:
@@ -85,9 +90,7 @@ def process_video(youtubeId, video_path):
         cv2.destroyAllWindows()
         return keypoints_list
 
-    frame_interval = int(original_fps / target_fps)
-    if frame_interval <= 0:
-        frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
+    frame_interval = round(original_fps / target_fps)
 
     frame_count = 0
 
@@ -175,10 +178,9 @@ def process_video_user(video_path):
         cv2.destroyAllWindows()
         return keypoints_list
 
-    frame_interval = int(original_fps / target_fps)
-    if frame_interval <= 0:
-        frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
 
+    frame_interval = round(original_fps / target_fps)
+    
     frame_count = 0
 
     # 프레임 별로 비디오 처리
@@ -217,6 +219,8 @@ def process_video_user(video_path):
 
         frame_count += 1
 
+    print(str(frame_count) + " : 현재 총 프레임")
+    
     document = {
         'landmarks': keypoints_list
     }

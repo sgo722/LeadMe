@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 interface InputPasswordModalProps {
@@ -14,7 +14,8 @@ export const InputPasswordModal: React.FC<InputPasswordModalProps> = ({
   roomTitle,
   isError,
 }) => {
-  const [password, setPassword] = useState<string>("");
+  const [password, setPassword] = useState<string>(""); // 비밀번호 상태
+  const [isButtonEnabled, setIsButtonEnabled] = useState<boolean>(false); // 버튼 활성화 상태
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -25,6 +26,11 @@ export const InputPasswordModal: React.FC<InputPasswordModalProps> = ({
   const handleEnter = () => {
     onEnter(password);
   };
+
+  // 비밀번호 입력 상태 감시 & 버튼 활성화 여부 결정
+  useEffect(() => {
+    setIsButtonEnabled(password.trim() !== "");
+  }, [password]);
 
   return (
     <ModalOverlay onClick={handleOverlayClick}>
@@ -41,7 +47,9 @@ export const InputPasswordModal: React.FC<InputPasswordModalProps> = ({
           onChange={(e) => setPassword(e.target.value)}
         />
         {isError && <ErrorMessage>비밀번호가 틀렸습니다.</ErrorMessage>}
-        <EnterButton onClick={handleEnter}>enter</EnterButton>
+        <EnterButton onClick={handleEnter} disabled={!isButtonEnabled}>
+          enter
+        </EnterButton>
       </ModalContent>
     </ModalOverlay>
   );
@@ -160,4 +168,6 @@ const EnterButton = styled.button`
   font-weight: 500;
   color: #ee5050;
   padding: 3px 0px;
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
 `;

@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRecoilValue } from "recoil";
 import { userProfileState } from "stores/authAtom";
 import countdownSound from "assets/audio/countdown.mp3";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import YouTube, { YouTubePlayer } from "react-youtube";
 import { getJWTHeader } from "axiosInstance/apiClient";
 import type {
@@ -24,6 +24,8 @@ interface SignalData {
   start?: boolean;
   selectedYoutubeId?: string;
   score?: number;
+  resetScores?: boolean;
+  hostLeft?: boolean;
 }
 
 interface VideoDataItem {
@@ -103,6 +105,7 @@ export const BattleRoom: React.FC = () => {
   const [battleResult, setBattleResult] = useState<
     "win" | "lose" | "draw" | null
   >(null); // 배틀 결과
+
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -122,8 +125,8 @@ export const BattleRoom: React.FC = () => {
       setIsSubmitting(true);
     },
     onSuccess: (data) => {
-      const score = data.data;
-      console.log("성공했음 반환값:", score);
+      const score = Math.floor(data.data * 100);
+      console.log("영상제출 성공, 반환값:", score);
       // 내 점수 입력
       setMyScore(score);
       setIsSubmitting(false);
@@ -220,7 +223,16 @@ export const BattleRoom: React.FC = () => {
   // 방 나가는 뮤테이션
   const exitSessionMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      await axiosInstance.delete(`/api/v1/session/${sessionId}`);
+      // 방장이 나갈때 전송할 시그널
+      if (isHost && session) {
+        await session.signal({
+          data: JSON.stringify({ hostLeft: true }),
+          type: "host-left",
+        });
+      }
+      await axiosInstance.delete(`/api/v1/session/${sessionId}`, {
+        headers: getJWTHeader(),
+      });
     },
     onSuccess: () => {
       console.log("세션 종료 성공");
@@ -274,11 +286,20 @@ export const BattleRoom: React.FC = () => {
         data: JSON.stringify({
           isVideoConfirmed: false,
           selectedVideoId: null,
+          resetScores: true,
         }),
         type: "video-cancelled",
       });
     }
+    resetScores();
   };
+
+  // 스코어, 배틀결과 초기화 시키는 함수
+  const resetScores = useCallback(() => {
+    setMyScore(null);
+    setPeerScore(null);
+    setBattleResult(null);
+  }, []);
 
   // 준비 버튼 클릭 시 상태를 변경하고 다른참가자에게 신호를 보내는 함수
   const toggleReady = useCallback(() => {
@@ -286,11 +307,18 @@ export const BattleRoom: React.FC = () => {
     setMyReady(newReadyState);
     if (session) {
       session.signal({
-        data: JSON.stringify({ ready: newReadyState }),
+        data: JSON.stringify({
+          ready: newReadyState,
+          resetScores:
+            myScore !== null && peerScore !== null && battleResult !== null,
+        }),
         type: "user-ready",
       });
     }
-  }, [myReady, session]);
+    if (myScore && peerScore && battleResult) {
+      resetScores();
+    }
+  }, [myReady, session, battleResult, myScore, peerScore, resetScores]);
 
   // 시작신호를 보내는 함수
   const sendStartSignal = () => {
@@ -316,6 +344,9 @@ export const BattleRoom: React.FC = () => {
       // 준비 상태 초기화
       setMyReady(false);
       setPeerReady(false);
+      //녹화 상태 초기화
+      setIsRecording(false);
+      setRecordedBlob(null);
     }
   }, [youtubePlayerRef]);
 
@@ -372,7 +403,7 @@ export const BattleRoom: React.FC = () => {
 
   // 녹화 데이터 처리, 영상 제출 api 호출
   useEffect(() => {
-    if (recordedBlob && recordedBlob.size > 0) {
+    if (battleStart && recordedBlob && recordedBlob.size > 0) {
       console.log("녹화된 영상 크기:", recordedBlob.size);
 
       const formData = new FormData();
@@ -396,7 +427,13 @@ export const BattleRoom: React.FC = () => {
       // 처리 후 초기화
       setRecordedBlob(null);
     }
-  }, [recordedBlob, selectedVideo, submitRecordedVideoMutation, userProfile]);
+  }, [
+    recordedBlob,
+    selectedVideo,
+    submitRecordedVideoMutation,
+    userProfile,
+    battleStart,
+  ]);
 
   // 녹화 중지 함수
   const stopRecording = useCallback(() => {
@@ -436,6 +473,14 @@ export const BattleRoom: React.FC = () => {
     };
   }, [battleStart, countdown]);
 
+  // 방장이 나가면 방 폭파시키는 함수
+  const handleHostLeft = useCallback(async () => {
+    alert("방장이 퇴장했습니다. 배틀룸을 나갑니다.");
+    if (session) {
+      await exitSessionMutation.mutateAsync(session.sessionId);
+    }
+  }, [session, exitSessionMutation]);
+
   // 신호 처리를 위한 useEffect
   useEffect(() => {
     if (session) {
@@ -470,6 +515,9 @@ export const BattleRoom: React.FC = () => {
               setPeerReady(signalData.ready);
               console.log("상대방 준비 상태:", signalData.ready);
             }
+            if (signalData.resetScores) {
+              resetScores();
+            }
             break;
           case "video-selected":
             console.log("비디오 선택됨:", signalData);
@@ -500,6 +548,9 @@ export const BattleRoom: React.FC = () => {
             console.log("비디오 취소됨");
             setIsVideoConfirmed(false);
             setSelectedVideo(null);
+            if (signalData.resetScores) {
+              resetScores();
+            }
             break;
           case "battle-start":
             console.log("배틀 시작 신호 수신:", signalData);
@@ -510,6 +561,11 @@ export const BattleRoom: React.FC = () => {
           case "score":
             if (typeof signalData.score === "number") {
               setPeerScore(signalData.score);
+            }
+            break;
+          case "host-left":
+            if (signalData.hostLeft) {
+              handleHostLeft();
             }
             break;
           default:
@@ -523,8 +579,14 @@ export const BattleRoom: React.FC = () => {
         session.off("signal", handleSignal);
       };
     }
-  }, [session]);
-  //startBattle, videoList 이것도 원래 같이 넣었었음
+  }, [
+    session,
+    exitSessionMutation,
+    handleHostLeft,
+    resetScores,
+    startBattle,
+    videoList?.data,
+  ]);
 
   // 점수 비교 및 결과 설정
   useEffect(() => {
@@ -538,6 +600,7 @@ export const BattleRoom: React.FC = () => {
       if (myScore === peerScore) {
         setBattleResult("draw");
       }
+      setBattleStart(false);
     }
   }, [myScore, peerScore]);
 
@@ -687,6 +750,21 @@ export const BattleRoom: React.FC = () => {
     [challengeQuery.data]
   );
 
+  // 캔버스를 초기화하는 함수
+  const clearCanvas = useCallback(() => {
+    if (webcamCanvasRef.current) {
+      const ctx = webcamCanvasRef.current.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(
+          0,
+          0,
+          webcamCanvasRef.current.width,
+          webcamCanvasRef.current.height
+        );
+      }
+    }
+  }, []);
+
   // 캔버스 애니메이션 로직
   useEffect(() => {
     let animationFrameId: number;
@@ -701,6 +779,7 @@ export const BattleRoom: React.FC = () => {
         !challengeQuery.data?.data?.landmarks ||
         challengeQuery.data.data.landmarks.length === 0
       ) {
+        clearCanvas();
         animationFrameId = requestAnimationFrame(animate);
         return;
       }
@@ -717,8 +796,11 @@ export const BattleRoom: React.FC = () => {
 
     animationFrameId = requestAnimationFrame(animate);
 
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isYouTubePlaying, challengeQuery.data, drawBlazePoseData]);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      clearCanvas(); // 컴포넌트가 언마운트될 때 캔버스 초기화
+    };
+  }, [isYouTubePlaying, challengeQuery.data, drawBlazePoseData, clearCanvas]);
 
   // youtube 이벤트 핸들러
   const handleYouTubeStateChange = (e: {
@@ -726,10 +808,13 @@ export const BattleRoom: React.FC = () => {
     data: number;
   }) => {
     setIsYouTubePlaying(e.data === YouTube.PlayerState.PLAYING);
-    if (e.data === YouTube.PlayerState.PLAYING) {
-      startRecording();
-    } else if (e.data === YouTube.PlayerState.ENDED) {
-      stopRecording();
+    if (battleStart) {
+      if (e.data === YouTube.PlayerState.PLAYING) {
+        startRecording();
+      } else if (e.data === YouTube.PlayerState.ENDED) {
+        stopRecording();
+        clearCanvas(); // 영상이 끝나면 캔버스 초기화
+      }
     }
   };
 
@@ -755,7 +840,7 @@ export const BattleRoom: React.FC = () => {
                   }
                 />
                 {peerReady && <ReadyOverlay>READY</ReadyOverlay>}
-                {battleResult && (
+                {battleResult && peerScore !== null && (
                   <ResultOverlay
                     $result={
                       battleResult === "win"
@@ -765,11 +850,22 @@ export const BattleRoom: React.FC = () => {
                         : "draw"
                     }
                   >
-                    {battleResult === "win"
-                      ? "LOSE"
-                      : battleResult === "lose"
-                      ? "WIN"
-                      : "DRAW"}
+                    <NeonText
+                      $color={
+                        battleResult === "win"
+                          ? "red"
+                          : battleResult === "lose"
+                          ? "blue"
+                          : "yellow"
+                      }
+                    >
+                      {battleResult === "win"
+                        ? "YOU LOSE!"
+                        : battleResult === "lose"
+                        ? "YOU WIN!"
+                        : "DRAW!"}
+                      <ScoreText>{peerScore}</ScoreText>
+                    </NeonText>
                   </ResultOverlay>
                 )}
               </>
@@ -860,9 +956,24 @@ export const BattleRoom: React.FC = () => {
                 />
                 <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
                 {myReady && <ReadyOverlay>READY</ReadyOverlay>}
-                {battleResult && (
+                {battleResult && myScore !== null && (
                   <ResultOverlay $result={battleResult}>
-                    {battleResult.toUpperCase()}
+                    <NeonText
+                      $color={
+                        battleResult === "win"
+                          ? "blue"
+                          : battleResult === "lose"
+                          ? "red"
+                          : "yellow"
+                      }
+                    >
+                      {battleResult === "win"
+                        ? "YOU WIN!"
+                        : battleResult === "lose"
+                        ? "YOU LOSE!"
+                        : "DRAW!"}
+                      <ScoreText>{myScore}</ScoreText>
+                    </NeonText>
                   </ResultOverlay>
                 )}
               </>
@@ -883,7 +994,7 @@ export const BattleRoom: React.FC = () => {
                       시작
                     </ActionButton>
                   )}
-                  {!isRecording && (
+                  {!isRecording && countdown === null && (
                     <>
                       <ActionButton onClick={toggleReady}>
                         {myReady ? "준비 취소" : "준비"}
@@ -1289,20 +1400,61 @@ const LoadingSpinner = styled.div`
   }
 `;
 
+const flicker = keyframes`
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow:
+      0 0 4px #fff,
+      0 0 11px #fff,
+      0 0 19px #fff,
+      0 0 40px var(--color),
+      0 0 80px var(--color),
+      0 0 90px var(--color),
+      0 0 100px var(--color),
+      0 0 150px var(--color);
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+  }
+`;
+
 const ResultOverlay = styled.div<{ $result: "win" | "lose" | "draw" }>`
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: ${(props) =>
-    props.$result === "win"
-      ? "rgba(0, 255, 0, 0.7)"
-      : props.$result === "lose"
-      ? "rgba(255, 0, 0, 0.7)"
-      : "rgba(255, 165, 0, 0.7)"};
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-weight: bold;
-  font-size: 30px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: 10;
+`;
+
+const NeonText = styled.div<{ $color: "blue" | "red" | "yellow" }>`
+  font-family: "DOSIyagiMedium", sans-serif;
+  font-size: 50px;
+  font-weight: bold;
+  --color: ${(props) =>
+    props.$color === "blue"
+      ? "#1041FF"
+      : props.$color === "red"
+      ? "#FF3131"
+      : "#FFFF00"};
+  color: #fff;
+  padding: 10px 15px;
+  border: 0.1rem solid #fff;
+  border-radius: 1rem;
+  text-transform: uppercase;
+  animation: ${flicker} 1.5s infinite alternate;
+  text-shadow: 0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff, 0 0 40px var(--color),
+    0 0 80px var(--color), 0 0 90px var(--color), 0 0 100px var(--color),
+    0 0 150px var(--color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const ScoreText = styled.div`
+  font-size: 70px;
+  margin-top: 10px;
 `;

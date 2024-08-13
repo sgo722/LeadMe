@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 interface CreateRoomModalProps {
@@ -14,9 +14,20 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
   onClose,
   onCreateRoom,
 }) => {
-  const [isPublic, setIsPublic] = useState<boolean>(false); // private, public 상태
+  const [isPublic, setIsPublic] = useState<boolean>(true); // private, public 상태
   const [password, setPassword] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+  const [isButtonEnabled, setIsButtonEnabled] = useState<boolean>(false); // 버튼 활성화 상태
+
+  useEffect(() => {
+    if (!isPublic) {
+      // 비공개 방일 경우
+      setIsButtonEnabled(title.trim() !== "" && password.trim() !== "");
+    } else {
+      // 공개 방일 경우
+      setIsButtonEnabled(title.trim() !== "");
+    }
+  }, [isPublic, title, password]);
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -27,11 +38,12 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
   const handleSubmit = () => {
     const roomData = {
       roomName: title,
-      isPublic: !isPublic,
-      ...(!isPublic ? {} : { password }),
+      isPublic: isPublic,
+      ...(!isPublic ? { password } : {}),
     };
     onCreateRoom(roomData);
   };
+
   return (
     <ModalOverlay onClick={handleOverlayClick}>
       <ModalContent>
@@ -48,12 +60,12 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         <PrivateToggle>
           <input
             type="checkbox"
-            checked={isPublic}
+            checked={!isPublic}
             onChange={() => setIsPublic(!isPublic)}
           />
           <span>private</span>
         </PrivateToggle>
-        {isPublic && (
+        {!isPublic && (
           <InputField
             type="password"
             placeholder="비밀번호"
@@ -61,7 +73,9 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             onChange={(e) => setPassword(e.target.value)}
           />
         )}
-        <StartButton onClick={handleSubmit}>start</StartButton>
+        <StartButton onClick={handleSubmit} disabled={!isButtonEnabled}>
+          start
+        </StartButton>
       </ModalContent>
     </ModalOverlay>
   );
@@ -167,4 +181,6 @@ const StartButton = styled.button`
   font-weight: 500;
   color: #ee5050;
   padding: 3px 0px;
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
 `;

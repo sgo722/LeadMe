@@ -10,6 +10,7 @@ import axios from "axios";
 import useWebSocket from "utils/useWebSocket";
 import { baseUrl } from "axiosInstance/constants";
 import { useLocation } from "react-router-dom";
+import { ensureHttps } from "utils/urlUtils";
 
 interface ChatRoomGetResponse {
   roomId: number;
@@ -166,16 +167,16 @@ export const Chat: React.FC = () => {
                         ? chat.partnerId
                         : chat.userId,
                       chat.partnerId !== currentUserId
-                        ? chat.partnerImageUrl
-                        : chat.userImageUrl
+                        ? ensureHttps(chat.partnerImageUrl)
+                        : ensureHttps(chat.userImageUrl)
                     )
                   }
                 >
                   <UserProfileImage
                     src={
                       chat.partnerId !== currentUserId
-                        ? chat.partnerImageUrl
-                        : chat.userImageUrl
+                        ? ensureHttps(chat.partnerImageUrl)
+                        : ensureHttps(chat.userImageUrl)
                     }
                     alt={`${
                       chat.partnerId !== currentUserId

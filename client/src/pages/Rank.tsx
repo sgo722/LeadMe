@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import Header from "components/Header";
 import styled from "styled-components";
-import { SearchBar } from "components/SearchBar";
 import { ResponseData } from "types";
 import { baseUrl } from "axiosInstance/constants";
 import { useMutation } from "@tanstack/react-query";
 import { IoChevronBackSharp } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { ensureHttps } from "utils/urlUtils";
 
 interface ListData {
   userId: number;
@@ -17,10 +18,10 @@ interface ListData {
 }
 
 const Rank: React.FC = () => {
-  const [total, setTotal] = useState<number>(0);
+  const [total, setTotal] = useState<number | null>(null);
   const [rankList, setRankList] = useState<ListData[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
-
+  const navigate = useNavigate();
   const usersPerPage = 10;
 
   const mutationTotal = useMutation<number, Error>({
@@ -73,24 +74,27 @@ const Rank: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const totalPages = total !== null ? Math.ceil(total / usersPerPage) : 1;
+
   const handleNextPage = () => {
-    setCurrentPage((prevPage) =>
-      Math.min(prevPage + 1, Math.ceil(total / usersPerPage))
-    );
+    if (total !== null) {
+      setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+    }
   };
 
   const handlePreviousPage = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
-  const totalPages = Math.ceil(total / usersPerPage);
+  const handleProfileClick = (id: number) => {
+    navigate(`/mypage/${id}`);
+  };
 
   return (
     <>
       <Header />
       <Container>
         <MainSection>
-          {/* <Title>Top 100</Title> */}
           <TableWrapper>
             <Table>
               <thead>
@@ -101,21 +105,24 @@ const Rank: React.FC = () => {
                   <TableHeader>팔로워</TableHeader>
                 </TableRow>
               </thead>
-              <tbody>
+              <TBody>
                 {rankList.map((item, idx) => (
-                  <TableRow key={item.userId}>
+                  <TableRow
+                    key={item.userId}
+                    onClick={() => handleProfileClick(item.userId)}
+                  >
                     <TableCell>
                       {(currentPage - 1) * usersPerPage + idx + 1}
                     </TableCell>
                     <TableCell>
-                      {/* <img src={item.profileImg} alt="." /> */}
-                      {item.userNickname}
+                      <img src={ensureHttps(item.profileImg)} alt="." />
+                      <div>{item.userNickname}</div>
                     </TableCell>
                     <TableCell>{item.liked}</TableCell>
                     <TableCell>{item.followers}</TableCell>
                   </TableRow>
                 ))}
-              </tbody>
+              </TBody>
             </Table>
           </TableWrapper>
           <Pagination>
@@ -162,6 +169,7 @@ const Container = styled.div`
 
 const MainSection = styled.div`
   width: 1080px;
+  height: 673px;
   border-radius: 20px;
   background: linear-gradient(
     108deg,
@@ -186,6 +194,8 @@ const TableWrapper = styled.div`
     rgba(255, 255, 255, 0.2) 100%
   );
   backdrop-filter: blur(10px);
+  margin-top: 12px;
+  height: 521.6px;
 `;
 
 const Table = styled.table`
@@ -201,21 +211,48 @@ const TableRow = styled.tr`
   font-family: "Noto Sans KR", sans-serif;
   font-weight: 400;
   border-bottom: 1px solid #fff;
+  cursor: pointer;
+`;
+
+const TBody = styled.tbody`
+  & > tr:hover {
+    background-color: rgba(255, 255, 255, 0.85);
+  }
 `;
 
 const TableHeader = styled.th`
   padding: 10px;
   font-size: 12px;
   font-weight: 700;
+  background-color: rgba(255, 255, 255, 0.4);
 `;
 
 const TableCell = styled.td`
-  padding: 14px;
+  padding: 16px;
   font-size: 16px;
+  position: relative;
+
+  &:first-child {
+    width: 140px;
+  }
+
+  &:nth-child(n + 3) {
+    width: 250px;
+  }
 
   & > img {
+    position: absolute;
+    top: 9px;
+    left: 108px;
     width: 30px;
     height: 30px;
+    margin-right: 12px;
+    border-radius: 50%;
+  }
+
+  & > div {
+    position: absolute;
+    left: 160px;
   }
 `;
 
@@ -223,7 +260,6 @@ const Pagination = styled.div`
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-top: 20px;
 `;
 
 const PageButton = styled.button`
@@ -251,11 +287,3 @@ const SideButton = styled.button`
   background-color: inherit;
   cursor: pointer;
 `;
-
-// const Title = styled.div`
-//   font-family: "Rajdhani", sans-serif;
-//   text-align: center;
-//   font-weight: 600;
-//   font-size: 48px;
-//   color: #ee5050;
-// `;
