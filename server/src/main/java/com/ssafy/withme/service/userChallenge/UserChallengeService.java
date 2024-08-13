@@ -217,12 +217,15 @@ public class UserChallengeService {
      * 유저가 챌린지를 따라 한 후 업로드/저장을 한 경우 사용된다.
      * @param request
      */
-    public UserChallengeSaveResponse saveUserFile(UserChallengeSaveRequest request) {
+    public UserChallengeSaveResponse saveUserFile(User user, UserChallengeSaveRequest request) {
         Challenge challenge = challengeRepository.findById(request.getChallengeId()).orElse(null);
-//        User user = userRepository.findById(request.getUserId()).get();
 
         log.info("설정된 폴더 경로 " + TEMP_DIRECTORY);
         log.info("uuid : " + request.getUuid());
+
+        log.info("user : {}", user.getNickname());
+        log.info("user : {}", user.getId());
+        log.info("user : {}", user.getUsername());
 
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_merged.mp4");
 
@@ -243,7 +246,7 @@ public class UserChallengeService {
 
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
-//                    .user(user)
+                    .user(user)
                     .challenge(challenge)
                     .videoPath(PERMANENT_DIRECTORY + "/" + finalFileName)
                     .access(request.getAccess())
