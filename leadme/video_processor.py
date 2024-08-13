@@ -12,8 +12,8 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
 
-# PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
-PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
+PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
+# PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
 
 # MongoDB 연결 설정
 client = MongoClient(

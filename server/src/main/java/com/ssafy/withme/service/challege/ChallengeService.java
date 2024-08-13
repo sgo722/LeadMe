@@ -21,6 +21,7 @@ import com.ssafy.withme.service.youtube.YouTubeService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.ssafy.withme.service.challege.response.ChallengeCreateResponse;
@@ -47,6 +48,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.json.JSONObject;
 
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE;
 import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELETON_DATA;
@@ -85,7 +87,7 @@ public class ChallengeService {
      * @param request
      */
     @Transactional
-    public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request, MultipartFile videoFile) throws IOException {
+    public ChallengeCreateResponse createChallenge(ChallengeCreateRequest request, MultipartFile videoFile) throws IOException, JSONException {
         // 이미 저장되어 있는지 확인한다.
 
 
@@ -120,8 +122,22 @@ public class ChallengeService {
         // Fast API 반환값
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
-        // 챌린지 정보를 저장한다.
+
         Challenge challenge = request.toEntity();
+        if (response.getStatusCode() == HttpStatus.OK) {
+            String responseBody = response.getBody();
+            JSONObject jsonResponse = new JSONObject(responseBody);
+            Double originalFps_Double = jsonResponse.getDouble("originalFps");
+            int originalFps = originalFps_Double.intValue();
+            challenge.setOriginalFps(originalFps);
+
+            // original_fps 값을 사용
+            System.out.println("Original FPS: " + originalFps);
+        } else {
+            System.out.println("Error: " + response.getStatusCode());
+        }
+
+        // 챌린지 정보를 저장한다.
         Challenge savedChallenge = challengeRepository.save(challenge);
 
         // 저장된 영상의 해시태그를 저장한다.
@@ -176,7 +192,7 @@ public class ChallengeService {
         if(findLandmarkByYoutubeId == null){
             throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE_SKELETON_DATA);
         }
-        return LandmarkResponse.ofResponse(findLandmarkByYoutubeId, challenge.getId());
+        return LandmarkResponse.ofResponse(findLandmarkByYoutubeId, challenge);
     }
 
     /**
