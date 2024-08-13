@@ -11,6 +11,7 @@ import { baseUrl } from "axiosInstance/constants";
 import { CiImageOff } from "react-icons/ci";
 import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
+import { ensureHttps } from "utils/urlUtils";
 
 interface FeedProps {
   userChallengeId: number;
@@ -227,7 +228,10 @@ const Mypage: React.FC = () => {
           <ProfileTitle>Profile</ProfileTitle>
           <ProfileContainer>
             <Flex>
-              <ProfileImg src={user.profileImg} alt="프로필 이미지" />
+              <ProfileImg
+                src={ensureHttps(user.profileImg)}
+                alt="프로필 이미지"
+              />
               <table>
                 <tbody>
                   <Tr>
