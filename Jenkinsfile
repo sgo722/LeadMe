@@ -21,9 +21,7 @@ pipeline {
                 script {
                     sh 'rm -rf S11P12C109'
                     echo "Cloning repository from: ${GITLAB_REPOSITORY_URL}"
-                    withCredentials([usernamePassword(credentialsId: 'zvzv9808', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-    sh "git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@lab.ssafy.com/s11-webmobile1-sub2/S11P12C109.git"
-}
+                    sh "git clone ${GITLAB_REPOSITORY_URL}"
                 }
             }
         }
