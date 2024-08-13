@@ -316,7 +316,7 @@ public class CompetitionService {
     public Long getSessionCount(String sessionId) {
         String key = SESSION_KEY_PREFIX + sessionId + ":count";
         String count = redisTemplate.opsForValue().get(key);
-        return count != null ? Long.valueOf(count) : 0L;
+        return count != null ? Long.valueOf(count) : 1L;
     }
 
     @Transactional

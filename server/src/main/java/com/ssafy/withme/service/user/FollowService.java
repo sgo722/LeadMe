@@ -52,7 +52,7 @@ public class FollowService {
     }
 
     @Transactional
-    public void following(Long toId, Long fromId) {
+    public Follow following(Long toId, Long fromId) {
 
 
         User toUser = userService.findById(toId); // 요청 받는 사람
@@ -63,7 +63,7 @@ public class FollowService {
                 .fromUser(fromUser)
                 .build();
 
-        followRepository.save(newFollow);
+        return followRepository.save(newFollow);
     }
 
     @Transactional
