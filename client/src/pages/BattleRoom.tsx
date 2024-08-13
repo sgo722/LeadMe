@@ -18,6 +18,7 @@ import type {
 } from "openvidu-browser";
 
 interface SignalData {
+  name?: string;
   ready?: boolean;
   selectedVideoId?: number | null;
   isVideoConfirmed?: boolean;
@@ -77,6 +78,7 @@ export const BattleRoom: React.FC = () => {
   };
   const nav = useNavigate();
   const userProfile = useRecoilValue(userProfileState); // 유저정보
+  const [peerName, setPeerName] = useState<string>(""); // 상대방 이름
   const [session, setSession] = useState<Session | null>(null); //OpenVidu 세션 상태 관리
   const [publisher, setPublisher] = useState<Publisher | null>(null); // 로컬 비디오 스트림 발행자 상태 관리
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]); // 원격 비디오 스트림 구독자 목록 상태 관리
@@ -270,6 +272,11 @@ export const BattleRoom: React.FC = () => {
             data: JSON.stringify({ hostLeft: true }),
             type: "host-left",
           });
+          // 퇴장 시그널
+          await session.signal({
+            type: "user-left",
+            data: JSON.stringify({}),
+          });
           exitSessionMutation.mutate(session.sessionId, {
             onSuccess: () => {
               cleanupSession();
@@ -280,6 +287,11 @@ export const BattleRoom: React.FC = () => {
       } else {
         const confirmed = window.confirm("배틀룸을 나가시겠습니까?");
         if (confirmed) {
+          // 퇴장 시그널
+          await session.signal({
+            type: "user-left",
+            data: JSON.stringify({}),
+          });
           exitSessionMutation.mutate(session.sessionId, {
             onSuccess: () => {
               cleanupSession();
@@ -563,6 +575,14 @@ export const BattleRoom: React.FC = () => {
         }
 
         switch (signalType) {
+          case "user-joined":
+            if (signalData.name) {
+              setPeerName(signalData.name);
+            }
+            break;
+          case "user-left":
+            setPeerName("");
+            break;
           case "user-ready":
             if (typeof signalData.ready === "boolean") {
               setPeerReady(signalData.ready);
@@ -686,6 +706,12 @@ export const BattleRoom: React.FC = () => {
 
       // 세션에 연결
       await session.connect(token);
+
+      // 세션 연결 후 자신의 이름을 전송
+      session.signal({
+        data: JSON.stringify({ name: userProfile?.name }),
+        type: "user-joined",
+      });
 
       // 로컬 비디오 스트림 발행자 초기화
       const publisher = await OV.initPublisherAsync(undefined, {
@@ -898,6 +924,7 @@ export const BattleRoom: React.FC = () => {
                     video && subscribers[0].addVideoElement(video)
                   }
                 />
+                <NameOverlay>{peerName}</NameOverlay>
                 {peerReady && <ReadyOverlay>READY</ReadyOverlay>}
                 {battleResult && peerScore !== null && (
                   <ResultOverlay
@@ -1014,6 +1041,7 @@ export const BattleRoom: React.FC = () => {
                   ref={(video) => video && publisher.addVideoElement(video)}
                 />
                 <WebcamCanvas ref={webcamCanvasRef} width={350} height={622} />
+                <NameOverlay>{userProfile?.name}</NameOverlay>
                 {myReady && <ReadyOverlay>READY</ReadyOverlay>}
                 {battleResult && myScore !== null && (
                   <ResultOverlay $result={battleResult}>
@@ -1500,4 +1528,15 @@ const NeonText = styled.div<{ $color: "blue" | "red" | "yellow" }>`
 const ScoreText = styled.div`
   font-size: 70px;
   margin-top: 10px;
+`;
+
+const NameOverlay = styled.div`
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
 `;
