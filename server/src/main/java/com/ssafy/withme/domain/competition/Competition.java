@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @NoArgsConstructor
@@ -49,6 +50,7 @@ public class Competition extends BaseEntity {
         this.isPublic = isPublic;
         this.password = password;
         this.status = CompetitionStatus.OPEN;
+        this.createdDate = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     public CompetitionEditor.CompetitionEditorBuilder toEditor() {
