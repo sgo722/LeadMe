@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeUpdateRequest;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.exception.AuthorizationException;
 import com.ssafy.withme.service.userChallenge.response.*;
@@ -32,6 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -51,11 +53,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.ssafy.withme.domain.challenge.QChallenge.challenge;
 import static com.ssafy.withme.global.error.ErrorCode.*;
 
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@Transactional(readOnly = true)
 public class UserChallengeService {
 
     @Value("${python-server.temp-directory}")
@@ -95,6 +99,8 @@ public class UserChallengeService {
      * @throws IOException
      */
 
+
+    @Transactional
     public UserChallengeAnalyzeResponse analyzeVideo(UserChallengeAnalyzeRequest request, MultipartFile videoFile) throws EntityNotFoundException, IOException {
         // 챌린지 아이디
         Long challengeId = request.getChallengeId();
@@ -217,6 +223,8 @@ public class UserChallengeService {
      * 유저가 챌린지를 따라 한 후 업로드/저장을 한 경우 사용된다.
      * @param request
      */
+
+    @Transactional
     public UserChallengeSaveResponse saveUserFile(User user, UserChallengeSaveRequest request) {
         Challenge challenge = challengeRepository.findById(request.getChallengeId()).orElse(null);
 
@@ -268,6 +276,8 @@ public class UserChallengeService {
      * 유저가 챌린지를 따라 한 후 재촬영/취소를 한 경우 사용된다.
      * @param request
      */
+
+    @Transactional
     public void deleteUserFile(UserChallengeDeleteRequest request) {
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + ".mp4");
 
@@ -291,6 +301,8 @@ public class UserChallengeService {
      * @return
      */
 
+
+    @Transactional
     public UserChallengeReportResponse findReportByUuid(String uuid) throws IOException, InterruptedException {
         Report report = reportRepository.findByUuid(uuid);
 //        UserChallenge userChallenge = userChallengeRepository.findByUuid(uuid);
@@ -313,6 +325,7 @@ public class UserChallengeService {
      * @param pageable
      * @return
      */
+
     public UserChallengeFeedResponses findUserChallengeByPageable(Pageable pageable) {
         //유저 영상 중 access = "public" 인 영상들을 페이징 조회한다.
         Page<UserChallenge> findUserChallenge = userChallengeRepository.findByAccessOrderByCreatedDateDesc("public", pageable);
@@ -499,6 +512,8 @@ public class UserChallengeService {
         return null;
     }
 
+
+    @Transactional
     public void delete(User user, Long userChallengeId) {
         UserChallenge userChallenge = userChallengeRepository.findById(userChallengeId).orElseThrow(() -> {
             throw new EntityNotFoundException(NOT_EXISTS_USER_CHALLENGE_FILE);
@@ -511,5 +526,22 @@ public class UserChallengeService {
         }
 
         userChallengeRepository.deleteById(userChallengeId);
+    }
+
+
+    @Transactional
+    public UserChallengeUpdateResponse update(User user, UserChallengeUpdateRequest request) {
+        UserChallenge userChallenge = userChallengeRepository.findById(request.getUserChallengeId()).orElseThrow(() -> {
+            throw new EntityNotFoundException(NOT_EXISTS_USER_CHALLENGE_FILE);
+        });
+
+        User userChallengeMakeUser = userChallenge.getUser();
+        if(user != userChallengeMakeUser){
+            throw new AuthorizationException(NOT_AUTHORIZATION);
+        }
+
+        String updateTitle = request.getTitle();
+        userChallenge.changeTitle(updateTitle);
+        return UserChallengeUpdateResponse.ofResponse(userChallenge);
     }
 }

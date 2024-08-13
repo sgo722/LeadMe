@@ -65,4 +65,7 @@ public class UserChallenge extends BaseEntity {
         this.thumbnailPath = thumbnailPath;
     }
 
+    public String changeTitle(String updateTitle) {
+        this.fileName = updateTitle;
+    }
 }
