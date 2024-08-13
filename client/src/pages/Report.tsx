@@ -214,7 +214,7 @@ const Report = ({
   };
 
   const handleChallenge = () => {
-    navigate(`/challenge`);
+    navigate(`/guide`);
   };
 
   return (
