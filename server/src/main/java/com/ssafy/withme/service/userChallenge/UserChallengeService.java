@@ -223,6 +223,10 @@ public class UserChallengeService {
         log.info("설정된 폴더 경로 " + TEMP_DIRECTORY);
         log.info("uuid : " + request.getUuid());
 
+        log.info("user : {}", user.getNickname());
+        log.info("user : {}", user.getId());
+        log.info("user : {}", user.getUsername());
+
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_merged.mp4");
 
         log.info("임시 비디오 경로 : " + tempVideoPath.toString());
