@@ -179,10 +179,10 @@ const Header: React.FC<HeaderProps> = ({
                 YouTube
                 <FaYoutube />
               </SnsBox>
-              <SnsBox>
+              {/* <SnsBox>
                 TikTok
                 <FaTiktok />
-              </SnsBox>
+              </SnsBox> */}
             </TopRight>
           </Top>
         </HeaderWrapper>
