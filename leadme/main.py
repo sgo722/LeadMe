@@ -37,18 +37,18 @@ class UserChallenge(BaseModel):
     youtubeId : str
 
 UPLOAD_DIRECTORY = "."
-# TEMP_DIRECTORY = "video/temporary"
-# PERMANENT_DIRECTORY_USER = "video/user"
-# PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
-# PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
-# THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
+TEMP_DIRECTORY = "video/temporary"
+PERMANENT_DIRECTORY_USER = "video/user"
+PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
+PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
+THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
 
 
-TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
-PERMANENT_DIRECTORY_USER = "/home/ubuntu/python/video/user"
-PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
-PERMANENT_DIRECTORY_CHALLENGE_AUDIO =  "/home/ubuntu/python/video/challenge/audio"
-THUMBNAIL_DIRECTORY = "/home/ubuntu/python/video/temporary/thumbnail"
+# TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
+# PERMANENT_DIRECTORY_USER = "/home/ubuntu/python/video/user"
+# PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
+# PERMANENT_DIRECTORY_CHALLENGE_AUDIO =  "/home/ubuntu/python/video/challenge/audio"
+# THUMBNAIL_DIRECTORY = "/home/ubuntu/python/video/temporary/thumbnail"
 
 
 ## 서비스 로직 호출 부분을 Ray로 병렬 처리한다.
@@ -92,9 +92,11 @@ async def saveChallenge(
         shutil.copyfileobj(videoFile.file, buffer)
 
     # 비디오 처리 실행 및 결과 대기
-    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, video_path)))
+    keypoints, original_fps = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, video_path)))
     
-    return {"youtubeId": youtubeId}
+    print(original_fps)
+
+    return {"youtubeId": youtubeId, "original_fps" : original_fps}
 
 
 @app.post("/upload/blazepose")
