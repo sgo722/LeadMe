@@ -3,37 +3,43 @@ import styled from "styled-components";
 import Header from "components/Header";
 import { SearchBar } from "components/SearchBar";
 import FeedPlayer from "features/videoDetail/FeedPlayer";
-import { Feed as FeedType } from "types/index";
+import { ResponseData, FeedDetail } from "types/index";
+import { useMutation } from "@tanstack/react-query";
+import { axiosInstance } from "axiosInstance/apiClient";
 
-const dummyFeedData: FeedType[] = [
-  {
-    userChallengeId: 1,
-    title: "Dummy Video 1",
-    thumbnail: "https://via.placeholder.com/300x500.png?text=Video+1",
-  },
-  {
-    userChallengeId: 2,
-    title: "Dummy Video 2",
-    thumbnail: "https://via.placeholder.com/300x500.png?text=Video+2",
-  },
-  {
-    userChallengeId: 3,
-    title: "Dummy Video 3",
-    thumbnail: "https://via.placeholder.com/300x500.png?text=Video+3",
-  },
-  {
-    userChallengeId: 4,
-    title: "Dummy Video 4",
-    thumbnail: "https://via.placeholder.com/300x500.png?text=Video+4",
-  },
-];
+interface FeedProps {
+  totalPage: number;
+  totalElement: number;
+  pageSize: number;
+  size: number;
+  content: FeedDetail[];
+}
 
 const Feed = () => {
-  const [feed, _] = useState(dummyFeedData);
+  const [feed, setFeed] = useState<FeedDetail[]>([]);
   const [showComments, setShowComments] = useState<number | null>(null);
 
+  const mutationFeed = useMutation<FeedProps, Error, number>({
+    mutationFn: async (page: number) => {
+      const response = await axiosInstance.get<ResponseData<FeedProps>>(
+        "/api/v1/userChallenge/feed",
+        {
+          params: { page, size: 5 },
+        }
+      );
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      console.log("feed", data);
+      setFeed(data.content)
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching user Feed:", error);
+    },
+  });
+
   useEffect(() => {
-    console.log("초기 데이터 불러오기");
+    mutationFeed.mutate(0);
   }, []);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -75,12 +81,14 @@ const PageLayout = styled.div`
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-`;
+`; 
+
 const SearchBarWrapper = styled.div`
   padding: 20px;
   display: flex;
   justify-content: center;
 `;
+
 const VideoContainer = styled.div`
   display: flex;
   flex-direction: column;
