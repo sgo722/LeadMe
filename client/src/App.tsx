@@ -40,7 +40,7 @@ const App: React.FC = () => {
         <Route path="/rank" element={<Rank />}></Route>
         <Route path="/search" element={<Search />}></Route>
         <Route path="/search/:videoId" element={<SearchResultDetail />} />
-        <Route path="/challenge" element={<Challenge />}></Route>
+        <Route path="/guide" element={<Challenge />}></Route>
         <Route path="/mypage/:userId" element={<Mypage />}></Route>
         <Route path="/report/:uuid" element={<Report />}></Route>
         <Route path="/chat" element={<Chat />}></Route>
