@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FaLock } from "react-icons/fa";
 import { FaLockOpen } from "react-icons/fa";
-import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { useRecoilValue } from "recoil";
 import { useNavigate } from "react-router-dom";
 import { userProfileState } from "stores/authAtom";
-import { baseUrl } from "axiosInstance/constants";
 import { ResponseData } from "types";
+import { axiosInstance } from "axiosInstance/apiClient";
+import { getJWTHeader } from "axiosInstance/apiClient";
 
 interface scoreData {
   uuid: string;
@@ -52,9 +52,10 @@ const UpdateModal: React.FC<ModalProps> = ({ isOpen, onClose, reportData }) => {
         access: access,
       };
 
-      const response = await axios.post<ResponseData<UploadData>>(
-        `${baseUrl}/api/v1/userChallenge/temporary/save`,
-        requestData
+      const response = await axiosInstance.post<ResponseData<UploadData>>(
+        "/api/v1/userChallenge/temporary/save",
+        requestData,
+        { headers: getJWTHeader() }
       );
 
       if (!response.data.isSuccess) {

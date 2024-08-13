@@ -1,5 +1,5 @@
 # SSAFY 11기 공통프로젝트 : LeadMe
-
+![LEADME_LOGO](/uploads/d373b866f74d442994a9ec7aa594f358/LEADME-최종_1920px___2_.png)
 
 
 <br/>
