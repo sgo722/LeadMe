@@ -676,6 +676,14 @@ export const BattleRoom: React.FC = () => {
         setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
       });
 
+      // 참가자가 퇴장할때 호출
+      session.on("streamDestroyed", (event: StreamEvent) => {
+        setSubscribers((prevSubscribers) =>
+          prevSubscribers.filter((sub) => sub !== event.stream.streamManager)
+        );
+        handleCancel();
+      });
+
       // 세션에 연결
       await session.connect(token);
 
