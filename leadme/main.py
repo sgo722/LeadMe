@@ -115,7 +115,7 @@ async def saveVideDataByUserFile(
     logger.info(f"userFile API - UUID: {uuid}, Total Time: {total_time:.4f} seconds")
 
     return {"uuid": uuid, "keypoints": keypoints}
-    
+
 
 
 @app.post("/upload/userFile")
@@ -138,10 +138,10 @@ async def saveVideDataByUserFile(
     # 파일을 TEMP_DIRECTORY에 원래 이름으로 저장
     download_start = time.time()
 
-    # 수정 전 원본 라인 (Jinwoo)    
+    # 수정 전 원본 라인 (Jinwoo)
     # with open(original_video_path, "wb") as buffer:
     #     shutil.copyfileobj(videoFile.file, buffer)
-    
+
     await save_file(videoFile, original_video_path)
     download_end = time.time()
 
@@ -184,7 +184,7 @@ async def saveVideDataByUserFile(
         extract_audio_from_video(youtube_video_path, youtube_audio_path)
 
         return {"uuid": unique_id}
-    
+
     except Exception as e:
         return {"error": str(e)}
     
@@ -197,7 +197,7 @@ async def saveVideDataByUserFile(
 async def saveVideDataByUserFile(
     youtubeId:str = Form(...)):
         logger.info(f"youtubeId: {youtubeId}")
-        
+
         youtube_video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
         start_time = time.time()
         # 비디오 처리 실행 및 결과 대기
@@ -231,7 +231,7 @@ def double_speed_video(input_file, output_file):
         '-filter:a', 'atempo=2.0',
         output_file
     ]
-    
+
     # 사용 예시
     input_path = "/path/to/your/input_video.mp4"
     output_path = "/path/to/your/output_folder/output_2x.mp4"
@@ -242,5 +242,5 @@ def double_speed_video(input_file, output_file):
     except subprocess.CalledProcessError as e:
         print(f"An error occurred: {e}")
 
-    
+
 

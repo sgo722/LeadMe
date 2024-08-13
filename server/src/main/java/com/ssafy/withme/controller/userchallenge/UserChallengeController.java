@@ -65,7 +65,7 @@ public class UserChallengeController {
      */
     @PostMapping("/analyze")
     public ApiResponse<UserChallengeAnalyzeResponse> createUserChallenge(
-            @CurrentUser User user,
+//            @CurrentUser User user,
             @RequestPart("request") UserChallengeAnalyzeRequest request,
             @RequestPart MultipartFile videoFile) throws IOException {
 
