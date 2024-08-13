@@ -53,14 +53,14 @@ export const MovingDOM = () => {
       </ArticleWrapper>
       <ArticleWrapper ref={articleRef2}>
         <RightBox>
-          <H2>플랫폼 검색을 한 번에</H2>
-          <P>유튜브, 틱톡의 모든 숏츠 영상을 한 번의 검색으로</P>
+          <H2>쇼츠 영상 제작을 더욱 쉽게</H2>
+          <P>평소 따라 하고 싶던 유튜브 쇼츠 영상을 손쉽게 배워보세요!</P>
         </RightBox>
       </ArticleWrapper>
       <ArticleWrapper ref={articleRef3}>
         <LeftBox>
-          <H2>AI 기반 분석 레포트 제공</H2>
-          <P>AI 기술을 활용한 분석 보고서로 춤 연습을 더욱 효율적으로</P>
+          <H2>나의 챌린지 점수는?</H2>
+          <P>AI 기반 분석 레포트를 제공해드려요!</P>
         </LeftBox>
       </ArticleWrapper>
       <ArticleWrapper className="height-4" ref={articleRef4}></ArticleWrapper>
@@ -107,15 +107,18 @@ const H1 = styled.h1`
 
 const H2 = styled.h2`
   color: #f6efed;
-  font-size: 54px;
+  font-size: 50px;
   font-weight: 600;
+  font-family: "Noto Sans KR", sans-serif;
   margin-bottom: 32px;
 `;
 
 const P = styled.p`
   color: #c9c9c9;
-  font-size: 30px;
+  font-size: 27px;
   font-weight: 400;
+  font-family: "Noto Sans KR", sans-serif;
+  margin-bottom: 8px;
 `;
 
 const LeftBox = styled.div`

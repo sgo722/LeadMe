@@ -19,6 +19,7 @@ import Mypage from "pages/Mypage";
 import Feed from "pages/Feed";
 import { Battle } from "pages/Battle";
 import { BattleRoom } from "pages/BattleRoom";
+import { NotFoundPage } from "pages/NotFoundPage";
 import Admin from "pages/Admin";
 
 const App: React.FC = () => {
@@ -49,6 +50,8 @@ const App: React.FC = () => {
         <Route path="/battle" element={<Battle />}></Route>
         <Route path="/battleRoom/:sessionId" element={<BattleRoom />} />
         <Route path="/private/admin" element={<Admin />} />
+        <Route path="/404" element={<NotFoundPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <ShortsModal />
     </ThemeProvider>

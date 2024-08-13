@@ -31,6 +31,8 @@ public class Challenge extends BaseEntity {
 
     private String thumbnailUrl;
 
+    private int originalFps;
+
 
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<UserChallenge> userChallenges;
@@ -56,4 +58,7 @@ public class Challenge extends BaseEntity {
         thumbnailUrl = challengeEditor.getThumbnailUrl();
     }
 
+    public void setOriginalFps(int originalFps) {
+        this.originalFps = originalFps;
+    }
 }

@@ -6,10 +6,12 @@ import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { ChallengeItem, ResponseData } from "types";
 import { baseUrl } from "axiosInstance/constants";
+import { useNavigate } from "react-router-dom";
 
 const Challenge: React.FC = () => {
   const [challenges, setChallenges] = useState<ChallengeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true); // 로딩 상태 관리
+  const navigate = useNavigate();
 
   const mutationChallenge = useMutation<ChallengeItem[], Error, void>({
     mutationFn: async () => {
@@ -33,6 +35,10 @@ const Challenge: React.FC = () => {
     mutationChallenge.mutate();
   }, []);
 
+  const handleClick = (id: string) => {
+    navigate(`/practice/${id}`);
+  };
+
   const sections = [];
   for (let i = 0; i < challenges.length; i += 4) {
     sections.push(challenges.slice(i, i + 4));
@@ -48,7 +54,10 @@ const Challenge: React.FC = () => {
           sections.map((section, index) => (
             <MainSection key={index}>
               {section.map((img) => (
-                <ContentSection key={img.challengeId}>
+                <ContentSection
+                  key={img.challengeId}
+                  onClick={() => handleClick(img.youtubeId)}
+                >
                   <TitleSection>
                     <MainTitle>{img.title}</MainTitle>
                     <PlayButton src={playButtonIcon} />

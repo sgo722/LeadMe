@@ -13,8 +13,6 @@ pipeline {
         VM_OPTION_PASSWORD = credentials('VM_OPTION_PASSWORD')
         MONGO_USERNAME = credentials('MONGO_USERNAME')
         MONGO_PASSWORD = credentials('MONGO_PASSWORD')
-        VM_OPTIONS_MONGODB_USERNAME = credentials('VM_OPTIONS_MONGODB_USERNAME')
-        VM_OPTIONS_MONGODB_PASSWORD = credentials('VM_OPTIONS_MONGODB_PASSWORD')
     }
 
     stages {
@@ -131,7 +129,7 @@ pipeline {
                                         docker pull ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
                                         docker stop ${DOCKERHUB_NAME} || true
                                         docker rm ${DOCKERHUB_NAME} || true
-                                        docker run --name ${DOCKERHUB_NAME} -d --network my-network -p 8090:8090 \
+                                        docker run --name ${DOCKERHUB_NAME} -d -p 8090:8090 \
                                 -v /home/ubuntu/leadme/video/temporary:/home/ubuntu/python/video/temporary \
                                 -v /home/ubuntu/leadme/video/user:/home/ubuntu/python/video/user \
                                 -v /home/ubuntu/leadme/video/challenge:/home/ubuntu/python/video/challenge \
@@ -145,7 +143,7 @@ pipeline {
                                         docker pull ${DOCKERHUB_USERNAME}/client-image:latest
                                         docker stop client || true
                                         docker rm client || true
-                                        docker run --name client -d --network my-network -p 5173:80  ${DOCKERHUB_USERNAME}/client-image:latest
+                                        docker run --name client -d -p 5173:80  ${DOCKERHUB_USERNAME}/client-image:latest
 
                                         docker image prune -f
                                         """,

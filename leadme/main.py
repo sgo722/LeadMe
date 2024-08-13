@@ -92,9 +92,11 @@ async def saveChallenge(
         shutil.copyfileobj(videoFile.file, buffer)
 
     # 비디오 처리 실행 및 결과 대기
-    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, video_path)))
+    keypoints, original_fps = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, video_path)))
     
-    return {"youtubeId": youtubeId}
+    print(original_fps)
+
+    return {"youtubeId": youtubeId, "originalFps" : original_fps}
 
 
 @app.post("/upload/blazepose")
