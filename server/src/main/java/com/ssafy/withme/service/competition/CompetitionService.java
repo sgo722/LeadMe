@@ -84,7 +84,7 @@ public class CompetitionService {
         log.info("세션 생성 : 유저 아아디" + user.getId() + " 유저 이메일 : " + user.getEmail());
 
         // 해당 세션으로 레디스 데이터 생성
-        setSessionCount(sessionId, 0L);
+        setSessionCount(sessionId, 1L);
 
         Competition competition = Competition.builder()
                                 .user(user)
@@ -316,7 +316,7 @@ public class CompetitionService {
     public Long getSessionCount(String sessionId) {
         String key = SESSION_KEY_PREFIX + sessionId + ":count";
         String count = redisTemplate.opsForValue().get(key);
-        return count != null ? Long.valueOf(count) : 1L;
+        return count != null ? Long.valueOf(count) : 0L;
     }
 
     @Transactional
