@@ -18,4 +18,14 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom{
                 .where(follow.toUser.id.eq(toId), follow.fromUser.id.eq(fromId))
                 .execute();
     }
+
+    @Override
+    public Boolean existsByFromUserIdAndToUserId(Long fromUserId, Long toUserId) {
+
+        return qf.selectOne()
+                .from(follow)
+                .where(follow.fromUser.id.eq(fromUserId)
+                        .and(follow.toUser.id.eq(toUserId)))
+                .fetchFirst() != null;
+    }
 }

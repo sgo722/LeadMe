@@ -11,6 +11,7 @@ import { baseUrl } from "axiosInstance/constants";
 import { CiImageOff } from "react-icons/ci";
 import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
+import { ensureHttps } from "utils/urlUtils";
 
 interface FeedProps {
   userChallengeId: number;
@@ -26,7 +27,7 @@ interface PropsData {
 }
 
 const Mypage: React.FC = () => {
-  const [feed, setFeed] = useState<FeedProps[] | null>();
+  const [feed, setFeed] = useState<FeedProps[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
@@ -34,6 +35,7 @@ const Mypage: React.FC = () => {
   const [followModalType, setFollowModalType] = useState<
     "follower" | "following" | null
   >(null);
+  const [isFollowing, setIsFollowing] = useState<string>("unfollow");
   const navigate = useNavigate();
   const fetchSessionUserData = () => {
     const userData = sessionStorage.getItem("user_profile");
@@ -54,12 +56,14 @@ const Mypage: React.FC = () => {
       if (sessionUser) {
         if (data.id === sessionUser.id) {
           setIsMine(true);
+        } else {
+          setIsMine(false);
         }
       }
       setUser(data);
     },
     onError: (error: Error) => {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching user Profile:", error);
     },
   });
 
@@ -80,23 +84,98 @@ const Mypage: React.FC = () => {
     },
     onSuccess: (data) => {
       setFeed(data.content);
-      console.log("feed", data);
+      console.log("feed", data.content);
     },
     onError: (error: Error) => {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching user Feed:", error);
     },
   });
+
+  const mutationCheckFollow = useMutation<string, Error, string>({
+    mutationFn: async (value: string): Promise<string> => {
+      const response = await axios.get<ResponseData<string>>(
+        `${baseUrl}/api/v1/user/following/check/${value}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      return response.data.data;
+    },
+    onSuccess: (data: string) => {
+      setIsFollowing(data.toLowerCase());
+    },
+    onError: (error: Error) => {
+      console.error("Error checking follow status:", error);
+    },
+  });
+
+  const followUser = useMutation<void, Error, number>({
+    mutationFn: async (userId: number) => {
+      await axios.post<ResponseData<boolean>>(
+        `${baseUrl}/api/v1/user/following/send/${userId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+    },
+    onSuccess: () => {
+      console.log("팔로우 요청 성공");
+      setIsFollowing("follow");
+      if (user) {
+        setUser((prevUser) =>
+          prevUser ? { ...prevUser, following: prevUser.following + 1 } : null
+        );
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Error following user:", error);
+    },
+  });
+
+  const unfollowUser = useMutation<void, Error, number>({
+    mutationFn: async (userId: number) => {
+      await axios.delete<ResponseData<boolean>>(
+        `${baseUrl}/api/v1/user/following/unfollow/${userId}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+    },
+    onSuccess: () => {
+      console.log("언팔로우 요청 성공");
+      setIsFollowing("unfollow");
+      if (user) {
+        setUser((prevUser) =>
+          prevUser ? { ...prevUser, following: prevUser.following - 1 } : null
+        );
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Error unfollowing user:", error);
+    },
+  });
+
+  const [localAccessToken, setLocalAccessToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalAccessToken(accessToken);
+  }, [accessToken]);
 
   useEffect(() => {
     const urlSegments = location.pathname.split("/");
     const mypageIndex = urlSegments.indexOf("mypage");
     const value = mypageIndex !== -1 ? urlSegments[mypageIndex + 1] : "";
 
-    if (value && user === null) {
+    if (value) {
       mutationProfile.mutate(value);
       mutationFeed.mutate({ value, page: 1 });
+
+      if (localAccessToken) {
+        mutationCheckFollow.mutate(value);
+      }
     }
-  }, [location.pathname]);
+  }, [location.pathname, localAccessToken]);
 
   const handleOpenProfileModal = () => {
     setIsProfileModalOpen(true);
@@ -115,9 +194,25 @@ const Mypage: React.FC = () => {
     setIsFollowModalOpen(false);
   };
 
-  const handleMessagesClick = () => {
+  const handleNavigateChat = () => {
     if (user) {
-      navigate(`/chat`);
+      navigate("/chat");
+    }
+  };
+
+  const handleSendMessageClick = () => {
+    if (user) {
+      navigate("/chat", { state: user });
+    }
+  };
+
+  const handleToggleFollowClick = () => {
+    if (user) {
+      if (isFollowing === "follow") {
+        unfollowUser.mutate(user.id);
+      } else {
+        followUser.mutate(user.id);
+      }
     }
   };
 
@@ -133,7 +228,10 @@ const Mypage: React.FC = () => {
           <ProfileTitle>Profile</ProfileTitle>
           <ProfileContainer>
             <Flex>
-              <ProfileImg src={user.profileImg} alt="프로필 이미지" />
+              <ProfileImg
+                src={ensureHttps(user.profileImg)}
+                alt="프로필 이미지"
+              />
               <table>
                 <tbody>
                   <Tr>
@@ -144,27 +242,48 @@ const Mypage: React.FC = () => {
                     <Th>한 줄 소개</Th>
                     <Td>{user.profileComment}</Td>
                   </Tr>
-                  <Tr onClick={() => handleOpenFollowModal("follower")}>
-                    <Th>팔로워</Th>
-                    <Td>{user.follower}</Td>
-                  </Tr>
-                  <Tr onClick={() => handleOpenFollowModal("following")}>
-                    <Th>팔로잉</Th>
-                    <Td>{user.following}</Td>
-                  </Tr>
+                  {isMine ? (
+                    <>
+                      <TrCursor
+                        onClick={() => handleOpenFollowModal("follower")}
+                      >
+                        <Th>팔로워</Th>
+                        <Td>{user.following}</Td>
+                      </TrCursor>
+                      <TrCursor
+                        onClick={() => handleOpenFollowModal("following")}
+                      >
+                        <Th>팔로잉</Th>
+                        <Td>{user.follower}</Td>
+                      </TrCursor>
+                    </>
+                  ) : (
+                    <>
+                      <Tr>
+                        <Th>팔로워</Th>
+                        <Td>{user.following}</Td>
+                      </Tr>
+                      <Tr>
+                        <Th>팔로잉</Th>
+                        <Td>{user.follower}</Td>
+                      </Tr>
+                    </>
+                  )}
                 </tbody>
               </table>
             </Flex>
             <BtnContainer>
               {isMine ? (
                 <>
-                  <Btn onClick={handleMessagesClick}>메세지 목록</Btn>
+                  <Btn onClick={handleNavigateChat}>메세지 목록</Btn>
                   <Btn onClick={handleOpenProfileModal}>프로필 편집</Btn>
                 </>
               ) : (
                 <>
-                  <Btn>메세지 보내기</Btn>
-                  <Btn>팔로우</Btn>
+                  <Btn onClick={handleSendMessageClick}>메세지 보내기</Btn>
+                  <Btn onClick={handleToggleFollowClick}>
+                    {isFollowing === "follow" ? "언팔로우" : "팔로우"}
+                  </Btn>
                 </>
               )}
             </BtnContainer>
@@ -173,7 +292,7 @@ const Mypage: React.FC = () => {
         <MainSection>
           <FeedTitle>Feed</FeedTitle>
           <FeedContainer>
-            {feed ? (
+            {feed && feed.length > 0 ? (
               feed.map((item) => (
                 <OneFeed key={item.userChallengeId}>
                   <OneImg
@@ -226,11 +345,7 @@ const MainSection = styled.div`
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(50px);
   padding: 30px 40px 28px;
-  margin: 0 20px;
-
-  &:not(:last-child) {
-    margin-bottom: 40px;
-  }
+  margin: 0 20px 40px;
 `;
 
 const ProfileTitle = styled.div`
@@ -271,10 +386,6 @@ const ProfileImg = styled.img`
 
 const Tr = styled.tr`
   text-align: left;
-
-  &:nth-child(n + 3) {
-    cursor: pointer;
-  }
 `;
 
 const Th = styled.th`
@@ -374,10 +485,20 @@ const None = styled.div`
   font-family: "Noto Sans KR", sans-serif;
   text-align: center;
   padding-top: 56px;
-  height: 200px;
+  height: 210px;
 
   & > div {
     margin-top: 12px;
+  }
+`;
+
+const TrCursor = styled.tr`
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
   }
 `;
 

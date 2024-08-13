@@ -16,15 +16,15 @@ export const InteractionButtons: React.FC<InteractionButtonsProps> = ({
   return (
     <ButtonsWrapper>
       <Button>
-        <FaHeart />
+        <Heart size={17} />
         <span>{likes}</span>
       </Button>
       <Button onClick={onToggleComments}>
-        <FaComment />
+        <Comment size={17} />
         <span>{commentCount}</span>
       </Button>
       <Button onClick={() => console.log("Sound toggled")}>
-        <FaVolumeUp />
+        <FaVolumeUp size={20} />
       </Button>
     </ButtonsWrapper>
   );
@@ -55,9 +55,21 @@ const Button = styled.button`
   width: 50px;
   height: 50px;
   justify-content: center;
+  position: relative;
 
   span {
     font-size: 12px;
     margin-top: 5px;
+
+    position: absolute;
+    bottom: 5px;
   }
+`;
+
+const Heart = styled(FaHeart)`
+  margin-bottom: 8px;
+`;
+
+const Comment = styled(FaComment)`
+  margin-bottom: 10px;
 `;

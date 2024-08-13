@@ -32,7 +32,7 @@ dependencies {
 
 	implementation 'io.jsonwebtoken:jjwt:0.9.1'
 	implementation 'javax.xml.bind:jaxb-api:2.3.1'
-	implementation 'com.google.code.gson:gson:2.7'
+	implementation 'com.google.code.gson:gson:2.8.9'
 
 	// QueryDSL
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
@@ -53,8 +53,6 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-
-	implementation 'com.google.code.gson:gson:2.7'
 
 	// JWT 를 쉽게 생성하고 서명하고 파싱할 수 있게 도와줌
 	implementation 'io.jsonwebtoken:jjwt:0.9.1'
@@ -87,6 +85,9 @@ dependencies {
 
 	// open vidu
 	implementation 'io.openvidu:openvidu-java-client:2.30.0'
+	
+	// Json 데이터 파싱
+	implementation 'org.json:json:20210307'
 }
 
 tasks.named('test') {

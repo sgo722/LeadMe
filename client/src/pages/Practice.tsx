@@ -9,18 +9,20 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
-import { useSetRecoilState } from "recoil";
-import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
+// import { useSetRecoilState } from "recoil";
+// import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
 import { SubmitModal } from "features/practice/SubmitModal";
 import { TiMediaRecord } from "react-icons/ti";
 import { MdOutlineSpeed } from "react-icons/md";
 import countdownSound from "assets/audio/countdown.mp3";
+import { UserProfile } from "types";
+// import { FaVideoSlash } from "react-icons/fa6";
 
-interface ChallengeData {
-  youtubeId: string;
-  url: string;
-}
+// interface ChallengeData {
+//   youtubeId: string;
+//   url: string;
+// }
 
 interface Landmark {
   x: number;
@@ -35,10 +37,16 @@ interface YoutubeBlazePoseData {
   challengeId: number;
 }
 
-const postChallenge = async (data: ChallengeData) => {
-  const res = await axiosInstance.post("/api/v1/challenge", data);
-  return res.data;
-};
+interface VideoDataItem {
+  challengeId: number;
+  youtubeId: string;
+  title: string;
+}
+
+// const postChallenge = async (data: ChallengeData) => {
+//   const res = await axiosInstance.post("/api/v1/challenge", data);
+//   return res.data;
+// };
 
 const fetchYoutubeBlazePoseData = async (
   videoId: string
@@ -53,12 +61,12 @@ export const Practice: React.FC = () => {
   const nav = useNavigate();
 
   // Recoil 상태 설정
-  const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
-  const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
+  // const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
+  // const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
 
   // 로컬 상태 관리
-  const [inputUrl, setInputUrl] = useState<string>("");
-  const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
+  // const [inputUrl, setInputUrl] = useState<string>("");
+  // const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
@@ -83,31 +91,50 @@ export const Practice: React.FC = () => {
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오
 
+  const fetchSessionUserData = () => {
+    const userData = sessionStorage.getItem("user_profile");
+    return userData ? (JSON.parse(userData) as UserProfile) : null;
+  };
+
+  const sessionUser = fetchSessionUserData();
+
   // API 요청 관련 mutation
-  const mutation = useMutation({
-    mutationFn: postChallenge,
-    onMutate: (variables: ChallengeData) => {
-      setIsCompletionAlertModalOpen(true);
-      setIsWebcamVisible(true);
-      setCurrentYoutubeId(variables.youtubeId);
-    },
-    onSuccess: (data) => {
-      setIsWebcamVisible(false);
-      setCurrentYoutubeId("");
-      nav(`/practice/${data.data.youtubeId}`);
-    },
-    onError: () => {
-      setIsWebcamVisible(false);
-      setCurrentYoutubeId("");
-      nav("/home");
-    },
-  });
+  // const mutation = useMutation({
+  //   mutationFn: postChallenge,
+  //   onMutate: (variables: ChallengeData) => {
+  //     setIsCompletionAlertModalOpen(true);
+  //     setIsWebcamVisible(true);
+  //     setCurrentYoutubeId(variables.youtubeId);
+  //   },
+  //   onSuccess: (data) => {
+  //     setIsWebcamVisible(false);
+  //     setCurrentYoutubeId("");
+  //     nav(`/practice/${data.data.youtubeId}`);
+  //   },
+  //   onError: () => {
+  //     setIsWebcamVisible(false);
+  //     setCurrentYoutubeId("");
+  //     nav("/home");
+  //   },
+  // });
 
   // YouTube BlazePose 데이터 쿼리
   const youtubeBlazePoseQuery = useQuery({
     queryKey: ["youtubeBlazePoseData", videoId],
     queryFn: () => fetchYoutubeBlazePoseData(videoId!),
     enabled: !!videoId,
+  });
+
+  // 서버에 저장된 영상 목록 가져오는 쿼리
+  const fetchVideoList = async () => {
+    const res = await axiosInstance.get("/api/v1/challenge/battleList");
+    return res.data.data;
+  };
+
+  // 서버에 저장된 영상 가져오기
+  const { data: videoList } = useQuery({
+    queryKey: ["videoList"],
+    queryFn: fetchVideoList,
   });
 
   // PoseLandmarker 초기화
@@ -352,27 +379,27 @@ export const Practice: React.FC = () => {
   // UI 이벤트 핸들러
   const handleBackButtonClick = () => nav(-1);
   const handleChangeButtonClick = () => nav("/practice");
-  const handleSearchButtonClick = () => nav("/home");
-  const validateUrl = (url: string) => url.toLowerCase().includes("shorts");
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputUrl(e.target.value);
-    setIsValidUrl(validateUrl(e.target.value));
-  };
+  // const handleSearchButtonClick = () => nav("/home");
+  // const validateUrl = (url: string) => url.toLowerCase().includes("shorts");
+  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setInputUrl(e.target.value);
+  //   setIsValidUrl(validateUrl(e.target.value));
+  // };
 
-  const handleLoadVideo = () => {
-    const youtubeId = extractVideoId(inputUrl);
-    if (youtubeId) {
-      mutation.mutate({ youtubeId, url: inputUrl });
-      setInputUrl("");
-    } else {
-      console.error("올바른 Youtube Shorts URL이 아닙니다.");
-    }
-  };
+  // const handleLoadVideo = () => {
+  //   const youtubeId = extractVideoId(inputUrl);
+  //   if (youtubeId) {
+  //     mutation.mutate({ youtubeId, url: inputUrl });
+  //     setInputUrl("");
+  //   } else {
+  //     console.error("올바른 Youtube Shorts URL이 아닙니다.");
+  //   }
+  // };
 
-  const extractVideoId = (url: string): string | null => {
-    const match = url.match(/shorts\/([^?]+)/);
-    return match ? match[1] : null;
-  };
+  // const extractVideoId = (url: string): string | null => {
+  //   const match = url.match(/shorts\/([^?]+)/);
+  //   return match ? match[1] : null;
+  // };
 
   // 파이썬에서 영상 다운받는동안 대기시간에 홈으로 이동시켜줌
   const handleCloseIsCompletionAlertModal = () => {
@@ -492,7 +519,7 @@ export const Practice: React.FC = () => {
     if (youtubeBlazePoseQuery?.data?.challengeId) {
       submitVideoMutation.mutate({
         videoFile: blob,
-        userId: 1, // 향후 동적으로 변경 필요
+        userId: sessionUser?.id || 1,
         challengeId: youtubeBlazePoseQuery.data.challengeId,
       });
     }
@@ -512,6 +539,10 @@ export const Practice: React.FC = () => {
       countdownAudio.current?.play();
     }
   }, [countdown]);
+
+  const handlePick = (id: string) => {
+    nav(`/practice/${id}`);
+  };
 
   return (
     <>
@@ -546,30 +577,23 @@ export const Practice: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <SearchUrl>
-                    <Title>참고 영상을 첨부하세요</Title>
-                    <SubTitle>
-                      <span>방법 1</span>
-                    </SubTitle>
-                    <SearchButton onClick={handleSearchButtonClick}>
-                      영상 검색하러 가기
-                    </SearchButton>
-                    <SubTitle>
-                      <span>방법 2</span>
-                    </SubTitle>
-                    <SearchInput
-                      placeholder="숏츠 영상 url을 입력하세요"
-                      value={inputUrl}
-                      onChange={handleInputChange}
-                    />
-                    <SearchButton
-                      onClick={handleLoadVideo}
-                      disabled={!isValidUrl}
-                      style={{ opacity: isValidUrl ? 1 : 0.5 }}
-                    >
-                      url 영상 불러오기
-                    </SearchButton>
-                  </SearchUrl>
+                  <ChallengeList>
+                    <Title>Challenge!</Title>
+                    <ScrollableList>
+                      {Array.isArray(videoList) && videoList.length > 0 ? (
+                        videoList.map((item: VideoDataItem) => (
+                          <ListItem
+                            key={item.challengeId}
+                            onClick={() => handlePick(item.youtubeId)}
+                          >
+                            {item.title}
+                          </ListItem>
+                        ))
+                      ) : (
+                        <ListItem>No videos found</ListItem>
+                      )}
+                    </ScrollableList>
+                  </ChallengeList>
                 )}
               </YouTubeWrapper>
               {videoId && !isRecording && (
@@ -748,6 +772,7 @@ const VideoContainer = styled.div`
 const YouTubeWrapper = styled.div`
   margin-right: 20px; // YouTube와 Buttons 사이의 간격 조정
   border-radius: 8px;
+  height: 550px;
   overflow: hidden;
 `;
 
@@ -806,69 +831,16 @@ const YoutubeCanvas = styled.canvas`
   height: 100%;
 `;
 
-// 영상 url 입력하는 경우 ui
-const SearchUrl = styled.div`
-  width: 309px;
+const ChallengeList = styled.div`
+  width: 350px;
   height: 550px;
-  border-radius: 15px;
   background: rgba(255, 255, 255, 0.8);
   box-shadow: 8px 8px 4px 0px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px;
-  gap: 25px;
-`;
-
-const Title = styled.div`
-  color: #b4b4b4;
-  font-size: 18px;
-  font-weight: 500;
-`;
-
-const SubTitle = styled.div`
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: #b4b4b4;
-  font-size: 14px;
-  width: 100%;
-
-  &::before,
-  &::after {
-    content: "";
-    flex: 1;
-    border-bottom: 1px solid #cecece;
-  }
-
-  & > span {
-    padding: 0 10px;
-  }
-`;
-
-const SearchButton = styled.button`
-  border-radius: 4px;
-  background: #f7f7f7;
-  box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.15);
-  border: none;
-  color: #ee5050;
-  cursor: pointer;
-  width: 250px;
-  height: 44px;
-  font-size: 18px;
-  font-weight: 500;
-`;
-
-const SearchInput = styled.input`
-  border-radius: 4px;
-  background: #fff;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.15);
-  border: none;
-  width: 250px;
-  height: 44px;
-  outline: none;
-  padding-left: 15px;
+  padding: 30px 10px;
 `;
 
 const ButtonWrapper = styled.div`
@@ -983,4 +955,54 @@ const CountdownSpinner = styled.div<{ $countdown: number }>`
       transform: rotate(360deg);
     }
   }
+`;
+
+const ScrollableList = styled.div`
+  flex-grow: 1;
+  border-radius: 10px;
+  padding: 10px;
+
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 15px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #dfdfdf;
+    border-radius: 10px;
+    border: 4px solid rgba(0, 0, 0, 0);
+    background-clip: padding-box;
+    cursor: pointer;
+  }
+`;
+
+const ListItem = styled.div`
+  width: 100%;
+  min-width: 295px;
+  padding: 15px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f7f7f7 0%, #ffedf6 100%);
+
+  &:first-child {
+    margin: 0;
+  }
+
+  &:last-child {
+    margin: 0;
+  }
+`;
+
+const Title = styled.h1`
+  color: #ee5050;
+  font-family: Rajdhani;
+  font-size: 50px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: -0.6px;
+  margin-bottom: 12px;
 `;

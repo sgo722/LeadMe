@@ -9,9 +9,13 @@ import { useParams, useLocation } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import styled from "styled-components";
 import { axiosInstance } from "axiosInstance/apiClient";
-import VideoPlayer from "features/search/VideoPlayer";
+import { VideoPlayer } from "features/search/VideoPlayer";
 import Header from "components/Header";
 import { SearchBar } from "components/SearchBar";
+import { baseUrl } from "axiosInstance/constants";
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
+import { ResponseData } from "types";
 
 interface Video {
   videoId: string;
@@ -72,6 +76,27 @@ export const SearchResultDetail: React.FC = () => {
   const query = new URLSearchParams(location.search).get("q") || "";
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const [challengeVideoIds, setChallengeVideoIds] = useState<string[]>([]);
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const response = await axios.get<ResponseData<{ youtubeId: string[] }>>(
+        `${baseUrl}/api/v1/challenge/list`
+      );
+      return response.data.data.youtubeId;
+    },
+    onSuccess: (data) => {
+      setChallengeVideoIds(data);
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching challenge video IDs:", error.message);
+      setChallengeVideoIds([]);
+    },
+  });
+
+  useEffect(() => {
+    if (challengeVideoIds.length === 0) mutation.mutate();
+  }, []);
 
   useEffect(() => {
     if (videoId) {
@@ -141,6 +166,7 @@ export const SearchResultDetail: React.FC = () => {
             video={video}
             isActive={video.videoId === activeVideoId}
             onIntersection={handleIntersection}
+            challengeVideoIds={challengeVideoIds}
           />
         ))}
         {isFetchingNextPage && <div>Loading more...</div>}
@@ -148,6 +174,7 @@ export const SearchResultDetail: React.FC = () => {
     </PageLayout>
   );
 };
+
 const PageLayout = styled.div`
   height: 100vh;
   display: flex;

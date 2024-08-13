@@ -25,15 +25,40 @@ public class Challenge extends BaseEntity {
 
     private String url;
 
+    private String title;
+
+    private String thumbnailPath;
+
+    private String thumbnailUrl;
+
+    private int originalFps;
+
+
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<UserChallenge> userChallenges;
 
     @Builder
-    private Challenge(String youtubeId, String url) {
+    private Challenge(String youtubeId, String url, String title) {
         this.youtubeId = youtubeId;
         this.url = url;
         this.userChallenges = new ArrayList<>();
+        this.title = title;
     }
 
+    public void setThumbnail(String thumbnailPath){
+        this.thumbnailPath = thumbnailPath;
+    }
 
+    public ChallengeEditor.ChallengeEditorBuilder toEditor() {
+        return ChallengeEditor.builder()
+                .thumbnailUrl(thumbnailUrl);
+    }
+
+    public void edit(ChallengeEditor challengeEditor) {
+        thumbnailUrl = challengeEditor.getThumbnailUrl();
+    }
+
+    public void setOriginalFps(int originalFps) {
+        this.originalFps = originalFps;
+    }
 }

@@ -8,6 +8,7 @@ import ray
 import cv2
 import time
 import logging
+import aiofiles
 # from pathlib import Path
 import subprocess
 
@@ -31,19 +32,23 @@ class Video(BaseModel):
     url : str
     youtubeId : str
 
+class UserChallenge(BaseModel):
+    uuid : str
+    youtubeId : str
+
 UPLOAD_DIRECTORY = "."
 # TEMP_DIRECTORY = "video/temporary"
 # PERMANENT_DIRECTORY_USER = "video/user"
 # PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
 # PERMANENT_DIRECTORY_CHALLENGE_AUDIO = "video/challenge/audio"
-# THUMBNAIL_DIRECTORY = "video/temporary/thumnail"
+# THUMBNAIL_DIRECTORY = "video/temporary/thumbnail"
 
 
 TEMP_DIRECTORY = "/home/ubuntu/python/video/temporary"
 PERMANENT_DIRECTORY_USER = "/home/ubuntu/python/video/user"
 PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
 PERMANENT_DIRECTORY_CHALLENGE_AUDIO =  "/home/ubuntu/python/video/challenge/audio"
-THUMBNAIL_DIRECTORY = "/home/ubuntu/python/video/temporary/thumnail"
+THUMBNAIL_DIRECTORY = "/home/ubuntu/python/video/temporary/thumbnail"
 
 
 ## 서비스 로직 호출 부분을 Ray로 병렬 처리한다.
@@ -59,24 +64,65 @@ def ray_process_video_user(video_path):
 async def read_root():
     return "This is root path from MyAPI"
 
-@app.post("/videoUrl")
-async def saveVideoData(video: Video):
-    start_time = time.time()
-    video_path = await asyncio.to_thread(download_video, video.url, video.youtubeId)
+# @app.post("/videoUrl")
+# async def saveVideoData(video: Video):
+#     start_time = time.time()
+#     #video_path = await asyncio.to_thread(download_video, video.url, video.youtubeId)
     
+#     video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{video.youtubeId}.mp4")
+    
+#     # 비디오 처리 실행 및 결과 대기
+#     keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(video.youtubeId, video_path)))
+    
+#     total_time = time.time() - start_time
+#     logger.info(f"videoUrl API - YoutubeID: {video.youtubeId}, Total Time: {total_time:.4f} seconds")
+    
+#     return {"youtubeId": video.youtubeId, "keypoints": keypoints}
+
+
+@app.post("/admin/challenge")
+async def saveChallenge(
+    videoFile: UploadFile = File(...),
+    youtubeId: str = Form(...)): 
+
+
+    video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
+    
+    with open(video_path, "wb") as buffer:
+        shutil.copyfileobj(videoFile.file, buffer)
+
     # 비디오 처리 실행 및 결과 대기
+    keypoints, original_fps = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, video_path)))
     
-    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(video.youtubeId, video_path)))
-    
+    print(original_fps)
+
+    return {"youtubeId": youtubeId, "originalFps" : original_fps}
+
+
+@app.post("/upload/blazepose")
+async def saveVideDataByUserFile(
+    youtubeId: str = Form(...),
+    uuid: str = Form(...)):
+
+    final_video_path = os.path.join(TEMP_DIRECTORY, f"{uuid}.mp4")
+
+    start_time = time.time()
+
+    # 비디오 처리 실행 및 결과 대기
+    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video_user.remote(final_video_path)))
+
     total_time = time.time() - start_time
-    logger.info(f"videoUrl API - YoutubeID: {video.youtubeId}, Total Time: {total_time:.4f} seconds")
+    logger.info(f"userFile API - UUID: {uuid}, Total Time: {total_time:.4f} seconds")
+
+    return {"uuid": uuid, "keypoints": keypoints}
     
-    return {"youtubeId": video.youtubeId, "keypoints": keypoints}
+
 
 @app.post("/upload/userFile")
 async def saveVideDataByUserFile(
     videoFile: UploadFile = File(...),
     youtubeId: str = Form(...)):
+
     start_time = time.time()
     unique_id = str(uuid.uuid4())
 
@@ -91,8 +137,12 @@ async def saveVideDataByUserFile(
 
     # 파일을 TEMP_DIRECTORY에 원래 이름으로 저장
     download_start = time.time()
-    with open(original_video_path, "wb") as buffer:
-        shutil.copyfileobj(videoFile.file, buffer)
+
+    # 수정 전 원본 라인 (Jinwoo)    
+    # with open(original_video_path, "wb") as buffer:
+    #     shutil.copyfileobj(videoFile.file, buffer)
+    
+    await save_file(videoFile, original_video_path)
     download_end = time.time()
 
     # 비디오 파일을 수평으로 뒤집고 임시 파일로 저장
@@ -123,10 +173,18 @@ async def saveVideDataByUserFile(
         convert_start = time.time()
         # 뒤집힌 비디오 파일을 mp4로 변환
         clip = VideoFileClip(flipped_temp_video_path)
-        clip.write_videofile(final_video_path, codec="libx264")
+
+        # 원본 라인 (Jinwoo)
+        # clip.write_videofile(final_video_path, codec="libx264")
+
+        await asyncio.to_thread(clip.write_videofile, final_video_path, codec="libx264")
+
         convert_end = time.time()
 
         extract_audio_from_video(youtube_video_path, youtube_audio_path)
+
+        return {"uuid": unique_id}
+    
     except Exception as e:
         return {"error": str(e)}
     
@@ -134,13 +192,22 @@ async def saveVideDataByUserFile(
     # os.remove(original_video_path)
     # os.remove(flipped_temp_video_path)
 
-    # 비디오 처리 실행 및 결과 대기
-    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video_user.remote(final_video_path)))
 
-    total_time = time.time() - start_time
-    logger.info(f"userFile API - UUID: {unique_id}, Total Time: {total_time:.4f} seconds")
+@app.post("/admin/challenge/mongodb/")
+async def saveVideDataByUserFile(
+    youtubeId:str = Form(...)):
+        logger.info(f"youtubeId: {youtubeId}")
+        
+        youtube_video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
+        start_time = time.time()
+        # 비디오 처리 실행 및 결과 대기
+        keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, youtube_video_path)))
+        total_time = time.time() - start_time
+        logger.info(f"Total Time: {total_time:.4f} seconds")
 
-    return {"uuid": unique_id, "keypoints": keypoints}
+
+
+
 
 
 def extract_audio_from_video(video_file_path, audio_file_path):
@@ -150,3 +217,30 @@ def extract_audio_from_video(video_file_path, audio_file_path):
     except Exception as e:
         print(f"Audio extraction error: {str(e)}")
         raise
+
+async def save_file(file: UploadFile, path: str):
+    async with aiofiles.open(path, 'wb') as out_file:
+        while content := await file.read(1024):  # 파일을 비동기로 읽기
+            await out_file.write(content)  # 파일을 비동기로 쓰기
+
+def double_speed_video(input_file, output_file):
+    command = [
+        'ffmpeg',
+        '-i', input_file,
+        '-filter:v', 'setpts=0.5*PTS',
+        '-filter:a', 'atempo=2.0',
+        output_file
+    ]
+    
+    # 사용 예시
+    input_path = "/path/to/your/input_video.mp4"
+    output_path = "/path/to/your/output_folder/output_2x.mp4"
+
+    try:
+        subprocess.run(command, check=True)
+        print(f"Video speed doubled successfully. Output saved as {output_file}")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e}")
+
+    
+

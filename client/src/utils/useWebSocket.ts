@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
@@ -7,6 +7,7 @@ import { sockUrl } from "axiosInstance/constants";
 const useWebSocket = () => {
   const clientRef = useRef<Client | null>(null);
   const accessToken = useRecoilValue(accessTokenState);
+  const [subscriptions, setSubscriptions] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (!accessToken) return;
@@ -75,17 +76,29 @@ const useWebSocket = () => {
   const subscribeToChannel = useCallback(
     (channel: string, callback: (message: any) => void) => {
       if (clientRef.current && clientRef.current.connected) {
+        // 이미 구독된 채널이 있으면 새 구독을 만들지 않음
+        if (subscriptions[channel]) {
+          console.log(`Already subscribed to channel ${channel}`);
+          return;
+        }
+
         const subscription = clientRef.current.subscribe(channel, (message) => {
           console.log(`Message received from ${channel}:`, message.body);
           callback(JSON.parse(message.body));
         });
+
+        setSubscriptions((prevSubscriptions) => ({
+          ...prevSubscriptions,
+          [channel]: subscription,
+        }));
+        console.log("구독 중인 채널", subscribeToChannel);
+
         console.log(`Subscribed to channel ${channel}`);
-        return subscription;
       } else {
         console.error("WebSocket is not connected");
       }
     },
-    []
+    [subscriptions]
   );
 
   return { connectWebSocket, subscribeToChannel, sendMessage };

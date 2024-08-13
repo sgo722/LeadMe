@@ -4,6 +4,8 @@ import com.ssafy.withme.domain.challenge.Challenge;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+
 @NoArgsConstructor
 @Getter
 public class ChallengeCreateRequest {
@@ -12,10 +14,15 @@ public class ChallengeCreateRequest {
 
     private String url;
 
+    private String title;
+
+    private ArrayList<String> hashtags;
+
     public Challenge toEntity() {
         return Challenge.builder()
                 .youtubeId(youtubeId)
                 .url(url)
+                .title(title)
                 .build();
 
     }

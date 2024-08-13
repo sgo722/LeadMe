@@ -39,3 +39,29 @@ export interface UserProfile {
   loginDateTime: string | null;
   userStatus: string;
 }
+
+// 피드 영상
+export interface Feed {
+  title: string;
+  userChallengeId: number;
+  thumbnail: string;
+}
+
+// 피드 댓글
+export interface Comment {
+  username: string;
+  profileImg: string;
+  content: string;
+  createdData: string;
+  lastModifiedDate: string;
+}
+
+// 챌린지영상
+export interface ChallengeItem {
+  challengeId: number;
+  youtubeId: string;
+  url: string;
+  title: string;
+  thumbnail: string;
+  hashtags: string[];
+}

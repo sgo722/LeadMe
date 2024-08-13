@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeUpdateRequest;
 import com.ssafy.withme.domain.user.User;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeFeedResponse;
+import com.ssafy.withme.global.exception.AuthorizationException;
+import com.ssafy.withme.service.userChallenge.response.*;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
 import com.ssafy.withme.domain.landmark.Landmark;
@@ -23,10 +25,6 @@ import com.ssafy.withme.repository.landmark.LandmarkRepository;
 import com.ssafy.withme.repository.report.ReportRepository;
 import com.ssafy.withme.repository.user.UserRepository;
 import com.ssafy.withme.repository.userChallenge.UserChallengeRepository;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeAnalyzeResponse;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeReportResponse;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeSaveResponse;
-import com.ssafy.withme.service.userChallenge.response.UserChallengeMyPageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -54,11 +53,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.ssafy.withme.domain.challenge.QChallenge.challenge;
 import static com.ssafy.withme.global.error.ErrorCode.*;
 
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@Transactional(readOnly = true)
 public class UserChallengeService {
 
     @Value("${python-server.temp-directory}")
@@ -98,6 +99,8 @@ public class UserChallengeService {
      * @throws IOException
      */
 
+
+    @Transactional
     public UserChallengeAnalyzeResponse analyzeVideo(UserChallengeAnalyzeRequest request, MultipartFile videoFile) throws EntityNotFoundException, IOException {
         // 챌린지 아이디
         Long challengeId = request.getChallengeId();
@@ -110,7 +113,9 @@ public class UserChallengeService {
             throw new EntityNotFoundException(NOT_EXISTS_CHALLENGE);
         }
 
+        // 원본 영상 저장, 수평 반전한 영상 저장, 오디오 추출
         String url = FAST_API_URL + "/upload/userFile";
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -123,17 +128,33 @@ public class UserChallengeService {
         body.add("youtubeId", challenge.getYoutubeId());
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-        // Fast API 반환값
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-
         String result = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(result);
         String uuid = rootNode.path("uuid").asText();
 
+        // =====================================================================================================
+
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        body = new LinkedMultiValueMap<>();
+        body.add("youtubeId", challenge.getYoutubeId());
+        body.add("uuid", uuid);
+
+        // 블레이즈 포즈 추출
+        url = FAST_API_URL + "/upload/blazepose";
+
+
+        requestEntity = new HttpEntity<>(body, headers);
+        // Fast API 반환값
+        response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+        result = response.getBody();
+
         // 역직렬화한 유저 포즈 정보
         List<Frame> userFrames = deserialize(result);
+
 
         // 저장된 챌린지 포즈 정보
         Landmark landmark = landmarkRepository.findByYoutubeId(challenge.getYoutubeId());
@@ -148,7 +169,7 @@ public class UserChallengeService {
                 .collect(Collectors.toList());
 
         Map<String, Object> calculateResult = PoseComparison.calculatePoseScore(userFrames, challengeFrames);
-        log.info(" 반환 점수 : {}", calculateResult.get("score"));
+        log.info(" 반환 점수 : {}", calculateResult.get("totalScore"));
 
         Report report = Report.builder()
                 .uuid(uuid)
@@ -157,7 +178,6 @@ public class UserChallengeService {
                 .challengeId(request.getChallengeId())
                 .build();
         Report save = reportRepository.insert(report);
-        System.out.println(save);
 
         return UserChallengeAnalyzeResponse.builder()
                 .uuid(uuid)
@@ -166,8 +186,7 @@ public class UserChallengeService {
 
 
     /**
-     * 파이썬 서버에서 받아온 keypoints 값을 역직렬화 진행
-     *
+     * 파이썬 서버에서 받아온 스켈레톤데이터를 값을 역직렬화 진행
      * @param jsonResponse
      * @return List<Frame>
      * @throws JsonProcessingException
@@ -200,13 +219,14 @@ public class UserChallengeService {
 
 
     /**
-     * uuid와 fileName을 받아 임시저장 파일에서 해당 영상을 찾아 영구저장 파일로 이동시키고 파일 이름을 변경하여 영구저장한다.
-     *
+     * 임시저장된 유저 영상파일을 영구저장한다.
+     * 유저가 챌린지를 따라 한 후 업로드/저장을 한 경우 사용된다.
      * @param request
      */
-    public UserChallengeSaveResponse saveUserFile(UserChallengeSaveRequest request) {
+
+    @Transactional
+    public UserChallengeSaveResponse saveUserFile(User user, UserChallengeSaveRequest request) {
         Challenge challenge = challengeRepository.findById(request.getChallengeId()).orElse(null);
-//        User user = userRepository.findById(request.getUserId()).get();
 
         log.info("설정된 폴더 경로 " + TEMP_DIRECTORY);
         log.info("uuid : " + request.getUuid());
@@ -230,7 +250,7 @@ public class UserChallengeService {
 
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
-//                    .user(user)
+                    .user(user)
                     .challenge(challenge)
                     .videoPath(PERMANENT_DIRECTORY + "/" + finalFileName)
                     .access(request.getAccess())
@@ -252,10 +272,12 @@ public class UserChallengeService {
     }
 
     /**
-     * 유저 영상 uuid를 받아 임시저장폴더에서 해당 영상을 찾아서 삭제한다.
-     *
+     * 임시저장된 파일을 영구 삭제한다.
+     * 유저가 챌린지를 따라 한 후 재촬영/취소를 한 경우 사용된다.
      * @param request
      */
+
+    @Transactional
     public void deleteUserFile(UserChallengeDeleteRequest request) {
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + ".mp4");
 
@@ -275,17 +297,19 @@ public class UserChallengeService {
 
     /**
      * uuid를 기반으로 영상 분석데이터를 조회한다.
-     *
      * @param uuid
      * @return
      */
 
+
+    @Transactional
     public UserChallengeReportResponse findReportByUuid(String uuid) throws IOException, InterruptedException {
         Report report = reportRepository.findByUuid(uuid);
 //        UserChallenge userChallenge = userChallengeRepository.findByUuid(uuid);
         Challenge challenge = challengeRepository.findById(report.getChallengeId()).get();
         Long challengeId = challenge.getId();
         String youtubeId = challenge.getYoutubeId();
+        int originalFps = challenge.getOriginalFps();
         String videoPath = TEMP_DIRECTORY + "/" + uuid + ".mp4";
         String audioPath = AUDIO_DIRECTORY + "/" + uuid + ".mp3";
         String outputPath = TEMP_DIRECTORY + "/" + uuid + "_merged.mp4";
@@ -293,19 +317,24 @@ public class UserChallengeService {
         byte[] mergedVideoFile = mergeVideoAndAudio(videoPath, audioPath, outputPath);
 
 
-        return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, mergedVideoFile);
+        return UserChallengeReportResponse.ofResponse(report, challengeId, youtubeId, mergedVideoFile, originalFps);
     }
 
+    /**
+     * leadme 페이지에서 사용자들이 업로드한 영상을 조회한다.
+     * @param pageable
+     * @return
+     */
 
-    public List<UserChallengeFeedResponse> findUserChallengeByPageable(Pageable pageable) {
+    public UserChallengeFeedResponses findUserChallengeByPageable(Pageable pageable) {
         //유저 영상 중 access = "public" 인 영상들을 페이징 조회한다.
         Page<UserChallenge> findUserChallenge = userChallengeRepository.findByAccessOrderByCreatedDateDesc("public", pageable);
-
-        return findUserChallenge.stream()
+        List<UserChallengeFeedResponse> userChallengeFeedResponse = findUserChallenge.stream()
                 .map(userChallenge -> {
                     try {
-                        byte[] thumbnail = Files.readAllBytes(Paths.get(userChallenge.getThumbnailPath()));
-                        return UserChallengeFeedResponse.ofResponse(userChallenge, thumbnail);
+                        User user = userChallenge.getUser();
+                        byte[] video = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
+                        return UserChallengeFeedResponse.ofResponse(userChallenge, user, video);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
@@ -314,8 +343,24 @@ public class UserChallengeService {
                 })
                 .filter(Objects::nonNull) // null 값을 필터링하여 스트림에서 제외
                 .collect(Collectors.toList());
+
+        int pageSize = findUserChallenge.getPageable().getPageSize();
+        long totalElements = findUserChallenge.getTotalElements();
+        int totalPages = findUserChallenge.getTotalPages();
+        int size = findUserChallenge.getSize();
+
+        return new UserChallengeFeedResponses(size, totalElements, totalPages, pageSize, userChallengeFeedResponse);
     }
 
+    /**
+     * 유저영상의 챌린지 음악을 삽입한다.
+     * @param videoPath
+     * @param audioPath
+     * @param outputPath
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     */
     private byte[] mergeVideoAndAudio(String videoPath, String audioPath, String outputPath) throws IOException, InterruptedException {
         // 입력 파일 경로 확인
         System.out.println(videoPath);
@@ -354,6 +399,14 @@ public class UserChallengeService {
         return mergedFile;
     }
 
+    /**
+     * 썸네일 추출 기능
+     * @param videoPath
+     * @param fileName
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     */
     private String extractThumbnail(Path videoPath, String fileName) throws IOException, InterruptedException {
         // 비디오 길이 확인
         String durationCommand = String.format("ffmpeg -i %s", videoPath.toString());
@@ -414,11 +467,20 @@ public class UserChallengeService {
         return thumbnailPath.toString();
     }
 
+    /**
+     * 유저의 본인, 타인의 개인피드를 조회한다.
+     * @param pageable
+     * @param user
+     * @param viewUserId
+     * @return
+     */
     public Page<UserChallengeMyPageResponse> getUserChallengeByUser(Pageable pageable, User user, Long viewUserId) {
+        // 개인 피드를 조회한 유저를 조회한다.
         User findUser = userRepository.findById(viewUserId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_EXISTS));
 
 
+        // 본인의 개인 피드를 조회한 경우 - access값이 private, public 모두 보여준다
         if(findUser.equals(user)){
             Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdOrderByCreatedDateDesc(user.getId(), pageable);
             return userChallengeByPaging
@@ -432,6 +494,8 @@ public class UserChallengeService {
                         }
                     });
         }
+
+        // 타인의 개인피드를 조회한 경우 - access값이 public인 영상만 보여준다.
         if(!findUser.equals(user)){
             Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdAndAccessOrderByCreatedDateDesc(findUser.getId(), "public", pageable);
             return userChallengeByPaging
@@ -447,5 +511,38 @@ public class UserChallengeService {
 
         }
         return null;
+    }
+
+
+    @Transactional
+    public void delete(User user, Long userChallengeId) {
+        UserChallenge userChallenge = userChallengeRepository.findById(userChallengeId).orElseThrow(() -> {
+            throw new EntityNotFoundException(NOT_EXISTS_USER_CHALLENGE_FILE);
+        });
+
+
+        User userChallengeMakeUser = userChallenge.getUser();
+        if(user != userChallengeMakeUser){
+            throw new AuthorizationException(NOT_AUTHORIZATION);
+        }
+
+        userChallengeRepository.deleteById(userChallengeId);
+    }
+
+
+    @Transactional
+    public UserChallengeUpdateResponse update(User user, UserChallengeUpdateRequest request) {
+        UserChallenge userChallenge = userChallengeRepository.findById(request.getUserChallengeId()).orElseThrow(() -> {
+            throw new EntityNotFoundException(NOT_EXISTS_USER_CHALLENGE_FILE);
+        });
+
+        User userChallengeMakeUser = userChallenge.getUser();
+        if(user != userChallengeMakeUser){
+            throw new AuthorizationException(NOT_AUTHORIZATION);
+        }
+
+        String updateTitle = request.getTitle();
+        userChallenge.changeTitle(updateTitle);
+        return UserChallengeUpdateResponse.ofResponse(userChallenge);
     }
 }

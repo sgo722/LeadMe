@@ -18,11 +18,14 @@ public class ChallengeCreateResponse {
 
     private String url;
 
+    private String title;
+
     @Builder
-    private ChallengeCreateResponse(Long challengeId, String youtubeId, String url) {
+    private ChallengeCreateResponse(Long challengeId, String youtubeId, String url, String title) {
         this.challengeId = challengeId;
         this.youtubeId = youtubeId;
         this.url = url;
+        this.title = title;
     }
 
     public static ChallengeCreateResponse toResponse(Challenge challenge){
@@ -30,6 +33,7 @@ public class ChallengeCreateResponse {
                 .challengeId(challenge.getId())
                 .url(challenge.getUrl())
                 .youtubeId(challenge.getYoutubeId())
+                .title(challenge.getTitle())
                 .build();
     }
 }

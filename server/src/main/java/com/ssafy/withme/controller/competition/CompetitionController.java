@@ -2,6 +2,9 @@ package com.ssafy.withme.controller.competition;
 
 import com.ssafy.withme.controller.competition.request.CompetitionCreateRequest;
 import com.ssafy.withme.controller.competition.request.PasswordVerificationRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
+import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.SessionNotFoundException;
 import com.ssafy.withme.global.response.SuccessResponse;
@@ -14,7 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,15 +42,20 @@ public class CompetitionController {
      * @throws OpenViduHttpException
      */
     @PostMapping("/api/v1/sessions")
-    public SuccessResponse<?> initializeSession(@RequestBody(required = false) CompetitionCreateRequest request) throws OpenViduJavaClientException, OpenViduHttpException {
+    public SuccessResponse<?> initializeSession(@RequestBody(required = false) CompetitionCreateRequest request, @CurrentUser User user) throws OpenViduJavaClientException, OpenViduHttpException {
 
-        String userId = "test";
         //SessionProperties properties = SessionProperties.fromJson().build();
         Session session = openVidu.createSession();
 
-        competitionService.create(request, session.getSessionId(), userId);
+        competitionService.create(request, session.getSessionId(), user);
 
-        return SuccessResponse.of(session.getSessionId());
+        String token = session.createConnection().getToken();
+
+        HashMap<String, Object> response = new HashMap<>();
+        response.put("sessionId", session.getSessionId());
+        response.put("token", token);
+
+        return SuccessResponse.of(response);
     }
 
     /**
@@ -57,7 +67,7 @@ public class CompetitionController {
      * @throws OpenViduHttpException
      */
     @PostMapping("/api/v1/sessions/{sessionId}/connections")
-    public SuccessResponse<?> createConnection(@PathVariable("sessionId") String sessionId, @RequestBody(required = false) PasswordVerificationRequest request) throws OpenViduJavaClientException, OpenViduHttpException {
+    public SuccessResponse<?> createConnection(@PathVariable("sessionId") String sessionId, @RequestBody(required = false) PasswordVerificationRequest request) throws OpenViduJavaClientException, OpenViduHttpException, InterruptedException {
 
         Session session = openVidu.getActiveSession(sessionId);
 
@@ -66,8 +76,17 @@ public class CompetitionController {
         }
 
         Connection connection = session.createConnection();
-
         HashMap<String, Object> response = new HashMap<>();
+
+        Long activeConnectionSize = competitionService.getSessionCount(sessionId);
+        log.info("Current number of connections in session " + sessionId + ": " + activeConnectionSize);
+
+        // 해당 세션 인원 1 증가하며 2명 이상인 경우에는 꽉 찼다고 반환한다.
+        if(!competitionService.incrementIfLessThenTwo(sessionId)) {
+            response.put("isFulled",  true);
+            return SuccessResponse.of(response);
+        }
+
         // 비밀번호가 설정된 경쟁전에 참여하는 경우
         if(request != null) {
             if(competitionService.verifyCompetitionsPassword(request)) {
@@ -121,6 +140,43 @@ public class CompetitionController {
         return SuccessResponse.of(response);
     }
 
+    /**
+     * 세션 아이디를 활용해 유저 아이디 반환
+     * @param sessionId
+     * @return
+     */
+    @GetMapping("api/v1/sessions/{sessionId}/host")
+    public SuccessResponse<?> getCreateUserId(@PathVariable String sessionId) {
+        return SuccessResponse.of(competitionService.getCreateUserId(sessionId));
+    }
+
+    /**
+     * 세션에서 나간 경우 세션 삭제 또는 커넥트 카운트 감소
+     * @param sessionId
+     * @param user
+     */
+    @DeleteMapping("api/v1/session/{sessionId}")
+    public void deleteSession(@PathVariable String sessionId, @CurrentUser User user) {
+        competitionService.deleteSession(sessionId, user);
+    }
+
+    /**
+     * 경쟁전 점수 반환
+     * @param request
+     * @param videoFile
+     * @param user
+     * @return
+     * @throws IOException
+     */
+    @PostMapping("api/v1/competition/result")
+    public SuccessResponse<?> getCompetitionResult(
+            @RequestPart("request") UserChallengeAnalyzeRequest request,
+            @RequestPart MultipartFile videoFile,
+            @CurrentUser User user) throws IOException {
+        log.info(getClass().getSimpleName() + Thread.currentThread().getStackTrace()[1].getMethodName() + "===================================");
+
+        return SuccessResponse.of(competitionService.getCompetitionResult(request, videoFile));
+    }
 }
 
 

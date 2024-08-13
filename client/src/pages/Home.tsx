@@ -1,34 +1,13 @@
-import React, { useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useSetRecoilState } from "recoil";
-import {
-  accessTokenState,
-  accessTokenExpireTimeState,
-  refreshTokenState,
-  refreshTokenExpireTimeState,
-  userProfileState,
-} from "stores/authAtom";
+import React from "react";
 import styled from "styled-components";
 import Header from "components/Header";
 import { SearchBar } from "components/SearchBar";
-import axios from "axios";
-import { useMutation } from "@tanstack/react-query";
-import { baseUrl } from "axiosInstance/constants";
 import img1 from "assets/image/img1.png";
 import img2 from "assets/image/img2.png";
-import { UserProfile } from "types";
 
 interface ImageData {
   src: string;
   alt: string;
-}
-
-interface ResponseData {
-  code: number;
-  message: string;
-  data: UserProfile;
-  errors: any[];
-  isSuccess: boolean;
 }
 
 const imageData: ImageData[] = [
@@ -39,91 +18,6 @@ const imageData: ImageData[] = [
 ];
 
 const Home: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const setAccessToken = useSetRecoilState(accessTokenState);
-  const setAccessTokenExpireTime = useSetRecoilState(
-    accessTokenExpireTimeState
-  );
-  const setRefreshToken = useSetRecoilState(refreshTokenState);
-  const setRefreshTokenExpireTime = useSetRecoilState(
-    refreshTokenExpireTimeState
-  );
-  const setUserProfile = useSetRecoilState(userProfileState);
-
-  const mutation = useMutation<UserProfile, Error, string>({
-    mutationFn: async (token: string): Promise<UserProfile> => {
-      const response = await axios.get<ResponseData>(
-        `${baseUrl}/api/v1/user/me`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      return response.data.data;
-    },
-    onSuccess: (data: UserProfile) => {
-      setUserProfile(data); // 성공 시 유저 프로필 저장
-      sessionStorage.setItem("user_profile", JSON.stringify(data)); // 세션 스토리지에 유저 프로필 저장
-    },
-    onError: (error: Error) => {
-      console.error("Error fetching data:", error);
-    },
-  });
-
-  const initialFetchRef = useRef(false);
-
-  useEffect(() => {
-    if (initialFetchRef.current) return;
-
-    const params = new URLSearchParams(location.search);
-    const accessToken = params.get("accessToken");
-    const accessTokenExpireTime = params.get("accessTokenExpireTime");
-    const refreshToken = params.get("refreshToken");
-    const refreshTokenExpireTime = params.get("refreshTokenExpireTime");
-
-    if (accessToken) {
-      // URL에서 토큰 관련 데이터 추출 후 세션 스토리지에 저장
-      sessionStorage.setItem("access_token", accessToken);
-      sessionStorage.setItem(
-        "access_token_expire_time",
-        accessTokenExpireTime || ""
-      );
-      sessionStorage.setItem("refresh_token", refreshToken || "");
-      sessionStorage.setItem(
-        "refresh_token_expire_time",
-        refreshTokenExpireTime || ""
-      );
-
-      setAccessToken(accessToken);
-      setAccessTokenExpireTime(accessTokenExpireTime || "");
-      setRefreshToken(refreshToken || "");
-      setRefreshTokenExpireTime(refreshTokenExpireTime || "");
-
-      params.delete("accessToken");
-      params.delete("accessTokenExpireTime");
-      params.delete("refreshToken");
-      params.delete("refreshTokenExpireTime");
-
-      navigate(
-        {
-          pathname: location.pathname,
-          search: params.toString(),
-        },
-        { replace: true }
-      );
-
-      mutation.mutate(accessToken);
-      initialFetchRef.current = true; // 중복 실행 방지용
-    }
-  }, [
-    location,
-    navigate,
-    setAccessToken,
-    setAccessTokenExpireTime,
-    setRefreshToken,
-    setRefreshTokenExpireTime,
-  ]);
-
   return (
     <>
       <Header />
