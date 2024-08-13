@@ -576,8 +576,9 @@ export const BattleRoom: React.FC = () => {
 
         switch (signalType) {
           case "user-joined":
-            if (signalData.name) {
+            if (signalData.name && signalData.name !== userProfile?.name) {
               setPeerName(signalData.name);
+              console.log("Peer joined:", signalData.name);
             }
             break;
           case "user-left":
@@ -694,6 +695,12 @@ export const BattleRoom: React.FC = () => {
         const subscriber = session.subscribe(event.stream, "subscriber");
         // 구독자 목록에서 새 구독자 추가
         setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+        // 새 참가자에게 자신의 이름을 전송
+        session.signal({
+          data: JSON.stringify({ name: userProfile?.name }),
+          type: "user-joined",
+          to: [event.stream.connection],
+        });
       });
 
       // 참가자가 퇴장할때 호출
@@ -702,6 +709,17 @@ export const BattleRoom: React.FC = () => {
           prevSubscribers.filter((sub) => sub !== event.stream.streamManager)
         );
         handleCancel();
+      });
+
+      // 새 참가자가 연결될 때 자신의 이름을 전송
+      session.on("connectionCreated", (event) => {
+        if (event.connection !== session.connection) {
+          session.signal({
+            data: JSON.stringify({ name: userProfile?.name }),
+            type: "user-joined",
+            to: [event.connection],
+          });
+        }
       });
 
       // 세션에 연결
