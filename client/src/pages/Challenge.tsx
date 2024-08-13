@@ -36,7 +36,7 @@ const Challenge: React.FC = () => {
   }, []);
 
   const handleClick = (id: string) => {
-    navigate(`/practice/${id}`);
+    navigate(`/challenge/${id}`);
   };
 
   const sections = [];
