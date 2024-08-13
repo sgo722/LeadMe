@@ -19,18 +19,21 @@ public class UserChallengeReportResponse {
 
     private byte[] videoFile;
 
+    private int originalFps;
+
 
     @Builder
-    private UserChallengeReportResponse(String uuid, Long challengeId, String youtubeId, Double totalScore, double[] scoreHistory, byte[] videoFile) {
+    private UserChallengeReportResponse(String uuid, Long challengeId, String youtubeId, Double totalScore, double[] scoreHistory, byte[] videoFile, int originalFps) {
         this.uuid = uuid;
         this.challengeId = challengeId;
         this.youtubeId = youtubeId;
         this.totalScore = totalScore;
         this.scoreHistory = scoreHistory;
         this.videoFile = videoFile;
+        this.originalFps = originalFps;
     }
 
-    public static UserChallengeReportResponse ofResponse(Report report, Long challengeId, String youtubeId, byte[] videoFile){
+    public static UserChallengeReportResponse ofResponse(Report report, Long challengeId, String youtubeId, byte[] videoFile, int originalFps){
         return UserChallengeReportResponse.builder()
                 .uuid(report.getUuid())
                 .challengeId(challengeId)
@@ -38,6 +41,7 @@ public class UserChallengeReportResponse {
                 .totalScore(report.getTotalScore())
                 .scoreHistory(report.getScoreHistory())
                 .videoFile(videoFile)
+                .originalFps(originalFps)
                 .build();
     }
 
