@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FaLock } from "react-icons/fa";
 import { FaLockOpen } from "react-icons/fa";
-import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { useRecoilValue } from "recoil";
 import { useNavigate } from "react-router-dom";
 import { userProfileState } from "stores/authAtom";
-import { baseUrl } from "axiosInstance/constants";
 import { ResponseData } from "types";
+import { axiosInstance } from "axiosInstance/apiClient";
+import { getJWTHeader } from "axiosInstance/apiClient";
 
 interface scoreData {
   uuid: string;
@@ -52,9 +52,10 @@ const UpdateModal: React.FC<ModalProps> = ({ isOpen, onClose, reportData }) => {
         access: access,
       };
 
-      const response = await axios.post<ResponseData<UploadData>>(
-        `${baseUrl}/api/v1/userChallenge/temporary/save`,
-        requestData
+      const response = await axiosInstance.post<ResponseData<UploadData>>(
+        "/api/v1/userChallenge/temporary/save",
+        requestData,
+        { headers: getJWTHeader() }
       );
 
       if (!response.data.isSuccess) {
@@ -68,7 +69,7 @@ const UpdateModal: React.FC<ModalProps> = ({ isOpen, onClose, reportData }) => {
       console.log("Response:", data);
       alert("업로드 완료");
       onClose(); // 요청이 성공하면 모달 닫기
-      navigate(`/mypage/${data.userChallengeId}`); // 업로드 된 영상 디테일 페이지로 이동 (수정 필요)
+      navigate(`/mypage`); // 업로드 된 영상 디테일 페이지로 이동 (수정 필요)
     },
     onError: (error) => {
       console.error("Error uploading data:", error);

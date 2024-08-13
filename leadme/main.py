@@ -92,9 +92,11 @@ async def saveChallenge(
         shutil.copyfileobj(videoFile.file, buffer)
 
     # 비디오 처리 실행 및 결과 대기
-    keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, video_path)))
+    keypoints, original_fps = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, video_path)))
     
-    return {"youtubeId": youtubeId}
+    print(original_fps)
+
+    return {"youtubeId": youtubeId, "originalFps" : original_fps}
 
 
 @app.post("/upload/blazepose")
@@ -191,6 +193,21 @@ async def saveVideDataByUserFile(
     # os.remove(flipped_temp_video_path)
 
 
+@app.post("/admin/challenge/mongodb/")
+async def saveVideDataByUserFile(
+    youtubeId:str = Form(...)):
+        logger.info(f"youtubeId: {youtubeId}")
+        
+        youtube_video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
+        start_time = time.time()
+        # 비디오 처리 실행 및 결과 대기
+        keypoints = await asyncio.to_thread(lambda: ray.get(ray_process_video.remote(youtubeId, youtube_video_path)))
+        total_time = time.time() - start_time
+        logger.info(f"Total Time: {total_time:.4f} seconds")
+
+
+
+
 
 
 def extract_audio_from_video(video_file_path, audio_file_path):
@@ -205,3 +222,25 @@ async def save_file(file: UploadFile, path: str):
     async with aiofiles.open(path, 'wb') as out_file:
         while content := await file.read(1024):  # 파일을 비동기로 읽기
             await out_file.write(content)  # 파일을 비동기로 쓰기
+
+def double_speed_video(input_file, output_file):
+    command = [
+        'ffmpeg',
+        '-i', input_file,
+        '-filter:v', 'setpts=0.5*PTS',
+        '-filter:a', 'atempo=2.0',
+        output_file
+    ]
+    
+    # 사용 예시
+    input_path = "/path/to/your/input_video.mp4"
+    output_path = "/path/to/your/output_folder/output_2x.mp4"
+
+    try:
+        subprocess.run(command, check=True)
+        print(f"Video speed doubled successfully. Output saved as {output_file}")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e}")
+
+    
+

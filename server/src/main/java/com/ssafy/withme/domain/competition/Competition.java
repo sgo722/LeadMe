@@ -1,5 +1,6 @@
 package com.ssafy.withme.domain.competition;
 
+import com.ssafy.withme.domain.BaseEntity;
 import com.ssafy.withme.domain.competition.constant.CompetitionStatus;
 import com.ssafy.withme.domain.user.User;
 import jakarta.persistence.*;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 @Getter
-public class Competition {
+public class Competition extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

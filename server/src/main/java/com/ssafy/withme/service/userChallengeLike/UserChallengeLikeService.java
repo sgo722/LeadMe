@@ -62,10 +62,12 @@ public class UserChallengeLikeService {
         if(isLikeBefore) {
             // 좋아요 취소 -> redis에 저장된 유저 좋아요 수 감소
             zSetOperations.incrementScore(key, user.getNickname(), -1);
+            userChallenge.clickLike(-1);
         }
         else {
             // 좋아요 -> redis에 저장된 유저 좋아요 수 증가
             zSetOperations.incrementScore(key, user.getNickname(), 1);
+            userChallenge.clickLike(1);
         }
 
     }

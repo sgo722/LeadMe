@@ -106,6 +106,7 @@ export const BattleRoom: React.FC = () => {
     "win" | "lose" | "draw" | null
   >(null); // 배틀 결과
 
+  const OVRef = useRef<OpenVidu | null>(null); // Openvidu 객체를 참조하기 위한 ref
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null); // 유튜브플레이어 참조
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오 참조
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -126,7 +127,7 @@ export const BattleRoom: React.FC = () => {
     },
     onSuccess: (data) => {
       const score = Math.floor(data.data * 100);
-      console.log("성공했음 반환값:", score);
+      console.log("영상제출 성공, 반환값:", score);
       // 내 점수 입력
       setMyScore(score);
       setIsSubmitting(false);
@@ -155,6 +156,27 @@ export const BattleRoom: React.FC = () => {
     },
     enabled: !!selectedYoutubeId,
   });
+  // 세션 클린업 함수
+  const cleanupSession = useCallback(() => {
+    if (session) {
+      session.disconnect();
+      setSession(null);
+    }
+    if (publisher) {
+      publisher.stream.disposeWebRtcPeer();
+      publisher.off("streamCreated");
+      publisher.off("streamDestroyed");
+    }
+    subscribers.forEach((subscriber) => {
+      subscriber.stream.disposeWebRtcPeer();
+    });
+    if (OVRef.current) {
+      OVRef.current = null;
+    }
+    setSession(null);
+    setPublisher(null);
+    setSubscribers([]);
+  }, [session, publisher, subscribers]);
 
   // 블레이즈포즈 안정화되면 지우기
   useEffect(() => {
@@ -223,25 +245,51 @@ export const BattleRoom: React.FC = () => {
   // 방 나가는 뮤테이션
   const exitSessionMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      // 방장이 나갈때 전송할 시그널
-      if (isHost && session) {
-        await session.signal({
-          data: JSON.stringify({ hostLeft: true }),
-          type: "host-left",
-        });
-      }
       await axiosInstance.delete(`/api/v1/session/${sessionId}`, {
         headers: getJWTHeader(),
       });
     },
     onSuccess: () => {
       console.log("세션 종료 성공");
-      nav("/battle");
+      cleanupSession();
     },
     onError: (error) => {
       console.error("세션 종료 실패:", error);
     },
   });
+  // 나가기 버튼 클릭 시 실핼될 함수
+  const handleExit = async () => {
+    if (session) {
+      if (isHost) {
+        const confirmed = window.confirm(
+          "방장이 나가면 방이 사라집니다. 나가시겠습니까?"
+        );
+        if (confirmed) {
+          // 방장이 나갈 때 전송할 시그널
+          await session.signal({
+            data: JSON.stringify({ hostLeft: true }),
+            type: "host-left",
+          });
+          exitSessionMutation.mutate(session.sessionId, {
+            onSuccess: () => {
+              cleanupSession();
+              nav("/battle");
+            },
+          });
+        }
+      } else {
+        const confirmed = window.confirm("배틀룸을 나가시겠습니까?");
+        if (confirmed) {
+          exitSessionMutation.mutate(session.sessionId, {
+            onSuccess: () => {
+              cleanupSession();
+              nav("/battle");
+            },
+          });
+        }
+      }
+    }
+  };
 
   // 비디오 선택 취소 핸들러
   const handleClose = () => {
@@ -344,6 +392,9 @@ export const BattleRoom: React.FC = () => {
       // 준비 상태 초기화
       setMyReady(false);
       setPeerReady(false);
+      //녹화 상태 초기화
+      setIsRecording(false);
+      setRecordedBlob(null);
     }
   }, [youtubePlayerRef]);
 
@@ -400,7 +451,7 @@ export const BattleRoom: React.FC = () => {
 
   // 녹화 데이터 처리, 영상 제출 api 호출
   useEffect(() => {
-    if (recordedBlob && recordedBlob.size > 0) {
+    if (battleStart && recordedBlob && recordedBlob.size > 0) {
       console.log("녹화된 영상 크기:", recordedBlob.size);
 
       const formData = new FormData();
@@ -424,7 +475,13 @@ export const BattleRoom: React.FC = () => {
       // 처리 후 초기화
       setRecordedBlob(null);
     }
-  }, [recordedBlob, selectedVideo, submitRecordedVideoMutation, userProfile]);
+  }, [
+    recordedBlob,
+    selectedVideo,
+    submitRecordedVideoMutation,
+    userProfile,
+    battleStart,
+  ]);
 
   // 녹화 중지 함수
   const stopRecording = useCallback(() => {
@@ -465,12 +522,17 @@ export const BattleRoom: React.FC = () => {
   }, [battleStart, countdown]);
 
   // 방장이 나가면 방 폭파시키는 함수
-  const handleHostLeft = useCallback(async () => {
+  const handleHostLeft = useCallback(() => {
     alert("방장이 퇴장했습니다. 배틀룸을 나갑니다.");
     if (session) {
-      await exitSessionMutation.mutateAsync(session.sessionId);
+      exitSessionMutation.mutate(session.sessionId, {
+        onSuccess: () => {
+          cleanupSession();
+          nav("/battle");
+        },
+      });
     }
-  }, [session, exitSessionMutation]);
+  }, [session, exitSessionMutation, cleanupSession, nav]);
 
   // 신호 처리를 위한 useEffect
   useEffect(() => {
@@ -555,6 +617,7 @@ export const BattleRoom: React.FC = () => {
             }
             break;
           case "host-left":
+            console.log("방장이 나갔습니다");
             if (signalData.hostLeft) {
               handleHostLeft();
             }
@@ -578,7 +641,6 @@ export const BattleRoom: React.FC = () => {
     startBattle,
     videoList?.data,
   ]);
-  //startBattle, videoList 이것도 원래 같이 넣었었음
 
   // 점수 비교 및 결과 설정
   useEffect(() => {
@@ -592,77 +654,83 @@ export const BattleRoom: React.FC = () => {
       if (myScore === peerScore) {
         setBattleResult("draw");
       }
+      setBattleStart(false);
     }
   }, [myScore, peerScore]);
 
+  const initializeSession = useCallback(async () => {
+    try {
+      // OpenVidu 객체 생성
+      const OV = new OpenVidu();
+      // 새 세션 초기화
+      const session = OV.initSession();
+
+      // 사용자 웹캠 접근 권한 요청
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+
+      // 새 스트림이 생성될 때 실행될 이벤트 리스너
+      session.on("streamCreated", (event: StreamEvent) => {
+        // 새 스트림 구독
+        const subscriber = session.subscribe(event.stream, "subscriber");
+        // 구독자 목록에서 새 구독자 추가
+        setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+      });
+
+      // 참가자가 퇴장할때 호출
+      session.on("streamDestroyed", (event: StreamEvent) => {
+        setSubscribers((prevSubscribers) =>
+          prevSubscribers.filter((sub) => sub !== event.stream.streamManager)
+        );
+        handleCancel();
+      });
+
+      // 세션에 연결
+      await session.connect(token);
+
+      // 로컬 비디오 스트림 발행자 초기화
+      const publisher = await OV.initPublisherAsync(undefined, {
+        audioSource: undefined,
+        videoSource: undefined,
+        publishAudio: true,
+        publishVideo: true,
+        resolution: "640x480",
+        frameRate: 30,
+        insertMode: "APPEND",
+        mirror: false,
+      });
+
+      // 발행자를 세션에 게시
+      await session.publish(publisher);
+
+      // 세션과 발행자 상태를 업데이트
+      setSession(session);
+      setPublisher(publisher);
+    } catch (error) {
+      console.error("Error initializing session:", error);
+    }
+  }, [token]); // token을 의존성 배열에 추가
+
   // 컴포넌트가 마운트될때나 token이 변경될 때 실행
   useEffect(() => {
-    // OpenVidu 객체 생성
-    const OV = new OpenVidu();
-    // 새 세션 초기화
-    const session = OV.initSession();
-
-    // 세션을 초기화 하는 비동기 함수
-    const initializeSession = async () => {
-      try {
-        // 사용자 웹캠 접근 권한 요청
-        await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-
-        // 새 스트림이 생성될 때 실행될 이벤트 리스너
-        session.on("streamCreated", (event: StreamEvent) => {
-          // 새 스트림 구독
-          const subscriber = session.subscribe(event.stream, "subscriber");
-          // 구독자 목록에서 새 구독자 추가
-          setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
-        });
-        // 세션에 연결
-        await session.connect(token);
-
-        // 로컬 비디오 스트림 발행자 초기화
-        const publisher = await OV.initPublisherAsync(undefined, {
-          audioSource: undefined,
-          videoSource: undefined,
-          publishAudio: true,
-          publishVideo: true,
-          resolution: "640x480",
-          frameRate: 30,
-          insertMode: "APPEND",
-          mirror: false,
-        });
-        // 발행자를 세션에 게시
-        await session.publish(publisher);
-        // 세션과 발행자 상태를 업데이트
-        setSession(session);
-        setPublisher(publisher);
-      } catch (error) {
-        console.error("Error initializing session:", error);
-        // setError("세션 초기화 중 오류가 발생했습니다.");
-      }
-    };
-    // 세션 초기화 함수 실행
+    console.log("BattleRoom mounted");
     initializeSession();
 
-    // 클린업
     return () => {
-      // 세션 연결 끊기
-      setSession((currentSession: Session | null) => {
-        if (currentSession) currentSession.disconnect();
-        return null;
+      console.log("BattleRoom unmounted");
+      if (session) {
+        session.disconnect();
+      }
+      if (publisher) {
+        publisher.stream.disposeWebRtcPeer();
+      }
+      subscribers.forEach((subscriber) => {
+        subscriber.stream.disposeWebRtcPeer();
       });
-      // 모든 구독자의 WebRTC 피어 연결 정리
-      setSubscribers((currentSubscribers: Subscriber[]) => {
-        currentSubscribers.forEach((subscriber) =>
-          subscriber.stream.disposeWebRtcPeer()
-        );
-        return [];
-      });
-      // 발행자가 있으면 그 WebRTC 피어 연결도 정리
-      setPublisher((currentPublisher: Publisher | null) => {
-        if (currentPublisher) currentPublisher.stream.disposeWebRtcPeer();
-        return null;
-      });
+      setSession(null);
+      setPublisher(null);
+      setSubscribers([]);
     };
-  }, [token]);
+  }, []); // 빈 의존성 배열
 
   // 검색어 처리
   const filteredVideoList = useMemo(() => {
@@ -741,6 +809,21 @@ export const BattleRoom: React.FC = () => {
     [challengeQuery.data]
   );
 
+  // 캔버스를 초기화하는 함수
+  const clearCanvas = useCallback(() => {
+    if (webcamCanvasRef.current) {
+      const ctx = webcamCanvasRef.current.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(
+          0,
+          0,
+          webcamCanvasRef.current.width,
+          webcamCanvasRef.current.height
+        );
+      }
+    }
+  }, []);
+
   // 캔버스 애니메이션 로직
   useEffect(() => {
     let animationFrameId: number;
@@ -755,6 +838,7 @@ export const BattleRoom: React.FC = () => {
         !challengeQuery.data?.data?.landmarks ||
         challengeQuery.data.data.landmarks.length === 0
       ) {
+        clearCanvas();
         animationFrameId = requestAnimationFrame(animate);
         return;
       }
@@ -771,8 +855,11 @@ export const BattleRoom: React.FC = () => {
 
     animationFrameId = requestAnimationFrame(animate);
 
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isYouTubePlaying, challengeQuery.data, drawBlazePoseData]);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      clearCanvas(); // 컴포넌트가 언마운트될 때 캔버스 초기화
+    };
+  }, [isYouTubePlaying, challengeQuery.data, drawBlazePoseData, clearCanvas]);
 
   // youtube 이벤트 핸들러
   const handleYouTubeStateChange = (e: {
@@ -780,10 +867,13 @@ export const BattleRoom: React.FC = () => {
     data: number;
   }) => {
     setIsYouTubePlaying(e.data === YouTube.PlayerState.PLAYING);
-    if (e.data === YouTube.PlayerState.PLAYING) {
-      startRecording();
-    } else if (e.data === YouTube.PlayerState.ENDED) {
-      stopRecording();
+    if (battleStart) {
+      if (e.data === YouTube.PlayerState.PLAYING) {
+        startRecording();
+      } else if (e.data === YouTube.PlayerState.ENDED) {
+        stopRecording();
+        clearCanvas(); // 영상이 끝나면 캔버스 초기화
+      }
     }
   };
 
@@ -968,28 +1058,12 @@ export const BattleRoom: React.FC = () => {
                       <ActionButton onClick={toggleReady}>
                         {myReady ? "준비 취소" : "준비"}
                       </ActionButton>
-                      <ActionButton
-                        onClick={() => {
-                          if (session) {
-                            exitSessionMutation.mutate(session.sessionId);
-                          }
-                        }}
-                      >
-                        나가기
-                      </ActionButton>
+                      <ActionButton onClick={handleExit}>나가기</ActionButton>
                     </>
                   )}
                 </>
               ) : (
-                <ActionButton
-                  onClick={() => {
-                    if (session) {
-                      exitSessionMutation.mutate(session.sessionId);
-                    }
-                  }}
-                >
-                  나가기
-                </ActionButton>
+                <ActionButton onClick={handleExit}>나가기</ActionButton>
               )}
             </ButtonContainer>
           )}

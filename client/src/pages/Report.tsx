@@ -43,6 +43,7 @@ interface scoreData {
   totalScore: number;
   scoreHistory: number[];
   videoFile: string;
+  originalFps: number;
 }
 
 interface ResponseData {
@@ -132,7 +133,7 @@ const Report = ({
   };
 
   const averagedData = reportData
-    ? chunkArray(reportData.scoreHistory, 30).map(
+    ? chunkArray(reportData.scoreHistory, reportData.originalFps).map(
         (chunk) => calculateAverage(chunk) * 100
       )
     : [];
@@ -208,12 +209,12 @@ const Report = ({
 
   const handleRetry = () => {
     if (reportData && reportData.youtubeId) {
-      navigate(`/practice/${reportData.youtubeId}`);
+      navigate(`/challenge/${reportData.youtubeId}`);
     }
   };
 
   const handleChallenge = () => {
-    navigate(`/challenge`);
+    navigate(`/guide`);
   };
 
   return (

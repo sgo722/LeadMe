@@ -14,6 +14,7 @@ import com.ssafy.withme.service.challege.response.ChallengeYoutubeIdResponse;
 import com.ssafy.withme.service.userChallenge.UserChallengeService;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import lombok.RequiredArgsConstructor;
+import org.json.JSONException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -52,7 +53,7 @@ public class ChallengeController extends BaseEntity {
 
     @PostMapping("/api/v1/admin/challenge")
     public ApiResponse<ChallengeCreateResponse> create(@RequestPart("request") ChallengeCreateRequest request,
-                                    @RequestPart MultipartFile videoFile) throws IOException {
+                                    @RequestPart MultipartFile videoFile) throws IOException, JSONException {
 
         return SuccessResponse.of(challengeService.createChallenge(request,videoFile));
     }
@@ -117,9 +118,19 @@ public class ChallengeController extends BaseEntity {
         return SuccessResponse.of(challengeService.findAllChallenge());
     }
 
+    /**
+     * 썸네일이 없는 챌린지에 썸네일을 넣는다.
+     * @return
+     */
     @PutMapping("/api/v1/challenge/thumbnail-url")
     public SuccessResponse<?> updateChallengeThumbnailUrl() {
         challengeService.updateChallengeThumbnailUrl();
+        return SuccessResponse.of(true);
+    }
+
+    @GetMapping("/api/v1/challenge/blazepose")
+    public SuccessResponse<?> updateBlazePoseData() {
+        challengeService.updateBlazePoseData();
         return SuccessResponse.of(true);
     }
 

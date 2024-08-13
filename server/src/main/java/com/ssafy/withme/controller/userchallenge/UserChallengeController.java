@@ -3,6 +3,7 @@ package com.ssafy.withme.controller.userchallenge;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeRequest;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
+import com.ssafy.withme.controller.userchallenge.request.UserChallengeUpdateRequest;
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.exception.EntityNotFoundException;
@@ -34,8 +35,8 @@ public class UserChallengeController {
      * @return
      */
     @GetMapping("/feed")
-    public SuccessResponse<List<UserChallengeFeedResponse>> findUserChallengeByPageable(
-            @PageableDefault(size = 3) Pageable pageable) {
+    public SuccessResponse<UserChallengeFeedResponses> findUserChallengeByPageable(
+            @PageableDefault(size = 1) Pageable pageable) {
         return SuccessResponse.of(userChallengeService.findUserChallengeByPageable(pageable));
     }
 
@@ -96,7 +97,7 @@ public class UserChallengeController {
     public SuccessResponse<UserChallengeSaveResponse> saveTemporaryFile(
             @CurrentUser User user,
             @RequestBody UserChallengeSaveRequest request) {
-        return SuccessResponse.of(userChallengeService.saveUserFile(request));
+        return SuccessResponse.of(userChallengeService.saveUserFile(user, request));
     }
 
     /**
@@ -113,11 +114,29 @@ public class UserChallengeController {
         return SuccessResponse.empty();
     }
 
+    /**
+     * 유저 영상을 삭제한다.
+     * @param user
+     * @param userChallengeId
+     */
+
     @DeleteMapping("/{userChallengeId}")
     public void delete(
             @CurrentUser User user,
             @PathVariable("userChallengeId") Long userChallengeId){
         userChallengeService.delete(user, userChallengeId);
     }
+
+    /**
+     * 유저 영상을 수정한다.
+     */
+    @PutMapping
+    public SuccessResponse<UserChallengeUpdateResponse> update(
+            @CurrentUser User user,
+            @RequestBody UserChallengeUpdateRequest request){
+        return SuccessResponse.of(userChallengeService.update(user, request));
+    }
+
+
 
 }

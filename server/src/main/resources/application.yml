@@ -120,6 +120,7 @@ python-server:
   permanent-thumbnail-directory: /home/ubuntu/python/video/user/thumbnail
   youtube-audio-directory: /home/ubuntu/python/video/challenge/audio
 
+
 openvidu:
   url: https://i11c109.p.ssafy.io:8443
   secret: leadme

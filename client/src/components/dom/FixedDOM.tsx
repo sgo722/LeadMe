@@ -2,8 +2,8 @@ import styled from "styled-components";
 export const FixedDOM = () => {
   return (
     <FixedDOMWrapper id="fixed">
-      <h2>SNS 업로드 기능까지</h2>
-      <p>유튜브에 바로 업로드 가능</p>
+      <h2>친구와 챌린지 배틀까지</h2>
+      <p>친구와 실시간으로 춤 배틀을 펼쳐보세요!</p>
     </FixedDOMWrapper>
   );
 };
@@ -25,14 +25,16 @@ const FixedDOMWrapper = styled.div`
   pointer-events: none;
   & > h2 {
     color: #f6efed;
-    font-size: 54px;
+    font-size: 50px;
     font-weight: 600;
     margin-bottom: 32px;
+    font-family: "Noto Sans KR", sans-serif;
   }
 
   & > p {
     color: #c9c9c9;
-    font-size: 30px;
+    font-size: 27px;
     font-weight: 400;
+    font-family: "Noto Sans KR", sans-serif;
   }
 `;

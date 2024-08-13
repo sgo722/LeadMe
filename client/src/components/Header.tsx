@@ -149,6 +149,8 @@ const Header: React.FC<HeaderProps> = ({
         return "Rank";
       case "/battle":
         return "Battle";
+      case "/guide":
+        return "Guide";
       default:
         return "LeadMe";
     }
@@ -177,10 +179,10 @@ const Header: React.FC<HeaderProps> = ({
                 YouTube
                 <FaYoutube />
               </SnsBox>
-              <SnsBox>
+              {/* <SnsBox>
                 TikTok
                 <FaTiktok />
-              </SnsBox>
+              </SnsBox> */}
             </TopRight>
           </Top>
         </HeaderWrapper>
@@ -189,9 +191,9 @@ const Header: React.FC<HeaderProps> = ({
         <NavContent>
           <StyledLink to="/home">home</StyledLink>
           <StyledLink to="/feed">feed</StyledLink>
-          <StyledLink to="/practice">practice</StyledLink>
-          <StyledLink to="/battle">battle</StyledLink>
           <StyledLink to="/challenge">challenge</StyledLink>
+          <StyledLink to="/battle">battle</StyledLink>
+          <StyledLink to="/guide">guide</StyledLink>
           <StyledLink to="/rank">rank</StyledLink>
           {isLogin && sessionUser ? (
             <LeftContainer>

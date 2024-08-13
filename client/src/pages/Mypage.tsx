@@ -11,6 +11,7 @@ import { baseUrl } from "axiosInstance/constants";
 import { CiImageOff } from "react-icons/ci";
 import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
+import { ensureHttps } from "utils/urlUtils";
 
 interface FeedProps {
   userChallengeId: number;
@@ -52,6 +53,7 @@ const Mypage: React.FC = () => {
       return response.data.data;
     },
     onSuccess: (data: UserProfile) => {
+      console.log(data);
       if (sessionUser) {
         if (data.id === sessionUser.id) {
           setIsMine(true);
@@ -86,6 +88,7 @@ const Mypage: React.FC = () => {
       console.log("feed", data.content);
     },
     onError: (error: Error) => {
+      navigate("/404");
       console.error("Error fetching user Feed:", error);
     },
   });
@@ -104,6 +107,7 @@ const Mypage: React.FC = () => {
       setIsFollowing(data.toLowerCase());
     },
     onError: (error: Error) => {
+      navigate("/404");
       console.error("Error checking follow status:", error);
     },
   });
@@ -166,10 +170,13 @@ const Mypage: React.FC = () => {
     const mypageIndex = urlSegments.indexOf("mypage");
     const value = mypageIndex !== -1 ? urlSegments[mypageIndex + 1] : "";
 
-    if (value && localAccessToken) {
+    if (value) {
       mutationProfile.mutate(value);
       mutationFeed.mutate({ value, page: 1 });
-      mutationCheckFollow.mutate(value);
+
+      if (localAccessToken) {
+        mutationCheckFollow.mutate(value);
+      }
     }
   }, [location.pathname, localAccessToken]);
 
@@ -224,7 +231,10 @@ const Mypage: React.FC = () => {
           <ProfileTitle>Profile</ProfileTitle>
           <ProfileContainer>
             <Flex>
-              <ProfileImg src={user.profileImg} alt="프로필 이미지" />
+              <ProfileImg
+                src={ensureHttps(user.profileImg)}
+                alt="프로필 이미지"
+              />
               <table>
                 <tbody>
                   <Tr>
@@ -338,11 +348,7 @@ const MainSection = styled.div`
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(50px);
   padding: 30px 40px 28px;
-  margin: 0 20px;
-
-  &:not(:last-child) {
-    margin-bottom: 40px;
-  }
+  margin: 0 20px 40px;
 `;
 
 const ProfileTitle = styled.div`
@@ -482,7 +488,7 @@ const None = styled.div`
   font-family: "Noto Sans KR", sans-serif;
   text-align: center;
   padding-top: 56px;
-  height: 200px;
+  height: 210px;
 
   & > div {
     margin-top: 12px;

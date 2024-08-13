@@ -5,6 +5,7 @@ import numpy as np
 import os
 from yt_dlp import YoutubeDL
 from pymongo import MongoClient
+import math
 
 # MediaPipe의 포즈 감지 모델 초기화
 mp_pose = mp.solutions.pose
@@ -12,6 +13,7 @@ pose = mp_pose.Pose()
 
 
 PERMANENT_DIRECTORY_CHALLENGE = "/home/ubuntu/python/video/challenge"
+# PERMANENT_DIRECTORY_CHALLENGE = "video/challenge"
 
 # MongoDB 연결 설정
 client = MongoClient(
@@ -77,6 +79,10 @@ def process_video(youtubeId, video_path):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = total_frames / original_fps  # 비디오 길이(초)
 
+    print(str(original_fps) + " : original_fps")
+    print(str(total_frames) + " : total_frames")
+    print(str(duration) + " : duration")
+
     # 고정된 FPS 설정
     target_fps = 30
     if original_fps <= 0 or target_fps <= 0:
@@ -85,11 +91,12 @@ def process_video(youtubeId, video_path):
         cv2.destroyAllWindows()
         return keypoints_list
 
-    frame_interval = int(original_fps / target_fps)
-    if frame_interval <= 0:
-        frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
+    # frame_interval = round(original_fps / target_fps)
+    target_time_interval = 1 / target_fps
+
 
     frame_count = 0
+    elapsed_time = 0
 
     # 프레임 별로 비디오 처리
     while cap.isOpened():
@@ -97,38 +104,32 @@ def process_video(youtubeId, video_path):
         if not ret:
             break
 
-        # 매 `frame_interval` 번째 프레임만 처리
-        if frame_count % frame_interval == 0:
-
-            
-            
             # BGR 이미지를 RGB 이미지로 변환
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            # MediaPipe를 사용하여 포즈 추정
-            result = pose.process(rgb_frame)
+        # MediaPipe를 사용하여 포즈 추정
+        result = pose.process(rgb_frame)
 
-            if result.pose_landmarks:
-                # 각 랜드마크의 x, y, z 좌표 및 가시성 추출
-                keypoints = []
-                for landmark in result.pose_landmarks.landmark:
-                    keypoints.append({
-                        'x': landmark.x,
-                        'y': landmark.y,
-                        'z': landmark.z,
-                        'visibility': landmark.visibility
-                    })
-                keypoints_list.append(keypoints)
+        if result.pose_landmarks:
+            # 각 랜드마크의 x, y, z 좌표 및 가시성 추출
+            keypoints = []
+            for landmark in result.pose_landmarks.landmark:
+                keypoints.append({
+                    'x': landmark.x,
+                    'y': landmark.y,
+                    'z': landmark.z,
+                    'visibility': landmark.visibility
+                })
+            keypoints_list.append(keypoints)
 
-                # 프레임에 랜드마크 그리기 (선택 사항)
-                mp.solutions.drawing_utils.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+            # 프레임에 랜드마크 그리기 (선택 사항)
+            mp.solutions.drawing_utils.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-            # 프레임 표시 (선택 사항)
-            # cv2.imshow('Frame', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        
-        frame_count += 1
+        # 프레임 표시 (선택 사항)
+        # 화면 보고싶으면 cv2.imshow('Frame', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
 
     document = {
         'youtubeId': youtubeId,
@@ -144,7 +145,7 @@ def process_video(youtubeId, video_path):
     cap.release()
     cv2.destroyAllWindows()
 
-    return keypoints_list
+    return keypoints_list, original_fps
 
 def process_video_user(video_path):
     keypoints_list = []
@@ -175,10 +176,9 @@ def process_video_user(video_path):
         cv2.destroyAllWindows()
         return keypoints_list
 
-    frame_interval = int(original_fps / target_fps)
-    if frame_interval <= 0:
-        frame_interval = 1  # 최소 1로 설정하여 나누기 오류 방지
 
+    frame_interval = round(original_fps / target_fps)
+    
     frame_count = 0
 
     # 프레임 별로 비디오 처리
@@ -217,6 +217,8 @@ def process_video_user(video_path):
 
         frame_count += 1
 
+    print(str(frame_count) + " : 현재 총 프레임")
+    
     document = {
         'landmarks': keypoints_list
     }
