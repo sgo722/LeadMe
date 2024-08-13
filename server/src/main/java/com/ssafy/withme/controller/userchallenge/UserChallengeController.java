@@ -96,7 +96,7 @@ public class UserChallengeController {
     public SuccessResponse<UserChallengeSaveResponse> saveTemporaryFile(
             @CurrentUser User user,
             @RequestBody UserChallengeSaveRequest request) {
-        return SuccessResponse.of(userChallengeService.saveUserFile(request));
+        return SuccessResponse.of(userChallengeService.saveUserFile(user, request));
     }
 
     /**
