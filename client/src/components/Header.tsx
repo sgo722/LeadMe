@@ -191,7 +191,7 @@ const Header: React.FC<HeaderProps> = ({
         <NavContent>
           <StyledLink to="/home">home</StyledLink>
           <StyledLink to="/feed">feed</StyledLink>
-          <StyledLink to="/practice">practice</StyledLink>
+          <StyledLink to="/challenge">challenge</StyledLink>
           <StyledLink to="/battle">battle</StyledLink>
           <StyledLink to="/guide">guide</StyledLink>
           <StyledLink to="/rank">rank</StyledLink>

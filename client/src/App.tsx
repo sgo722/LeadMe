@@ -44,8 +44,8 @@ const App: React.FC = () => {
         <Route path="/mypage/:userId" element={<Mypage />}></Route>
         <Route path="/report/:uuid" element={<Report />}></Route>
         <Route path="/chat" element={<Chat />}></Route>
-        <Route path="/practice" element={<Practice />}></Route>
-        <Route path="/practice/:videoId" element={<Practice />}></Route>
+        <Route path="/challenge" element={<Practice />}></Route>
+        <Route path="/challenge/:videoId" element={<Practice />}></Route>
         <Route path="/feed" element={<Feed />}></Route>
         <Route path="/battle" element={<Battle />}></Route>
         <Route path="/battleRoom/:sessionId" element={<BattleRoom />} />

@@ -378,7 +378,7 @@ export const Practice: React.FC = () => {
 
   // UI 이벤트 핸들러
   const handleBackButtonClick = () => nav(-1);
-  const handleChangeButtonClick = () => nav("/practice");
+  const handleChangeButtonClick = () => nav("/challenge");
   // const handleSearchButtonClick = () => nav("/home");
   // const validateUrl = (url: string) => url.toLowerCase().includes("shorts");
   // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -541,7 +541,7 @@ export const Practice: React.FC = () => {
   }, [countdown]);
 
   const handlePick = (id: string) => {
-    nav(`/practice/${id}`);
+    nav(`/challenge/${id}`);
   };
 
   return (

@@ -209,7 +209,7 @@ const Report = ({
 
   const handleRetry = () => {
     if (reportData && reportData.youtubeId) {
-      navigate(`/practice/${reportData.youtubeId}`);
+      navigate(`/challenge/${reportData.youtubeId}`);
     }
   };
 

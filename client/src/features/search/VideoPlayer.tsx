@@ -95,7 +95,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const handlePracticeClick = () => {
-    nav(`/practice/${video.videoId}`);
+    nav(`/challenge/${video.videoId}`);
   };
 
   const handleCloseCompletionAlertModal = () => {
