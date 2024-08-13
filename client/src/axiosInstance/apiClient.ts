@@ -6,7 +6,6 @@ import { baseUrl } from "axiosInstance/constants";
 // 반환값: { Authorization: "Bearer 토큰"}
 export const getJWTHeader = (): Record<string, string> => {
   const token = sessionStorage.getItem("access_token");
-  console.log("토큰값임: ", token);
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
