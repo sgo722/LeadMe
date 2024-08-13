@@ -68,4 +68,8 @@ public class UserChallenge extends BaseEntity {
     public void changeTitle(String updateTitle) {
         this.fileName = updateTitle;
     }
+
+    public void clickLike(int count) {
+        likes += count;
+    }
 }

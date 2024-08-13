@@ -18,16 +18,19 @@ public class UserChallengeFeedResponse {
 
     private Long userChallengeId;
 
+    private int likes;
+
     private byte[] video;
 
 
     @Builder
-    private UserChallengeFeedResponse(String nickname, String profileImg,Long userId, String title, Long userChallengeId, byte[] video) {
+    private UserChallengeFeedResponse(String nickname, String profileImg,Long userId, String title, Long userChallengeId, int likes, byte[] video) {
         this.nickname = nickname;
         this.profileImg = profileImg;
         this.userId = userId;
         this.title = title;
         this.userChallengeId = userChallengeId;
+        this.likes = likes;
         this.video = video;
     }
 
@@ -38,6 +41,7 @@ public class UserChallengeFeedResponse {
                 .userId(userChallenge.getUser().getId())
                 .title(userChallenge.getFileName())
                 .userChallengeId(userChallenge.getId())
+                .likes(userChallenge.getLikes())
                 .video(video)
                 .build();
     }

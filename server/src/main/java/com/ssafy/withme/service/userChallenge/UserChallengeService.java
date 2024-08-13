@@ -251,6 +251,7 @@ public class UserChallengeService {
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
                     .user(user)
+                    .likes(0)
                     .challenge(challenge)
                     .videoPath(PERMANENT_DIRECTORY + "/" + finalFileName)
                     .access(request.getAccess())
