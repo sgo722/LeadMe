@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { IoChevronBackSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { ensureHttps } from "utils/urlUtils";
 
 interface ListData {
   userId: number;
@@ -114,7 +115,7 @@ const Rank: React.FC = () => {
                       {(currentPage - 1) * usersPerPage + idx + 1}
                     </TableCell>
                     <TableCell>
-                      <img src={item.profileImg} alt="." />
+                      <img src={ensureHttps(item.profileImg)} alt="." />
                       <div>{item.userNickname}</div>
                     </TableCell>
                     <TableCell>{item.liked}</TableCell>
