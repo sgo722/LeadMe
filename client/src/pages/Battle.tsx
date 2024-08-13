@@ -205,15 +205,14 @@ export const Battle: React.FC = () => {
     // 비번입력모달 닫기
   };
 
-  // 방 생성 날짜 포멧팅 UTC to KST
+  // 방 생성 날짜 포멧팅
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    const koreaTime = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
-    const month = (koreaTime.getMonth() + 1).toString().padStart(2, "0");
-    const day = koreaTime.getDate().toString().padStart(2, "0");
-    const hours = koreaTime.getHours().toString().padStart(2, "0");
-    const minutes = koreaTime.getMinutes().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
 
     return `${month}-${day} ${hours}:${minutes}`;
   };
