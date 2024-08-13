@@ -53,6 +53,7 @@ const Mypage: React.FC = () => {
       return response.data.data;
     },
     onSuccess: (data: UserProfile) => {
+      console.log(data);
       if (sessionUser) {
         if (data.id === sessionUser.id) {
           setIsMine(true);
@@ -87,6 +88,7 @@ const Mypage: React.FC = () => {
       console.log("feed", data.content);
     },
     onError: (error: Error) => {
+      navigate("/404");
       console.error("Error fetching user Feed:", error);
     },
   });
@@ -105,6 +107,7 @@ const Mypage: React.FC = () => {
       setIsFollowing(data.toLowerCase());
     },
     onError: (error: Error) => {
+      navigate("/404");
       console.error("Error checking follow status:", error);
     },
   });
