@@ -9,7 +9,7 @@ import { axiosInstance } from "axiosInstance/apiClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pagination } from "features/battle/Pagination";
 import { useNavigate } from "react-router-dom";
-import { AxiosResponse } from "axios";
+import { AxiosError, AxiosResponse } from "axios";
 import { getJWTHeader } from "axiosInstance/apiClient";
 import { ensureHttps } from "utils/urlUtils";
 // 로딩 새로고침
@@ -39,6 +39,7 @@ interface Room {
   public: boolean;
   roomName: string;
   sessionId: string;
+  userCount: number | null;
 }
 
 export const Battle: React.FC = () => {
@@ -137,8 +138,16 @@ export const Battle: React.FC = () => {
         },
       });
     },
-    onError: (error) => {
+    onError: (error: AxiosError) => {
       console.error("공개 방 토큰 발급 요류:", error);
+      if (error.response?.status === 500) {
+        alert("이미 만료된 방입니다.");
+        window.location.reload(); // 페이지 새로고침
+      } else if (error.response?.status === 509) {
+        alert("입장 가능 인원이 초과되었습니다.");
+      } else {
+        alert("방 입장 중 오류가 발생했습니다. 다시 시도해 주세요.");
+      }
     },
   });
 
@@ -164,8 +173,16 @@ export const Battle: React.FC = () => {
         setIsPasswordError(true);
       }
     },
-    onError: (error) => {
+    onError: (error: AxiosError) => {
       console.error("비공개방 토큰 발급 오류:", error);
+      if (error.response?.status === 500) {
+        alert("이미 만료된 방입니다.");
+        window.location.reload(); // 페이지 새로고침
+      } else if (error.response?.status === 509) {
+        alert("입장 가능 인원이 초과되었습니다.");
+      } else {
+        alert("방 입장 중 오류가 발생했습니다. 다시 시도해 주세요.");
+      }
     },
   });
 
@@ -177,6 +194,11 @@ export const Battle: React.FC = () => {
   const handleEnterRoom = (room: Room) => {
     // 로그인 시
     if (user) {
+      if (room?.userCount === 2) {
+        alert("인원이 가득 찼습니다.");
+        return;
+      }
+
       if (room.public) {
         // 공개 방이면 바로 입장 시도
         enterPublicRoomMutation.mutate(room);
@@ -245,8 +267,11 @@ export const Battle: React.FC = () => {
                     <RoomCreatedAt>
                       {formatDate(room.createdDate)}
                     </RoomCreatedAt>
-                    <EnterButton onClick={() => handleEnterRoom(room)}>
-                      enter
+                    <EnterButton
+                      onClick={() => handleEnterRoom(room)}
+                      disabled={room.userCount === 2}
+                    >
+                      {room.userCount === 2 ? "Full" : "Enter"}
                     </EnterButton>
                   </RoomBottom>
                 </RoomItem>
@@ -403,7 +428,7 @@ const Footer = styled.div`
   gap: 20px; // 페이징과 버튼 사이의 간격
 `;
 
-const EnterButton = styled.button`
+const EnterButton = styled.button<{ disabled: boolean }>`
   width: 80px;
   height: 30px;
   border-radius: 4px;
@@ -417,6 +442,8 @@ const EnterButton = styled.button`
   font-style: normal;
   font-weight: 500;
   line-height: 23px;
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
 `;
 
 const PaginationContainer = styled.div`
