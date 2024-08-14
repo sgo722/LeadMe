@@ -9,6 +9,8 @@ import countdownSound from "assets/audio/countdown.mp3";
 import styled, { keyframes } from "styled-components";
 import YouTube, { YouTubePlayer } from "react-youtube";
 import { getJWTHeader } from "axiosInstance/apiClient";
+import { IoArrowBackOutline } from "react-icons/io5";
+
 import type {
   Publisher,
   Session,
@@ -1040,7 +1042,9 @@ export const BattleRoom: React.FC = () => {
           >
             {isVideoConfirmed && selectedVideo ? (
               <FullScreenYouTubeContainer>
-                <BackIcon onClick={handleCancel}>&larr;</BackIcon>
+                <BackIcon onClick={handleCancel}>
+                  <IoArrowBackOutline />
+                </BackIcon>
                 <YouTube
                   videoId={selectedVideo.youtubeId}
                   opts={{
