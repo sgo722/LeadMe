@@ -16,7 +16,7 @@ public interface UserChallengeRepository extends JpaRepository<UserChallenge, Lo
 
     UserChallenge findByUuid(String uuid);
 
-    @Query("select uc from UserChallenge uc where uc.fileName like %:keyword% or uc.user.name like %:keyword%")
+    @Query("select uc from UserChallenge uc where uc.fileName like %:keyword% or uc.user.nickname like %:keyword%")
     List<UserChallenge> findByKeyword(@Param("keyword") String keyword);
 
     Page<UserChallenge> findByAccessOrderByCreatedDateDesc(String access, Pageable pageable);

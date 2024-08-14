@@ -468,11 +468,12 @@ public class UserChallengeService {
         List<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword).stream()
                 .map(c -> {
 
-                    if (user == null || c.getAccess().equals("private"))
+                    if (c == null || user == null || c.getAccess().equals("private"))
                         return null;
 
                     return c;
                 })
+                .filter(Objects::nonNull)
                 .toList();
 
         if (user == null)
