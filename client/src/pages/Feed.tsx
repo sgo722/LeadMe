@@ -19,7 +19,7 @@ interface FeedProps {
 
 const Feed = () => {
   const [feed, setFeed] = useState<FeedDetail[]>([]);
-  const [showComments, setShowComments] = useState<number | null>(null);
+  // const [showComments, setShowComments] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
@@ -107,13 +107,13 @@ const Feed = () => {
     }
   }, [userId]);
 
-  const toggleComments = (userChallengeId: number) => {
-    if (showComments === userChallengeId) {
-      setShowComments(null);
-    } else {
-      setShowComments(userChallengeId);
-    }
-  };
+  // const toggleComments = (userChallengeId: number) => {
+  //   if (showComments === userChallengeId) {
+  //     setShowComments(null);
+  //   } else {
+  //     setShowComments(userChallengeId);
+  //   }
+  // };
 
   const handleSearch = (searchTerm: string) => {
     console.log(searchTerm);
@@ -131,8 +131,8 @@ const Feed = () => {
           <FeedPlayer
             key={video.userChallengeId}
             video={video}
-            showComments={showComments === video.userChallengeId}
-            onToggleComments={() => toggleComments(video.userChallengeId)}
+            // showComments={showComments === video.userChallengeId} // 댓글 기능 주석처리
+            // onToggleComments={() => toggleComments(video.userChallengeId)} // 댓글 기능 주석처리
             userChallengeId={video.userChallengeId}
           />
         ))}
