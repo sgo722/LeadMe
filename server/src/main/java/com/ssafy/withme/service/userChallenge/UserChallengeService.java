@@ -246,12 +246,12 @@ public class UserChallengeService {
             // 영구 저장 경로로 이동 및 파일명 변경
             String finalFileName = request.getFileName() + ".mp4";
 
-            Path userDirectoryPath = Paths.get(PERMANENT_DIRECTORY, String.valueOf(user.getId()));
-            if (!Files.exists(userDirectoryPath)) {
-                Files.createFile(userDirectoryPath);
+            Path userChallengeFolder = Paths.get(PERMANENT_DIRECTORY, String.valueOf(user.getId()));
+            if (!Files.exists(userChallengeFolder)) {
+                Files.createDirectories(userChallengeFolder);
             }
 
-            Path permanentVideoPath = Paths.get(PERMANENT_DIRECTORY + "/" + user.getId(), finalFileName);
+            Path permanentVideoPath = Paths.get(PERMANENT_DIRECTORY + "/" + String.valueOf(user.getId()), finalFileName);
 
             Files.move(tempVideoPath, permanentVideoPath);
 
@@ -458,7 +458,7 @@ public class UserChallengeService {
         String thumbnailFileName = fileName + ".png";
         Path thumbnailFolder = Paths.get(THUMBNAIL_DIRECTORY, String.valueOf(userId));
         if (!Files.exists(thumbnailFolder)) {
-            Files.createFile(thumbnailFolder);
+            Files.createDirectories(thumbnailFolder);
         }
 
         Path thumbnailPath = Paths.get(THUMBNAIL_DIRECTORY + "/" + userId, thumbnailFileName);
