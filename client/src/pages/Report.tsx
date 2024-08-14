@@ -224,7 +224,7 @@ const Report = ({
         <MainSection>
           <div>
             {videoUrl && (
-              <video id="videoPlayer" width="320" controls loop>
+              <video id="videoPlayer" width="300" controls loop>
                 <source src={videoUrl} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
@@ -303,10 +303,11 @@ const MainSection = styled.div`
 
   & > div:first-child {
     width: 300px;
-    height: 533px;
-    border-radius: 20px;
+    height: 532px;
+    border-radius: 8px;
     background-color: rgba(255, 255, 255, 0.5);
     box-shadow: 0px 6px 5px 0px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
   }
 `;
 
