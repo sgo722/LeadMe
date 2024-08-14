@@ -196,7 +196,7 @@ const Mypage: React.FC = () => {
 
       if (response.status === 200) {
         alert("회원 탈퇴가 완료되었습니다.");
-        navigate(`${baseUrl}/api/v1/home`);
+        navigate("/");
       } else {
         alert("회원 탈퇴에 실패했습니다.");
       }
