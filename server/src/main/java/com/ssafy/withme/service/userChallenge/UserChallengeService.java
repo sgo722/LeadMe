@@ -464,29 +464,26 @@ public class UserChallengeService {
         return null;
     }
 
-    public UserChallengeFeedResponses findByKeyword(String keyword, Pageable pageable) {
+    public List<UserChallengeFeedResponse> findByKeyword(String keyword) {
 
-        Page<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword, pageable);
+        List<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword);
 
-        return UserChallengeFeedResponses.builder()
-                .totalPage(findList.getTotalPages())
-                .totalElement(findList.getTotalElements())
-                .pageSize(findList.getPageable().getPageSize())
-                .size(findList.getSize())
-                .content(findList.stream()
-                        .map(c -> {
-                            try {
-                                byte[] video = Files.readAllBytes(Paths.get(c.getVideoPath()));
+        return findList.stream()
+                .map(c -> {
 
-                                return UserChallengeFeedResponse.of(c, video);
-                            } catch (Exception e) {
+                    try {
+                        byte[] videoData = Files.readAllBytes(Paths.get(c.getVideoPath()));
 
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .toList())
-                .build();
+                        return UserChallengeFeedResponse.of(c, videoData);
+                    } catch (IOException e) {
+
+                        log.info("File Exception: {}", e.getMessage());
+
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
 
 //        List<UserChallengeFeedResponse> userChallengeFeedResponse = findUserChallenge.stream()

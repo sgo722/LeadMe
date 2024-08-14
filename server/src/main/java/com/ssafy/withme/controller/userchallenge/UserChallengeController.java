@@ -57,12 +57,9 @@ public class UserChallengeController {
     }
 
     @GetMapping("/search/{keyword}")
-    public SuccessResponse<UserChallengeFeedResponses> getUserChallengeByKeyword(
-            @PageableDefault(size = 1) Pageable pageable,
-            @PathVariable("keyword") String keyword
-    ){
+    public SuccessResponse<List> getUserChallengeByKeyword(@PathVariable("keyword") String keyword){
 
-        UserChallengeFeedResponses response = userChallengeService.findByKeyword(keyword, pageable);
+        List<UserChallengeFeedResponse> response = userChallengeService.findByKeyword(keyword);
 
         return SuccessResponse.of(response);
     }

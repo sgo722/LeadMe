@@ -9,13 +9,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface UserChallengeRepository extends JpaRepository<UserChallenge, Long> {
 
     UserChallenge findByUuid(String uuid);
 
     @Query("select uc from UserChallenge uc where uc.fileName like %:keyword% or uc.user.name like %:keyword%")
-    Page<UserChallenge> findByKeyword(@Param("keyword") String keyword, Pageable pageable);
+    List<UserChallenge> findByKeyword(@Param("keyword") String keyword);
 
     Page<UserChallenge> findByAccessOrderByCreatedDateDesc(String access, Pageable pageable);
 
