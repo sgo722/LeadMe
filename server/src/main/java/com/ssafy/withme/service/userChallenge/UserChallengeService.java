@@ -408,7 +408,8 @@ public class UserChallengeService {
      * @throws IOException
      * @throws InterruptedException
      */
-    private String extractThumbnail(Path videoPath, String fileName) throws IOException, InterruptedException {
+    @Transactional
+    public String extractThumbnail(Path videoPath, String fileName) throws IOException, InterruptedException {
         // 비디오 길이 확인
         String durationCommand = String.format("ffmpeg -i %s", videoPath.toString());
         Process process = Runtime.getRuntime().exec(durationCommand);
