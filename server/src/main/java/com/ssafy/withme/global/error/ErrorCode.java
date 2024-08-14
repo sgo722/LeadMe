@@ -43,6 +43,7 @@ public enum ErrorCode {
     NOT_FOUND_SESSION(HttpStatus.NOT_FOUND, HttpStatus.NO_CONTENT.value(), "세션을 찾을 수 없습니다."),
     NOT_FOUND_COMPETITION(HttpStatus.NOT_FOUND, HttpStatus.NO_CONTENT.value(), "해당 경쟁전을 찾을 수 없습니다."),
     FAILED_TO_CONVERT_TYPE(HttpStatus.NOT_FOUND, HttpStatus.NO_CONTENT.value(), "타입을 변환할 수 없습니다."),
+    COMPETITION_IS_FULL(HttpStatus.BANDWIDTH_LIMIT_EXCEEDED, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED.value(), "CompetitionRoom is full."),
 
     // 유튜브
     NOT_EXISTS_YOUTUBE_THUMBNAIL_URL(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "해당 유튜브ID의 썸네일 URL이 존재하지 않습니다.")
