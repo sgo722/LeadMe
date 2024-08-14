@@ -171,7 +171,7 @@ const Mypage: React.FC = () => {
 
     if (value) {
       mutationProfile.mutate(value);
-      mutationFeed.mutate({ value, page: 1 });
+      mutationFeed.mutate({ value, page: 0 });
 
       if (localAccessToken) {
         mutationCheckFollow.mutate(value);
