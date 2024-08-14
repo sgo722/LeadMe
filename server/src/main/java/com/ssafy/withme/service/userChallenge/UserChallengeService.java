@@ -465,7 +465,15 @@ public class UserChallengeService {
 
     public List<UserChallengeFeedResponse> findByKeyword(String keyword, User user) {
 
-        List<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword);
+        List<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword).stream()
+                .map(c -> {
+
+                    if (user == null || c.getAccess().equals("private"))
+                        return null;
+
+                    return c;
+                })
+                .toList();
 
         if (user == null)
             return fromEntity(findList, 0L);
