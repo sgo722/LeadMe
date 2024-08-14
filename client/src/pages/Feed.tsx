@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { useLocation, useParams } from "react-router-dom";
 import Header from "components/Header";
 import { SearchBar } from "components/SearchBar";
 import FeedPlayer from "features/videoDetail/FeedPlayer";
@@ -18,34 +19,80 @@ interface FeedProps {
 const Feed = () => {
   const [feed, setFeed] = useState<FeedDetail[]>([]);
   const [showComments, setShowComments] = useState<number | null>(null);
+  const location = useLocation();
+  const { userId } = useParams<{ userId?: string }>();
 
   const mutationFeed = useMutation<FeedProps, Error, number>({
     mutationFn: async (page: number) => {
       const response = await axiosInstance.get<ResponseData<FeedProps>>(
         "/api/v1/userChallenge/feed",
         {
-          params: { page, size: 5 },
+          params: { page, size: 3 },
         }
       );
       return response.data.data;
     },
     onSuccess: (data) => {
-      console.log("feed", data);
-      setFeed(data.content);
+      const newFeed = data.content;
+
+      if (newFeed.length > 0) {
+        const firstNewFeedId = newFeed[0].userChallengeId;
+
+        const isDuplicate = feed.some(
+          (item) => item.userChallengeId === firstNewFeedId
+        );
+
+        if (!isDuplicate) {
+          console.log("새로운 데이터", newFeed);
+          setFeed((prevFeed) => [...prevFeed, ...newFeed]);
+        }
+      }
     },
     onError: (error: Error) => {
       console.error("Error fetching user Feed:", error);
     },
   });
 
-  useEffect(() => {
-    mutationFeed.mutate(0);
-  }, []);
+  const mutationUserFeed = useMutation<FeedDetail[], Error, string>({
+    mutationFn: async (id: string) => {
+      const response = await axiosInstance.get<ResponseData<FeedDetail[]>>(
+        `/api/v1/userChallenge/search/users/${id}`
+      );
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      console.log("특정유저 피드", data);
+      setFeed(data);
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching user Feed:", error);
+    },
+  });
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    console.log(e);
-    // 스크롤이 바닥에 닿으면 다음 페이지를 불러옴 - 무한 스크롤
-  };
+  const mutationSearchFeed = useMutation<FeedDetail[], Error, string>({
+    mutationFn: async (keyword: string) => {
+      const response = await axiosInstance.get<ResponseData<FeedDetail[]>>(
+        `/api/v1/userChallenge/search/${keyword}`
+      );
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      console.log("검색결과:", data);
+      setFeed(data);
+    },
+    onError: (error: Error) => {
+      console.error("Error fetching search results:", error);
+    },
+  });
+
+  useEffect(() => {
+    if (userId) {
+      console.log(userId);
+      mutationUserFeed.mutate(userId);
+    } else if (location.pathname === "/feed") {
+      mutationFeed.mutate(0);
+    }
+  }, [userId]);
 
   const toggleComments = (userChallengeId: number) => {
     if (showComments === userChallengeId) {
@@ -55,11 +102,16 @@ const Feed = () => {
     }
   };
 
+  const handleSearch = (searchTerm: string) => {
+    console.log(searchTerm);
+    mutationSearchFeed.mutate(searchTerm);
+  };
+
   return (
-    <PageLayout onScroll={handleScroll}>
+    <PageLayout>
       <Header stickyOnly />
       <SearchBarWrapper>
-        <SearchBar width={650} navigation />
+        <SearchBar width={650} navigation={false} onSearch={handleSearch} />
       </SearchBarWrapper>
       <VideoContainer>
         {feed.map((video) => (
