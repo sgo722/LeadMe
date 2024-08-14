@@ -23,7 +23,7 @@ public class PoseComparison {
         for(int i = 7; i < pose.size(); i++) {
             Keypoint kp = pose.get(i);
             // 신뢰도 0.3 미만은 0으로 대체
-            if(kp.getVisibility() < 0.3) {
+            if(kp.getVisibility() < 0.6) {
                 kp.setX(0);
                 kp.setY(0);
                 kp.setZ(0);
@@ -130,15 +130,15 @@ public class PoseComparison {
         // 원본 프레임 기준으로 평균을 나눔
         totalScore = totalScore / totalFrameCount;
 
-        if(totalScore <= 80 && totalScore > 70) {
-            totalScore *= 0.95;
-        } else if(totalScore <= 70 && totalScore > 50) {
-            totalScore *= 0.9;
-        } else if(totalScore <= 50 && totalScore > 30) {
-            totalScore *= 0.7;
-        } else if (totalScore <= 30){
-            totalScore *= 0.6;
-        }
+//        if(totalScore <= 80 && totalScore > 70) {
+//            totalScore *= 0.95;
+//        } else if(totalScore <= 70 && totalScore > 50) {
+//            totalScore *= 0.9;
+//        } else if(totalScore <= 50 && totalScore > 30) {
+//            totalScore *= 0.7;
+//        } else if (totalScore <= 30){
+//            totalScore *= 0.6;
+//        }
 
         log.info("totalScore :" + totalScore);
 
