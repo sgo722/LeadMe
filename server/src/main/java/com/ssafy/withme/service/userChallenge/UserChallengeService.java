@@ -283,8 +283,6 @@ public class UserChallengeService {
             return UserChallengeSaveResponse.ofResponse(savedUserChallenge);
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
         return null;
     }
