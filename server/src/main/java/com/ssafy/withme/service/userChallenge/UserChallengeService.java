@@ -232,7 +232,7 @@ public class UserChallengeService {
         log.info("uuid : " + request.getUuid());
 
 
-        Path thumbnailExtractPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "flipped_temp.mp4");
+        Path thumbnailExtractPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_flipped_temp.mp4");
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_merged.mp4");
 
         log.info("임시 비디오 경로 : " + tempVideoPath.toString());
