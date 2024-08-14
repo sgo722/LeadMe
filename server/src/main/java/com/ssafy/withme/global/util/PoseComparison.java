@@ -23,7 +23,7 @@ public class PoseComparison {
         for(int i = 7; i < pose.size(); i++) {
             Keypoint kp = pose.get(i);
             // 신뢰도 0.3 미만은 0으로 대체
-            if(kp.getVisibility() < 0.3) {
+            if(kp.getVisibility() < 0.6) {
                 kp.setX(0);
                 kp.setY(0);
                 kp.setZ(0);
