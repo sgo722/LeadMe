@@ -180,7 +180,7 @@ async def saveVideDataByUserFile(
 
         frame = clip.get_frame(target_time)
 
-        image = image.fromarray(frame)
+        image = Image.fromarray(frame)
         image.save(thumbnail_path)
 
         # 원본 라인 (Jinwoo)
