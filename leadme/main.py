@@ -15,6 +15,7 @@ import subprocess
 import asyncio
 from moviepy.editor import VideoFileClip , AudioFileClip, CompositeAudioClip
 from video_processor import download_video, process_video, process_video_user
+from PIL import Image
 
 
 # 로깅 설정
@@ -179,7 +180,6 @@ async def saveVideDataByUserFile(
 
         frame = clip.get_frame(target_time)
 
-        from PIL import Image
         image = image.fromarray(frame)
         image.save(thumbnail_path)
 
