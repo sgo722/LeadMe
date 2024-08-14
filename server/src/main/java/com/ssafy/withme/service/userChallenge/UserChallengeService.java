@@ -437,7 +437,7 @@ public class UserChallengeService {
 //                        try {
 //                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
 //                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
-                            return UserChallengeMyPageResponse.responseOf(userChallenge, null, user.getId());
+                            return UserChallengeMyPageResponse.responseOf(userChallenge, null);
 //                        } catch (IOException e) {
 //                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
 //                        }
@@ -454,7 +454,7 @@ public class UserChallengeService {
 //                        try {
 //                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
 //                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
-                            return UserChallengeMyPageResponse.responseOf(userChallenge, null, findUser.getId());
+                            return UserChallengeMyPageResponse.responseOf(userChallenge, null);
 //                        } catch (IOException e) {
 //                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
 //                        }

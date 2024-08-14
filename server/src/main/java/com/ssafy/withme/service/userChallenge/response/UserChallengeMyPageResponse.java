@@ -18,28 +18,20 @@ public class UserChallengeMyPageResponse {
 
     private String access;
 
-    private Boolean isLiked;
-
     @Builder
-    private UserChallengeMyPageResponse(Long userChallengeId, String title, byte[] thumbnail, String access, Boolean isLiked) {
+    private UserChallengeMyPageResponse(Long userChallengeId, String title, byte[] thumbnail, String access) {
         this.userChallengeId = userChallengeId;
         this.title = title;
         this.thumbnail = thumbnail;
         this.access = access;
-        this.isLiked = isLiked;
     }
 
-    public static UserChallengeMyPageResponse responseOf(UserChallenge userChallenge, byte[] thumbnail, Long userId){
+    public static UserChallengeMyPageResponse responseOf(UserChallenge userChallenge, byte[] thumbnail){
         return UserChallengeMyPageResponse.builder()
                 .title(userChallenge.getFileName())
                 .thumbnail(thumbnail)
                 .userChallengeId(userChallenge.getId())
                 .access(userChallenge.getAccess())
-                .isLiked(
-                        userChallenge.getUserChallengeLikeList().stream()
-                                .filter(c -> c.getUser().getId() == userId)
-                                .toList().size() == 1
-                )
                 .build();
     }
 }
