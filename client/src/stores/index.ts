@@ -11,11 +11,6 @@ export const IsShortsVisibleAtom = atom<boolean>({
   default: false,
 });
 
-export const CurrentYoutubeIdAtom = atom({
-  key: "CurrentYoutubeIdAtom",
-  default: "",
-});
-
 export const RecordedVideoUrlAtom = atom<string | null>({
   key: "RecordedVideoUrlAtom",
   default: null,
