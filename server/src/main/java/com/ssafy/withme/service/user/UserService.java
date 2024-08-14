@@ -112,4 +112,10 @@ public class UserService {
 
         findUser.updateProfile(userUpdateDto.getNickname(), userUpdateDto.getProfileComment());
     }
+
+    @Transactional
+    public void deleteUser(Long id){
+
+        userRepository.deleteById(id);
+    }
 }

@@ -124,4 +124,12 @@ public class UserController {
         Integer activeUserCount = (Integer) redisTemplate.opsForValue().get("active_user_count");
         return activeUserCount != null ? activeUserCount.longValue() : 0L;
     }
+
+    @DeleteMapping("/user/delete/{id}")
+    public SuccessResponse<?> delete(@PathVariable("id") Long id) {
+
+        userService.deleteUser(id);
+
+        return SuccessResponse.of(true);
+    }
 }
