@@ -205,7 +205,7 @@ export const Practice: React.FC = () => {
       ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
       ctx.shadowColor = randomColor;
       ctx.shadowBlur = 4;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 1;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
@@ -228,7 +228,7 @@ export const Practice: React.FC = () => {
     [youtubeBlazePoseQuery.data]
   );
 
-  const drawBodyPart = (ctx: CanvasRenderingContext2D, points: any[]) => {
+  const drawBodyPart = (ctx: CanvasRenderingContext2D, points: Landmark[]) => {
     ctx.beginPath();
     ctx.moveTo(points[0].x * ctx.canvas.width, points[0].y * ctx.canvas.height);
     for (let i = 1; i < points.length; i++) {
@@ -244,7 +244,7 @@ export const Practice: React.FC = () => {
 
   const drawLimb = (
     ctx: CanvasRenderingContext2D,
-    landmarks: any[],
+    landmarks: Landmark[],
     points: number[],
     startWidth: number,
     endWidth: number

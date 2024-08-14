@@ -140,6 +140,7 @@ const ProfileModal: React.FC<ModalProps> = ({
             type="text"
             value={profileComment}
             onChange={(e) => setProfileComment(e.target.value)}
+            placeholder="한 줄 소개"
           />
           <SaveButton
             onClick={(e) => {
@@ -240,11 +241,7 @@ const Form = styled.form`
   }
 
   input::placeholder {
-    color: #ee5050;
-    font-size: 16px;
-  }
-
-  & > input::placeholder {
+    color: #cecece;
     font-size: 14px;
   }
 `;
@@ -299,11 +296,7 @@ const Flex = styled.div`
   }
 
   input::placeholder {
-    color: #ee5050;
-    font-size: 16px;
-  }
-
-  & > input::placeholder {
+    color: #cecece;
     font-size: 14px;
   }
 `;
