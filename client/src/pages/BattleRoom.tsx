@@ -109,6 +109,7 @@ export const BattleRoom: React.FC = () => {
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [myScore, setMyScore] = useState<number | null>(null); // 내 점수
   const [peerScore, setPeerScore] = useState<number | null>(null); // 상대 점수
+  const [isScoreCalculating, setIsScoreCalculating] = useState<boolean>(false); //점수 계산 상태
   const [battleResult, setBattleResult] = useState<
     "win" | "lose" | "draw" | null
   >(null); // 배틀 결과
@@ -131,6 +132,7 @@ export const BattleRoom: React.FC = () => {
     mutationFn: submitRecordedVideo,
     onMutate: () => {
       setIsSubmitting(true);
+      setIsScoreCalculating(true);
     },
     onSuccess: (data) => {
       const score = Math.floor(data.data * 100);
@@ -149,6 +151,7 @@ export const BattleRoom: React.FC = () => {
     onError: (error) => {
       console.log("녹화영상 제출 실패", error);
       setIsSubmitting(false);
+      setIsScoreCalculating(false);
     },
   });
 
@@ -640,6 +643,7 @@ export const BattleRoom: React.FC = () => {
           case "score":
             if (typeof signalData.score === "number") {
               setPeerScore(signalData.score);
+              setIsScoreCalculating(true);
             }
             break;
           case "host-left":
@@ -681,6 +685,8 @@ export const BattleRoom: React.FC = () => {
         setBattleResult("draw");
       }
       setBattleStart(false);
+      setIsSubmitting(false);
+      setIsScoreCalculating(false);
     }
   }, [myScore, peerScore]);
 
@@ -1166,11 +1172,13 @@ export const BattleRoom: React.FC = () => {
           )}
         </BattleArea>
       </Container>
-      {isSubmitting && (
+      {(isSubmitting || isScoreCalculating) && (
         <LoadingOverlay>
           <LoadingContent>
             <LoadingSpinner />
-            <LoadingText>점수 계산중..</LoadingText>
+            <LoadingText>
+              {isSubmitting ? "점수 계산중.." : "결과 기다리는 중.."}
+            </LoadingText>
           </LoadingContent>
         </LoadingOverlay>
       )}
