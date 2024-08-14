@@ -183,6 +183,29 @@ const Mypage: React.FC = () => {
     setIsProfileModalOpen(true);
   };
 
+  const handleDeleteUser = async () => {
+    if (!user) return;
+
+    const confirmation = window.confirm("정말로 회원 탈퇴를 하시겠습니까?");
+    if (!confirmation) return;
+
+    try {
+      const response = await axios.delete(`${baseUrl}/api/v1/user/delete/${user.id}`, {
+        headers: {Authorization: `Bearer ${accessToken}`},
+      });
+
+      if (response.status === 200) {
+        alert("회원 탈퇴가 완료되었습니다.");
+        navigate(`${baseUrl}/api/v1/home`);
+      } else {
+        alert("회원 탈퇴에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("Error deleting user: ", error);
+      alert("회원 탈퇴 중 오류가 발생했습니다.");
+    }
+  };
+
   const handleCloseProfileModal = () => {
     setIsProfileModalOpen(false);
   };
@@ -279,6 +302,7 @@ const Mypage: React.FC = () => {
                 <>
                   <Btn onClick={handleNavigateChat}>메세지 목록</Btn>
                   <Btn onClick={handleOpenProfileModal}>프로필 편집</Btn>
+                  <Btn onClick={handleDeleteUser}>회원 탈퇴</Btn>
                 </>
               ) : (
                 <>
