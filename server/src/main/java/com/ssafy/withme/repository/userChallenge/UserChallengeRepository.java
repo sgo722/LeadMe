@@ -26,4 +26,7 @@ public interface UserChallengeRepository extends JpaRepository<UserChallenge, Lo
 
     @Query("select uc from UserChallenge uc where uc.user.id = :userId and uc.access = :access order by uc.createdDate desc")
     Page<UserChallenge> findByUserAndAccessOrderByCreatedDateDesc(@Param("userId") Long userId, @Param("access") String access, Pageable pageable);
+
+    @Query("select uc from UserChallenge uc where uc.user.id = :userId")
+    List<UserChallenge> findByUserId(@Param("userId") Long userId);
 }

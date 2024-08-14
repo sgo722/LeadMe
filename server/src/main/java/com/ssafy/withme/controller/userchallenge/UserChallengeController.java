@@ -56,12 +56,30 @@ public class UserChallengeController {
         return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user, viewUserId));
     }
 
+    /**
+     * 특정 키워드로 챌린지 검색
+     * @param keyword
+     * @return
+     */
     @GetMapping("/search/{keyword}")
     public SuccessResponse<List> getUserChallengeByKeyword(@PathVariable("keyword") String keyword){
 
         List<UserChallengeFeedResponse> response = userChallengeService.findByKeyword(keyword);
 
         return SuccessResponse.of(response);
+    }
+
+    /**
+     * 유저의 식별자로 챌린지 검색
+     * @param userId
+     * @return
+     */
+    @GetMapping("/search/users/{userId}")
+    public SuccessResponse<?> getUserChallengeByUserId(@PathVariable("userId") Long userId){
+
+        List<UserChallengeFeedResponse> findList = userChallengeService.findByUserId(userId);
+
+        return SuccessResponse.of(findList);
     }
 
     /**

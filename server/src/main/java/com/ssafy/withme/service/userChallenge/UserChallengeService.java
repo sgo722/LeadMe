@@ -468,22 +468,7 @@ public class UserChallengeService {
 
         List<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword);
 
-        return findList.stream()
-                .map(c -> {
-
-                    try {
-                        byte[] videoData = Files.readAllBytes(Paths.get(c.getVideoPath()));
-
-                        return UserChallengeFeedResponse.of(c, videoData);
-                    } catch (IOException e) {
-
-                        log.info("File Exception: {}", e.getMessage());
-
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return fromEntity(findList);
 
 
 //        List<UserChallengeFeedResponse> userChallengeFeedResponse = findUserChallenge.stream()
@@ -542,5 +527,32 @@ public class UserChallengeService {
         String updateTitle = request.getTitle();
         userChallenge.changeTitle(updateTitle);
         return UserChallengeUpdateResponse.ofResponse(userChallenge);
+    }
+
+    public List<UserChallengeFeedResponse> findByUserId(Long userId) {
+
+        List<UserChallenge> findList = userChallengeRepository.findByUserId(userId);
+
+        return fromEntity(findList);
+    }
+
+    private List<UserChallengeFeedResponse> fromEntity(List<UserChallenge> userChallengeList) {
+
+        return userChallengeList.stream()
+                .map(c -> {
+
+                    try {
+                        byte[] videoData = Files.readAllBytes(Paths.get(c.getVideoPath()));
+
+                        return UserChallengeFeedResponse.of(c, videoData);
+                    } catch (IOException e) {
+
+                        log.info("File Exception: {}", e.getMessage());
+
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }
