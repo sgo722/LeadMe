@@ -232,7 +232,6 @@ public class UserChallengeService {
         log.info("uuid : " + request.getUuid());
 
 
-        Path thumbnailExtractPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + ".mp4");
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_merged.mp4");
 
         log.info("임시 비디오 경로 : " + tempVideoPath.toString());
@@ -256,7 +255,7 @@ public class UserChallengeService {
             Files.move(tempVideoPath, permanentVideoPath);
 
 
-            String thumbnailPath = extractThumbnail(thumbnailExtractPath, user.getId(), request.getFileName());
+            String thumbnailPath = extractThumbnail(tempVideoPath, user.getId(), request.getFileName());
 
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
