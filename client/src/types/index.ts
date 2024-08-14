@@ -65,3 +65,13 @@ export interface ChallengeItem {
   thumbnail: string;
   hashtags: string[];
 }
+
+export interface FeedDetail {
+  nickname: string;
+  profileImg: string;
+  userId: number;
+  title: string;
+  userChallengeId: number;
+  video: string;
+  likes: number;
+}
