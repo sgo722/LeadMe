@@ -86,11 +86,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         TokenDetails refreshTokenDetails = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION, TokenType.REFRESH);
         String refreshToken = refreshTokenDetails.token();
         // 데이터 베이스에 유저아이디와 리프레시 토큰을 저장
-        saveRefreshToken(user, refreshToken);
+//        saveRefreshToken(user, refreshToken);
         // 클라이언트에서 액세스 토큰이 만료되면 재발급 요청하도록 쿠키에 리프레시 토큰을 저장
-        addRefreshTokenToCookie(request, response, refreshToken);
-
-        // 2. 액세스 토큰 생성 -> 패스에 액세스 토큰을 추가
+        addRefreshTokenToCookie(request, response, refreshToken);       // 2. 액세스 토큰 생성 -> 패스에 액세스 토큰을 추가
         // 토큰 제공자를 사용해 액세스 토큰을 만든 뒤
         TokenDetails accessTokenDetails = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION, TokenType.ACCESS);
         String accessToken = accessTokenDetails.token();
@@ -129,15 +127,15 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     }
 
     // 생성된 리프레시 토큰을 전달받아 데이터베이스에 저장
-    private void saveRefreshToken(User user, String newRefreshToken) {
-
-        RefreshToken refreshToken = refreshTokenRepository.findByUserId(user.getId())
-                .map(entity -> entity.update(newRefreshToken))
-                .orElse(new RefreshToken(user, newRefreshToken));
-
-        refreshTokenRepository.save(refreshToken);
-
-    }
+//    private void saveRefreshToken(User user, String newRefreshToken) {
+//
+//        RefreshToken refreshToken = refreshTokenRepository.findByUserId(user.getId())
+//                .map(entity -> entity.update(newRefreshToken))
+//                .orElse(new RefreshToken(user, newRefreshToken));
+//
+//        refreshTokenRepository.save(refreshToken);
+//
+//    }
 
     // 생성된 리프레시 토큰을 쿠키에 저장
     private void addRefreshTokenToCookie(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
