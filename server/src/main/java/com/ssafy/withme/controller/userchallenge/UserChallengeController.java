@@ -56,6 +56,17 @@ public class UserChallengeController {
         return SuccessResponse.of(userChallengeService.getUserChallengeByUser(pageable, user, viewUserId));
     }
 
+    @GetMapping("/search/{keyword}")
+    public SuccessResponse<UserChallengeFeedResponses> getUserChallengeByKeyword(
+            @PageableDefault(size = 1) Pageable pageable,
+            @PathVariable("keyword") String keyword
+    ){
+
+        UserChallengeFeedResponses response = userChallengeService.findByKeyword(keyword, pageable);
+
+        return SuccessResponse.of(response);
+    }
+
     /**
      ** 유저영상을 스켈레톤 데이터를 저장하고 영상파일을 임시저장 한다.
      * @param request
@@ -136,7 +147,4 @@ public class UserChallengeController {
             @RequestBody UserChallengeUpdateRequest request){
         return SuccessResponse.of(userChallengeService.update(user, request));
     }
-
-
-
 }

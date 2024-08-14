@@ -45,4 +45,17 @@ public class UserChallengeFeedResponse {
                 .video(video)
                 .build();
     }
+
+    public static UserChallengeFeedResponse of(UserChallenge userChallenge, byte[] video){
+
+        return UserChallengeFeedResponse.builder()
+                .nickname(userChallenge.getUser().getNickname())
+                .profileImg(userChallenge.getUser().getProfileImg())
+                .userId(userChallenge.getUser().getId())
+                .title(userChallenge.getFileName())
+                .userChallengeId(userChallenge.getId())
+                .likes(userChallenge.getLikes())
+                .video(video)
+                .build();
+    }
 }
