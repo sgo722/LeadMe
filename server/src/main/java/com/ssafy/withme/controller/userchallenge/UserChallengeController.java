@@ -136,7 +136,4 @@ public class UserChallengeController {
             @RequestBody UserChallengeUpdateRequest request){
         return SuccessResponse.of(userChallengeService.update(user, request));
     }
-
-
-
 }

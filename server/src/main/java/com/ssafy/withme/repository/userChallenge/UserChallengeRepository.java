@@ -5,6 +5,8 @@ import com.ssafy.withme.domain.userchallenge.UserChallenge;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -14,7 +16,9 @@ public interface UserChallengeRepository extends JpaRepository<UserChallenge, Lo
 
     Page<UserChallenge> findByAccessOrderByCreatedDateDesc(String access, Pageable pageable);
 
-    Page<UserChallenge> findByUserOrderByCreatedDateDesc(User user, Pageable pageable);
+    @Query("select uc from UserChallenge uc where uc.user.id = :userId order by uc.createdDate desc")
+    Page<UserChallenge> findByUserOrderByCreatedDateDesc(@Param("userId") Long userId, Pageable pageable);
 
-    Page<UserChallenge> findByUserAndAccessOrderByCreatedDateDesc(User user, String access, Pageable pageable);
+    @Query("select uc from UserChallenge uc where uc.user.id = :userId and uc.access = :access order by uc.createdDate desc")
+    Page<UserChallenge> findByUserAndAccessOrderByCreatedDateDesc(@Param("userId") Long userId, @Param("access") String access, Pageable pageable);
 }
