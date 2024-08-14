@@ -2,25 +2,27 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { FeedDetail } from "types/index";
 import { InteractionButtons } from "features/videoDetail/InteractionButtons";
-import { CommentSection } from "features/videoDetail/CommentSection";
+// import { CommentSection } from "features/videoDetail/CommentSection"; // 댓글 기능 주석 처리
 
 interface VideoPlayerProps {
   video: FeedDetail;
-  showComments: boolean;
-  onToggleComments: () => void;
+  // showComments: boolean; // 댓글 기능 주석 처리
+  // onToggleComments: () => void; // 댓글 기능 주석 처리
   userChallengeId: number;
 }
 
 const FeedPlayer: React.FC<VideoPlayerProps> = ({
   video,
-  showComments,
-  onToggleComments,
+  // showComments, // 댓글 기능 주석 처리
+  // onToggleComments, // 댓글 기능 주석 처리
   userChallengeId,
 }) => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
+    console.log(userChallengeId);
+
     if (video.video) {
       const base64String = video.video;
       const videoBlob = fetch(`data:video/mp4;base64,${base64String}`).then(
@@ -34,25 +36,24 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
   }, [video.video]);
 
   return (
-    <VideoPlayerWrapper $showComments={showComments}>
+    <VideoPlayerWrapper /* $showComments={showComments} */>
       <VideoContent>
         {videoUrl && (
           <VideoElement ref={videoRef} src={videoUrl} controls autoPlay loop />
         )}
         <InteractionButtons
           likes={video.likes}
-          commentCount={0}
-          onToggleComments={onToggleComments}
+          // commentCount={0} // 댓글 기능 주석 처리
+          // onToggleComments={onToggleComments} // 댓글 기능 주석 처리
         />
       </VideoContent>
-      <CommentSection show={showComments} userChallengeId={userChallengeId} />
+      {/* <CommentSection show={showComments} userChallengeId={userChallengeId} /> */}
+      {/* 댓글 기능 주석 처리 */}
     </VideoPlayerWrapper>
   );
 };
 
-const VideoPlayerWrapper = styled.div<{
-  $showComments: boolean;
-}>`
+const VideoPlayerWrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;

@@ -2,40 +2,39 @@ import React from "react";
 import styled from "styled-components";
 import { Video } from "types/index";
 import { InteractionButtons } from "features/videoDetail/InteractionButtons";
-import { CommentSection } from "features/videoDetail/CommentSection";
+// import { CommentSection } from "features/videoDetail/CommentSection"; // 댓글 기능 주석처리
 
 interface VideoPlayerProps {
   video: Video;
   isActive: boolean;
-  showComments: boolean;
-  onToggleComments: () => void;
+  // showComments: boolean; // 댓글 기능 주석처리
+  // onToggleComments: () => void; // 댓글 기능 주석처리
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   video,
-  isActive,
-  showComments,
-  onToggleComments,
+  // isActive,
+  // showComments, // 댓글 기능 주석처리
+  // onToggleComments, // 댓글 기능 주석처리
 }) => {
   return (
-    <VideoPlayerWrapper $isActive={isActive} $showComments={showComments}>
+    <VideoPlayerWrapper /*  $isActive={isActive} $showComments={showComments} */
+    >
       <VideoContent>
         <VideoThumbnail src={video.src} alt={video.title} />
         <InteractionButtons
           likes={video.likes}
-          commentCount={video.comments.length}
-          onToggleComments={onToggleComments}
+          // commentCount={video.comments.length}
+          // onToggleComments={onToggleComments} // 댓글 기능 주석처리
         />
       </VideoContent>
-      <CommentSection show={showComments} userChallengeId={video.id} />
+      {/* <CommentSection show={showComments} userChallengeId={video.id} /> */}
+      {/* 댓글 기능 주석처리 */}
     </VideoPlayerWrapper>
   );
 };
 
-const VideoPlayerWrapper = styled.div<{
-  $isActive: boolean;
-  $showComments: boolean;
-}>`
+const VideoPlayerWrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -45,8 +44,6 @@ const VideoPlayerWrapper = styled.div<{
   width: 100%;
   margin-bottom: 3vh;
   transition: transform 0.3s ease-in-out;
-  transform: ${(props) =>
-    props.$showComments ? "translateX(-20%)" : "translateX(0)"};
 `;
 
 const VideoContent = styled.div`
@@ -62,3 +59,5 @@ const VideoThumbnail = styled.img`
   object-fit: cover;
   border-radius: 10px;
 `;
+
+export default VideoPlayer;
