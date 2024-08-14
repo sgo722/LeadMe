@@ -246,12 +246,12 @@ public class UserChallengeService {
             // 영구 저장 경로로 이동 및 파일명 변경
             String finalFileName = request.getFileName() + ".mp4";
 
-            Path userChallengeFolder = Paths.get(PERMANENT_DIRECTORY, String.valueOf(user.getId()));
-            if (!Files.exists(userChallengeFolder)) {
-                Files.createDirectories(userChallengeFolder);
-            }
+//            Path userChallengeFolder = Paths.get(PERMANENT_DIRECTORY, String.valueOf(user.getId()));
+//            if (!Files.exists(userChallengeFolder)) {
+//                Files.createDirectories(userChallengeFolder);
+//            }
 
-            Path permanentVideoPath = Paths.get(PERMANENT_DIRECTORY + "/" + String.valueOf(user.getId()), finalFileName);
+            Path permanentVideoPath = Paths.get(PERMANENT_DIRECTORY + "/", finalFileName);
 
             Files.move(tempVideoPath, permanentVideoPath);
 
@@ -456,12 +456,12 @@ public class UserChallengeService {
 
         // 썸네일 추출
         String thumbnailFileName = fileName + ".png";
-        Path thumbnailFolder = Paths.get(THUMBNAIL_DIRECTORY, String.valueOf(userId));
-        if (!Files.exists(thumbnailFolder)) {
-            Files.createDirectories(thumbnailFolder);
-        }
+//        Path thumbnailFolder = Paths.get(THUMBNAIL_DIRECTORY, String.valueOf(userId));
+//        if (!Files.exists(thumbnailFolder)) {
+//            Files.createDirectories(thumbnailFolder);
+//        }
 
-        Path thumbnailPath = Paths.get(THUMBNAIL_DIRECTORY + "/" + userId, thumbnailFileName);
+        Path thumbnailPath = Paths.get(THUMBNAIL_DIRECTORY + "/", thumbnailFileName);
 
         // 디렉토리 존재 여부 확인 및 생성
         Files.createDirectories(thumbnailPath.getParent());
