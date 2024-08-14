@@ -72,10 +72,6 @@ public class ChallengeService {
 
     private final RestTemplate restTemplate;
 
-
-    @Value("${python-server.permanent-challenge-thumbnail-directory}")
-    String THUMBNAIL_DIRECTORY;
-
     @Value("${python-server.permanent-challenge-directory}")
     String CHALLENGE_DIRECTORY;
 
@@ -157,16 +153,16 @@ public class ChallengeService {
 
 
         // 썸네일을 파일로 생성하고, 썸네일 경로를 데이터베이스(MySQL)에 저장한다.
-        try{
-            String finalFileName = request.getYoutubeId() + ".mp4";
-            Path permanentVideoPath = Paths.get(CHALLENGE_DIRECTORY, finalFileName);
-
-            String challengeThumbnail = extractThumbnail(permanentVideoPath, request.getYoutubeId());
-            savedChallenge.setThumbnail(challengeThumbnail);
-            challengeRepository.save(savedChallenge);
-        }catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try{
+//            String finalFileName = request.getYoutubeId() + ".mp4";
+//            Path permanentVideoPath = Paths.get(CHALLENGE_DIRECTORY, finalFileName);
+//
+//            String challengeThumbnail = extractThumbnail(permanentVideoPath, request.getYoutubeId());
+//            savedChallenge.setThumbnail(challengeThumbnail);
+//            challengeRepository.save(savedChallenge);
+//        }catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
 
         return ChallengeCreateResponse.toResponse(savedChallenge);
@@ -279,60 +275,6 @@ public class ChallengeService {
      * @throws IOException
      * @throws InterruptedException
      */
-
-    private String extractThumbnail(Path videoPath, String fileName) throws IOException, InterruptedException {
-        // 비디오 길이 확인
-        String durationCommand = String.format("ffmpeg -i %s", videoPath.toString());
-        Process process = Runtime.getRuntime().exec(durationCommand);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-
-        String line;
-        String durationStr = null;
-        Pattern pattern = Pattern.compile("Duration: (\\d{2}):(\\d{2}):(\\d{2}\\.\\d{2})");
-
-        while ((line = reader.readLine()) != null) {
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.find()) {
-                durationStr = matcher.group(0);
-                break;
-            }
-        }
-        process.waitFor();
-
-        if (durationStr == null) {
-            throw new IOException("Failed to retrieve video duration.");
-        }
-
-
-        // 비디오 길이를 초 단위로 변환
-        String[] timeParts = durationStr.split(":");
-        String[] secondPart = timeParts[3].split("//.");
-        int minutes = Integer.parseInt(timeParts[2]);
-        double seconds = Double.parseDouble(secondPart[0]);
-        double totalDuration = minutes * 60 + seconds;
-
-        // 3/5 지점 계산
-        double targetTime = totalDuration * 3 / 5;
-
-        // 썸네일 추출
-        String thumbnailFileName = fileName + ".png";
-        Path thumbnailPath = Paths.get(THUMBNAIL_DIRECTORY, thumbnailFileName);
-
-        // 디렉토리 존재 여부 확인 및 생성
-        Files.createDirectories(thumbnailPath.getParent());
-
-        // 수정된 부분 시작
-        String thumbnailCommand = String.format("ffmpeg -i %s -ss %f -vframes 1 %s", videoPath.toString(), targetTime, thumbnailPath.toString());
-        ProcessBuilder builder = new ProcessBuilder(thumbnailCommand.split(" "));
-        builder.redirectErrorStream(true);
-
-        Process thumbnailProcess = builder.start();
-
-        // 프로세스 출력 로그
-        reader = new BufferedReader(new InputStreamReader(thumbnailProcess.getInputStream()));
-
-        return thumbnailPath.toString();
-    }
 
     /**
      * 챌린지 목록에서 유튜브 썸네일 이미지 주소가 없는 목록을 가져와 유튜브 api를 활용해 썸네일 주소를 입력해준다.

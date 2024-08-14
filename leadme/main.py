@@ -15,6 +15,7 @@ import subprocess
 import asyncio
 from moviepy.editor import VideoFileClip , AudioFileClip, CompositeAudioClip
 from video_processor import download_video, process_video, process_video_user
+from PIL import Image
 
 
 # 로깅 설정
@@ -131,6 +132,7 @@ async def saveVideDataByUserFile(
     original_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_{youtubeId}.mp4")
     flipped_temp_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}_flipped_temp.mp4")
     final_video_path = os.path.join(TEMP_DIRECTORY, f"{unique_id}.mp4")
+    thumbnail_path = os.path.join(THUMBNAIL_DIRECTORY, f"{unique_id}.png")
     youtube_video_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE, f"{youtubeId}.mp4")
     youtube_audio_path = os.path.join(PERMANENT_DIRECTORY_CHALLENGE_AUDIO, f"{unique_id}.mp3")
 
@@ -173,6 +175,13 @@ async def saveVideDataByUserFile(
         convert_start = time.time()
         # 뒤집힌 비디오 파일을 mp4로 변환
         clip = VideoFileClip(flipped_temp_video_path)
+
+        target_time = clip.duration * 0.6
+
+        frame = clip.get_frame(target_time)
+
+        image = image.fromarray(frame)
+        image.save(thumbnail_path)
 
         # 원본 라인 (Jinwoo)
         # clip.write_videofile(final_video_path, codec="libx264")

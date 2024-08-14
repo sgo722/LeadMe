@@ -103,7 +103,7 @@ pipeline {
                             -v /home/ubuntu/leadme/video/user:/home/ubuntu/python/video/user \
                             -v /home/ubuntu/leadme/video/challenge:/home/ubuntu/python/video/challenge \
                             -v /home/ubuntu/leadme/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
-                            -v /home/ubuntu/leadme/video/challenge/thumbnail:/home/ubuntu/python/video/challenge/thumbnail \
+                            -v /home/ubuntu/leadme/video/temporary/thumbnail:/home/ubuntu/python/video/temporary/thumbnail \
                             -v /home/ubuntu/leadme/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
                             ${DOCKERHUB_USERNAME}/python-image:latest
                         '''
@@ -134,7 +134,7 @@ pipeline {
                                 -v /home/ubuntu/leadme/video/user:/home/ubuntu/python/video/user \
                                 -v /home/ubuntu/leadme/video/challenge:/home/ubuntu/python/video/challenge \
                                 -v /home/ubuntu/leadme/video/challenge/audio:/home/ubuntu/python/video/challenge/audio \
-                                -v /home/ubuntu/leadme/video/challenge/thumbnail:/home/ubuntu/python/video/challenge/thumbnail \
+                                -v /home/ubuntu/leadme/video/temporary/thumbnail:/home/ubuntu/python/video/temporary/thumbnail \
                                 -v /home/ubuntu/leadme/video/user/thumbnail:/home/ubuntu/python/video/user/thumbnail \
                                 -v /home/ubuntu:/host \
                                 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" \
