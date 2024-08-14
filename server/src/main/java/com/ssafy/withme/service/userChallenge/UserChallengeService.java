@@ -487,13 +487,13 @@ public class UserChallengeService {
             Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserOrderByCreatedDateDesc(user, pageable);
             return userChallengeByPaging
                     .map(userChallenge -> {
-                        try {
-                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
-                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
-                            return UserChallengeMyPageResponse.responseOf(userChallenge, thumbnailBytes);
-                        } catch (IOException e) {
-                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
-                        }
+//                        try {
+//                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
+//                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
+                            return UserChallengeMyPageResponse.responseOf(userChallenge, null);
+//                        } catch (IOException e) {
+//                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
+//                        }
                     });
         }
 
@@ -504,13 +504,13 @@ public class UserChallengeService {
             Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserAndAccessOrderByCreatedDateDesc(findUser, "public", pageable);
             return userChallengeByPaging
                     .map(userChallenge -> {
-                        try {
-                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
-                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
-                            return UserChallengeMyPageResponse.responseOf(userChallenge, thumbnailBytes);
-                        } catch (IOException e) {
-                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
-                        }
+//                        try {
+//                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
+//                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
+                            return UserChallengeMyPageResponse.responseOf(userChallenge, null);
+//                        } catch (IOException e) {
+//                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
+//                        }
                     });
 
         }
