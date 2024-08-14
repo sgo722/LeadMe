@@ -22,9 +22,11 @@ public class UserChallengeFeedResponse {
 
     private byte[] video;
 
+    private Boolean isLiked;
+
 
     @Builder
-    private UserChallengeFeedResponse(String nickname, String profileImg,Long userId, String title, Long userChallengeId, int likes, byte[] video) {
+    private UserChallengeFeedResponse(String nickname, String profileImg,Long userId, String title, Long userChallengeId, int likes, byte[] video, Boolean isLiked) {
         this.nickname = nickname;
         this.profileImg = profileImg;
         this.userId = userId;
@@ -32,6 +34,7 @@ public class UserChallengeFeedResponse {
         this.userChallengeId = userChallengeId;
         this.likes = likes;
         this.video = video;
+        this.isLiked = isLiked;
     }
 
     public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, User user, byte[] video){
@@ -43,10 +46,15 @@ public class UserChallengeFeedResponse {
                 .userChallengeId(userChallenge.getId())
                 .likes(userChallenge.getLikes())
                 .video(video)
+                .isLiked(
+                        userChallenge.getUserChallengeLikeList().stream()
+                                .filter(c -> c.getUser().getId() == user.getId())
+                                .toList().size() == 1
+                )
                 .build();
     }
 
-    public static UserChallengeFeedResponse of(UserChallenge userChallenge, byte[] video){
+    public static UserChallengeFeedResponse of(UserChallenge userChallenge, Long userId, byte[] video){
 
         return UserChallengeFeedResponse.builder()
                 .nickname(userChallenge.getUser().getNickname())
@@ -56,6 +64,11 @@ public class UserChallengeFeedResponse {
                 .userChallengeId(userChallenge.getId())
                 .likes(userChallenge.getLikes())
                 .video(video)
+                .isLiked(
+                        userChallenge.getUserChallengeLikeList().stream()
+                                .filter(c -> c.getUser().getId() == userId)
+                                .toList().size() == 1
+                )
                 .build();
     }
 }

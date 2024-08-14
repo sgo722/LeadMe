@@ -437,7 +437,7 @@ public class UserChallengeService {
 //                        try {
 //                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
 //                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
-                            return UserChallengeMyPageResponse.responseOf(userChallenge, null);
+                            return UserChallengeMyPageResponse.responseOf(userChallenge, null, user.getId());
 //                        } catch (IOException e) {
 //                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
 //                        }
@@ -454,7 +454,7 @@ public class UserChallengeService {
 //                        try {
 //                            Path thumbnailPath = new File(userChallenge.getThumbnailPath()).toPath();
 //                            byte[] thumbnailBytes = Files.readAllBytes(thumbnailPath);
-                            return UserChallengeMyPageResponse.responseOf(userChallenge, null);
+                            return UserChallengeMyPageResponse.responseOf(userChallenge, null, findUser.getId());
 //                        } catch (IOException e) {
 //                            throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_THUMBNAIL_FILE);
 //                        }
@@ -464,11 +464,11 @@ public class UserChallengeService {
         return null;
     }
 
-    public List<UserChallengeFeedResponse> findByKeyword(String keyword) {
+    public List<UserChallengeFeedResponse> findByKeyword(String keyword, User user) {
 
         List<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword);
 
-        return fromEntity(findList);
+        return fromEntity(findList, user.getId());
 
 
 //        List<UserChallengeFeedResponse> userChallengeFeedResponse = findUserChallenge.stream()
@@ -533,10 +533,10 @@ public class UserChallengeService {
 
         List<UserChallenge> findList = userChallengeRepository.findByUserId(userId);
 
-        return fromEntity(findList);
+        return fromEntity(findList, userId);
     }
 
-    private List<UserChallengeFeedResponse> fromEntity(List<UserChallenge> userChallengeList) {
+    private List<UserChallengeFeedResponse> fromEntity(List<UserChallenge> userChallengeList, Long userId) {
 
         return userChallengeList.stream()
                 .map(c -> {
@@ -544,7 +544,7 @@ public class UserChallengeService {
                     try {
                         byte[] videoData = Files.readAllBytes(Paths.get(c.getVideoPath()));
 
-                        return UserChallengeFeedResponse.of(c, videoData);
+                        return UserChallengeFeedResponse.of(c, userId, videoData);
                     } catch (IOException e) {
 
                         log.info("File Exception: {}", e.getMessage());

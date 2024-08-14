@@ -62,9 +62,11 @@ public class UserChallengeController {
      * @return
      */
     @GetMapping("/search/{keyword}")
-    public SuccessResponse<List> getUserChallengeByKeyword(@PathVariable("keyword") String keyword){
+    public SuccessResponse<List> getUserChallengeByKeyword(
+            @PathVariable("keyword") String keyword,
+            @CurrentUser User user){
 
-        List<UserChallengeFeedResponse> response = userChallengeService.findByKeyword(keyword);
+        List<UserChallengeFeedResponse> response = userChallengeService.findByKeyword(keyword, user);
 
         return SuccessResponse.of(response);
     }
