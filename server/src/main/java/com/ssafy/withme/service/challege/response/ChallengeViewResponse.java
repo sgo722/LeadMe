@@ -46,6 +46,9 @@ public class ChallengeViewResponse {
     }
 
     public static ChallengeViewResponse ofResponse(Challenge challenge) {
+
+        challenge.getChallengeHashTags().size();
+
         return ChallengeViewResponse.builder()
                 .challengeId(challenge.getId())
                 .thumbnail(challenge.getThumbnailUrl())

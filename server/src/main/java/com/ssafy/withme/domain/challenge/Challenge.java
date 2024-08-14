@@ -34,10 +34,10 @@ public class Challenge extends BaseEntity {
 
     private int originalFps;
 
-    @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<UserChallenge> userChallenges;
 
-    @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<ChallengeHashTag> challengeHashTags;
 
     @Builder
