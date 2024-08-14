@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import Header from "components/Header";
 import { SearchBar } from "components/SearchBar";
 import FeedPlayer from "features/videoDetail/FeedPlayer";
 import { ResponseData, FeedDetail } from "types/index";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
+import { getJWTHeader } from "axiosInstance/apiClient";
 
 interface FeedProps {
   totalPage: number;
@@ -20,6 +21,7 @@ const Feed = () => {
   const [feed, setFeed] = useState<FeedDetail[]>([]);
   const [showComments, setShowComments] = useState<number | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
 
   const mutationFeed = useMutation<FeedProps, Error, number>({
@@ -28,6 +30,7 @@ const Feed = () => {
         "/api/v1/userChallenge/feed",
         {
           params: { page, size: 3 },
+          headers: getJWTHeader(),
         }
       );
       return response.data.data;
@@ -56,7 +59,10 @@ const Feed = () => {
   const mutationUserFeed = useMutation<FeedDetail[], Error, string>({
     mutationFn: async (id: string) => {
       const response = await axiosInstance.get<ResponseData<FeedDetail[]>>(
-        `/api/v1/userChallenge/search/users/${id}`
+        `/api/v1/userChallenge/search/users/${id}`,
+        {
+          headers: getJWTHeader(),
+        }
       );
       return response.data.data;
     },
@@ -72,7 +78,10 @@ const Feed = () => {
   const mutationSearchFeed = useMutation<FeedDetail[], Error, string>({
     mutationFn: async (keyword: string) => {
       const response = await axiosInstance.get<ResponseData<FeedDetail[]>>(
-        `/api/v1/userChallenge/search/${keyword}`
+        `/api/v1/userChallenge/search/${keyword}`,
+        {
+          headers: getJWTHeader(),
+        }
       );
       return response.data.data;
     },
@@ -87,8 +96,12 @@ const Feed = () => {
 
   useEffect(() => {
     if (userId) {
-      console.log(userId);
-      mutationUserFeed.mutate(userId);
+      if (getJWTHeader()) {
+        mutationUserFeed.mutate(userId);
+      } else {
+        alert("로그인 후 이용 가능한 서비스입니다.");
+        navigate("/home");
+      }
     } else if (location.pathname === "/feed") {
       mutationFeed.mutate(0);
     }
