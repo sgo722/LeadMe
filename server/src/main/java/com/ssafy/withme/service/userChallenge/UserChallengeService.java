@@ -483,7 +483,8 @@ public class UserChallengeService {
 
         // 본인의 개인 피드를 조회한 경우 - access값이 private, public 모두 보여준다
         if(findUser.equals(user)){
-            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdOrderByCreatedDateDesc(user.getId(), pageable);
+            System.out.println("본인");
+            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserOrderByCreatedDateDesc(user, pageable);
             return userChallengeByPaging
                     .map(userChallenge -> {
                         try {
@@ -498,7 +499,9 @@ public class UserChallengeService {
 
         // 타인의 개인피드를 조회한 경우 - access값이 public인 영상만 보여준다.
         if(!findUser.equals(user)){
-            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserIdAndAccessOrderByCreatedDateDesc(findUser.getId(), "public", pageable);
+
+            System.out.println("타인");
+            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserAndAccessOrderByCreatedDateDesc(findUser, "public", pageable);
             return userChallengeByPaging
                     .map(userChallenge -> {
                         try {
