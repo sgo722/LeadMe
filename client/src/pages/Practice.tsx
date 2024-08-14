@@ -9,10 +9,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
-// import { useSetRecoilState } from "recoil";
-// import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
-import { CompletionAlertModal } from "components/CompletionAlertModal";
+import { useSetRecoilState } from "recoil";
+import { IsShortsVisibleAtom, RecordedVideoUrlAtom } from "stores/index";
 import { SubmitModal } from "features/practice/SubmitModal";
+import { AlertModal } from "components/AlertModal";
+import { CompletionAlertModal } from "components/CompletionAlertModal";
 import { TiMediaRecord } from "react-icons/ti";
 import { MdOutlineSpeed } from "react-icons/md";
 import countdownSound from "assets/audio/countdown.mp3";
@@ -62,6 +63,12 @@ export const Practice: React.FC = () => {
   // URL 파라미터에서 videoId 추출
   const { videoId } = useParams<{ videoId?: string }>();
   const nav = useNavigate();
+
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [showAlertModal, setShowAlertModal] = useState<boolean>(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
+  const setIsShortsVisible = useSetRecoilState(IsShortsVisibleAtom);
+  const setRecordedVideoUrl = useSetRecoilState(RecordedVideoUrlAtom);
 
   // Recoil 상태 설정
   // const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
@@ -527,20 +534,37 @@ export const Practice: React.FC = () => {
 
       return res.data;
     },
-
-    onSuccess: (data) => {
+    onMutate: (data) => {
+      setIsAnalyzing(true);
       setShowSubmitModal(false);
       setRecordedChunks([]);
-      // 이제 레포트페이지로 이동
-      nav(`/report/${data.data.uuid}`);
+
+      const videoUrl = URL.createObjectURL(data.videoFile);
+      setRecordedVideoUrl(videoUrl);
+      setIsShortsVisible(true);
+
+      setAlertMessage("영상 분석이 시작되었습니다!");
+      setShowAlertModal(true);
+      nav("/home");
     },
-    onError: (error, variables) => {
+
+    onSuccess: (data) => {
+      setIsAnalyzing(false);
+      setAlertMessage("영상 분석이 완료되었습니다!");
+      setShowAlertModal(true);
+      setTimeout(() => {
+        setIsShortsVisible(false);
+        setRecordedVideoUrl(null);
+        nav(`/report/${data.data.uuid}`);
+      }, 2000);
+    },
+    onError: (error) => {
       console.error("제출 실패", error);
-      console.log("전송 시도한 데이터:", {
-        videoFileSize: variables.videoFile.size,
-        userId: variables.userId,
-        challengeId: variables.challengeId,
-      });
+      setIsAnalyzing(false);
+      setIsShortsVisible(false);
+      setRecordedVideoUrl(null);
+      setAlertMessage("영상 제출에 실패했습니다. 다시 시도해주세요.");
+      setShowAlertModal(true);
     },
   });
 
@@ -736,7 +760,12 @@ export const Practice: React.FC = () => {
           setRecordedChunks([]);
         }}
         onSubmit={handleSubmit}
-        isPending={submitVideoMutation.isPending}
+        isPending={submitVideoMutation.isPending || isAnalyzing}
+      />
+      <AlertModal
+        isOpen={showAlertModal}
+        onClose={() => setShowAlertModal(false)}
+        message={alertMessage}
       />
     </>
   );

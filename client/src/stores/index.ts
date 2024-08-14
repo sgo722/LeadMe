@@ -15,3 +15,8 @@ export const CurrentYoutubeIdAtom = atom({
   key: "CurrentYoutubeIdAtom",
   default: "",
 });
+
+export const RecordedVideoUrlAtom = atom<string | null>({
+  key: "RecordedVideoUrlAtom",
+  default: null,
+});
