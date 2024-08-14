@@ -429,7 +429,7 @@ public class UserChallengeService {
 
 
         // 본인의 개인 피드를 조회한 경우 - access값이 private, public 모두 보여준다
-        if(findUser.equals(user)){
+        if(user != null && user.getId() == viewUserId){
             System.out.println("본인");
             Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserOrderByCreatedDateDesc(user.getId(), pageable);
             return userChallengeByPaging
@@ -445,7 +445,7 @@ public class UserChallengeService {
         }
 
         // 타인의 개인피드를 조회한 경우 - access값이 public인 영상만 보여준다.
-        if(!findUser.equals(user)){
+        else{
 
             System.out.println("타인");
             Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserAndAccessOrderByCreatedDateDesc(findUser.getId(), "public", pageable);
@@ -461,12 +461,14 @@ public class UserChallengeService {
                     });
 
         }
-        return null;
     }
 
     public List<UserChallengeFeedResponse> findByKeyword(String keyword, User user) {
 
         List<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword);
+
+        if (user == null)
+            return fromEntity(findList, 0L);
 
         return fromEntity(findList, user.getId());
 
@@ -529,9 +531,23 @@ public class UserChallengeService {
         return UserChallengeUpdateResponse.ofResponse(userChallenge);
     }
 
-    public List<UserChallengeFeedResponse> findByUserId(Long userId) {
+    public List<UserChallengeFeedResponse> findByUserId(Long userId, User currentUser) {
 
-        List<UserChallenge> findList = userChallengeRepository.findByUserId(userId);
+        List<UserChallenge> findList = userChallengeRepository.findByUserId(userId).stream()
+                .map(c -> {
+
+                    if (c.getAccess().equals("private") && currentUser.getId() != userId) {
+
+                        return null;
+                    }
+
+                    if (currentUser == null && c.getAccess().equals("public"))
+                        return c;
+
+                    return c;
+                })
+                .filter(Objects::nonNull)
+                .toList();
 
         return fromEntity(findList, userId);
     }

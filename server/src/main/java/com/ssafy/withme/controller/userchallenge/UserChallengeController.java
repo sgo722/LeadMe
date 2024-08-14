@@ -77,9 +77,12 @@ public class UserChallengeController {
      * @return
      */
     @GetMapping("/search/users/{userId}")
-    public SuccessResponse<?> getUserChallengeByUserId(@PathVariable("userId") Long userId){
+    public SuccessResponse<?> getUserChallengeByUserId(
+            @PathVariable("userId") Long userId,
+            @CurrentUser User user
+    ){
 
-        List<UserChallengeFeedResponse> findList = userChallengeService.findByUserId(userId);
+        List<UserChallengeFeedResponse> findList = userChallengeService.findByUserId(userId, user);
 
         return SuccessResponse.of(findList);
     }
