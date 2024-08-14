@@ -255,7 +255,7 @@ public class UserChallengeService {
             Files.move(tempVideoPath, permanentVideoPath);
 
 
-            String thumbnailPath = extractThumbnail(tempVideoPath, user.getId(), request.getFileName());
+            String thumbnailPath = extractThumbnail(permanentVideoPath, user.getId(), request.getFileName());
 
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
