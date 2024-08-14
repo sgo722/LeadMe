@@ -7,7 +7,9 @@ import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeReq
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeUpdateRequest;
 import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.AuthorizationException;
+import com.ssafy.withme.global.exception.BusinessException;
 import com.ssafy.withme.service.userChallenge.response.*;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
@@ -521,6 +523,56 @@ public class UserChallengeService {
 
         }
         return null;
+    }
+
+    public UserChallengeFeedResponses findByKeyword(String keyword, Pageable pageable) {
+
+        Page<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword, pageable);
+
+        return UserChallengeFeedResponses.builder()
+                .totalPage(findList.getTotalPages())
+                .totalElement(findList.getTotalElements())
+                .pageSize(findList.getPageable().getPageSize())
+                .size(findList.getSize())
+                .content(findList.stream()
+                        .map(c -> {
+                            try {
+                                byte[] video = Files.readAllBytes(Paths.get(c.getVideoPath()));
+
+                                return UserChallengeFeedResponse.of(c, video);
+                            } catch (Exception e) {
+
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .toList())
+                .build();
+
+
+//        List<UserChallengeFeedResponse> userChallengeFeedResponse = findUserChallenge.stream()
+//                .map(userChallenge -> {
+//                    try {
+//
+//                        byte[] video = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
+//
+//                        return UserChallengeFeedResponse.of(userChallenge, video);
+//                    } catch (Exception e) {
+//                        // 예외 처리 로직을 여기에 추가
+//                        e.printStackTrace();
+//                        return null; // 또는 다른 적절한 예외 처리 방법
+//                    }
+//                })
+//                .filter(Objects::nonNull) // null 값을 필터링하여 스트림에서 제외
+//                .collect(Collectors.toList());
+//
+//        int pageSize = findUserChallenge.getPageable().getPageSize();
+//        long totalElements = findUserChallenge.getTotalElements();
+//        int totalPages = findUserChallenge.getTotalPages();
+//        int size = findUserChallenge.getSize();
+//
+//        return new UserChallengeFeedResponses(size, totalElements, totalPages, pageSize, userChallengeFeedResponse);
+
     }
 
 
