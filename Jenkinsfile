@@ -36,10 +36,10 @@ pipeline {
                     }
                     
                     // 클라이언트 빌드
-                    //dir('S11P12C109/client') {
-                    //    sh 'npm install'  
-                    //    sh 'npm run build'  
-                    //}
+                    dir('S11P12C109/client') {
+                        sh 'npm install'  
+                        sh 'npm run build'  
+                    }
                 }
             }
         }
