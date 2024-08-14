@@ -234,7 +234,6 @@ public class UserChallengeService {
         log.info("uuid : " + request.getUuid());
 
 
-        Path thumbnailExtractPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + ".mp4");
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_merged.mp4");
 
         log.info("임시 비디오 경로 : " + tempVideoPath.toString());
@@ -247,10 +246,18 @@ public class UserChallengeService {
         try {
             // 영구 저장 경로로 이동 및 파일명 변경
             String finalFileName = request.getFileName() + ".mp4";
-            Path permanentVideoPath = Paths.get(TEMP_DIRECTORY, finalFileName);
+
+//            Path userChallengeFolder = Paths.get(PERMANENT_DIRECTORY, String.valueOf(user.getId()));
+//            if (!Files.exists(userChallengeFolder)) {
+//                Files.createDirectories(userChallengeFolder);
+//            }
+
+            Path permanentVideoPath = Paths.get(PERMANENT_DIRECTORY + "/", finalFileName);
+
             Files.move(tempVideoPath, permanentVideoPath);
 
-            String thumbnailPath = extractThumbnail(thumbnailExtractPath, request.getFileName());
+
+            String thumbnailPath = extractThumbnail(tempVideoPath, user.getId(), request.getFileName());
 
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
@@ -413,7 +420,7 @@ public class UserChallengeService {
      * @throws InterruptedException
      */
     @Transactional
-    public String extractThumbnail(Path videoPath, String fileName) throws IOException, InterruptedException {
+    public String extractThumbnail(Path videoPath, Long userId, String fileName) throws IOException, InterruptedException {
         // 비디오 길이 확인
         String durationCommand = String.format("ffmpeg -i %s", videoPath.toString());
         Process process = Runtime.getRuntime().exec(durationCommand);
@@ -450,7 +457,12 @@ public class UserChallengeService {
 
         // 썸네일 추출
         String thumbnailFileName = fileName + ".png";
-        Path thumbnailPath = Paths.get(THUMBNAIL_DIRECTORY, thumbnailFileName);
+//        Path thumbnailFolder = Paths.get(THUMBNAIL_DIRECTORY, String.valueOf(userId));
+//        if (!Files.exists(thumbnailFolder)) {
+//            Files.createDirectories(thumbnailFolder);
+//        }
+
+        Path thumbnailPath = Paths.get(THUMBNAIL_DIRECTORY + "/", thumbnailFileName);
 
         // 디렉토리 존재 여부 확인 및 생성
         Files.createDirectories(thumbnailPath.getParent());
