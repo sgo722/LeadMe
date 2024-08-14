@@ -127,6 +127,16 @@ public class CompetitionService {
 
         return competitions.stream()
                 .map(CompetitionResponse::toResponse)
+                .map(c -> {
+                    String tempKey = SESSION_KEY_PREFIX + c.getSessionId() + ":count";
+                    String value = redisTemplate.opsForValue().get(tempKey);
+
+                    Integer count = (value == null || value.isEmpty()) ? null : Integer.parseInt(value);
+
+                    c.updateCount(count);
+
+                    return c;
+                })
                 .collect(Collectors.toList());
     }
 

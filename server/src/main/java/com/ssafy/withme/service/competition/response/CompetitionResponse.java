@@ -16,6 +16,7 @@ public class CompetitionResponse {
     private String sessionId;
     private boolean isPublic;
     private LocalDateTime createdDate;
+    private Integer userCount;
 
     @Builder
     private CompetitionResponse(Long competitionId, String nickname, String profileImg ,String roomName, String sessionId, boolean isPublic, LocalDateTime createdDate) {
@@ -38,6 +39,10 @@ public class CompetitionResponse {
                 .isPublic(competition.isPublic())
                 .createdDate(competition.getCreatedDate())
                 .build();
+    }
+
+    public void updateCount(Integer count){
+        this.userCount = count;
     }
 
 }
