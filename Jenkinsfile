@@ -36,10 +36,10 @@ pipeline {
                     }
                     
                     // 클라이언트 빌드
-                    dir('S11P12C109/client') {
-                        sh 'npm install'  
-                        sh 'npm run build'  
-                    }
+                    //dir('S11P12C109/client') {
+                    //    sh 'npm install'  
+                    //    sh 'npm run build'  
+                    //}
                 }
             }
         }
@@ -60,21 +60,21 @@ pipeline {
             }
         }
 
-         stage('Build and Push Client Docker Image') {
-            steps {
-                script {
-                    dir('S11P12C109/client') { // 클라이언트 디렉토리 경로 변경
-                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                            sh '''
-                            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-                            docker build -t ${DOCKERHUB_USERNAME}/client-image:latest .
-                            docker push ${DOCKERHUB_USERNAME}/client-image:latest
-                            '''
-                        }
-                   }
-               }
-            }
-        }
+        //stage('Build and Push Client Docker Image') {
+        //    steps {
+        //        script {
+        //            dir('S11P12C109/client') { // 클라이언트 디렉토리 경로 변경
+        //                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+        //                    sh '''
+        //                    echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+        //                    docker build -t ${DOCKERHUB_USERNAME}/client-image:latest .
+        //                    docker push ${DOCKERHUB_USERNAME}/client-image:latest
+        //                    '''
+        //                }
+        //           }
+        //       }
+        //    }
+        //}
 
         stage('Build and Push Python Docker Image') {
             steps {
