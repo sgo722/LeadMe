@@ -130,6 +130,15 @@ public class PoseComparison {
         // 원본 프레임 기준으로 평균을 나눔
         totalScore = totalScore / totalFrameCount;
 
+        if(totalScore <= 80 && totalScore > 70) {
+            totalScore *= 0.95;
+        } else if(totalScore <= 70 && totalScore > 50) {
+            totalScore *= 0.9;
+        } else if(totalScore <= 50 && totalScore > 30) {
+            totalScore *= 0.7;
+        } else if (totalScore <= 30){
+            totalScore *= 0.6;
+        }
 
         log.info("totalScore :" + totalScore);
 
