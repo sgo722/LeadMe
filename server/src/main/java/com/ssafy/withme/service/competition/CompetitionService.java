@@ -233,7 +233,7 @@ public class CompetitionService {
         }
         // 호스트가 아닌 경우
         else {
-            deleteSessionCount(sessionId);
+            decrementSessionCount(sessionId);
         }
     }
 
