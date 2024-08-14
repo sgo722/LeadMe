@@ -60,17 +60,16 @@ export const ShortsModal: React.FC = () => {
 
   return (
     <ShortsContainer $shortsSize={shortsSize}>
-      <ShortsContent $shortsSize={shortsSize} ref={shortsContentRef}>
+      <ShortsContent
+        $shortsSize={shortsSize}
+        ref={shortsContentRef}
+        style={{
+          width: videoDimensions[shortsSize].width,
+          height: videoDimensions[shortsSize].height,
+        }}
+      >
         {recordedVideoUrl ? (
-          <Video
-            src={recordedVideoUrl}
-            width={videoDimensions[shortsSize].width}
-            height={videoDimensions[shortsSize].height}
-            controls
-            loop
-            muted
-            autoPlay
-          />
+          <Video src={recordedVideoUrl} controls loop muted autoPlay />
         ) : (
           <AnalyzingText>영상 분석 중...</AnalyzingText>
         )}

@@ -12,18 +12,11 @@ import { axiosInstance } from "axiosInstance/apiClient";
 import { useSetRecoilState } from "recoil";
 import { IsShortsVisibleAtom, RecordedVideoUrlAtom } from "stores/index";
 import { SubmitModal } from "features/practice/SubmitModal";
-import { AlertModal } from "components/AlertModal";
 import { CompletionAlertModal } from "components/CompletionAlertModal";
 import { TiMediaRecord } from "react-icons/ti";
 import { MdOutlineSpeed } from "react-icons/md";
 import countdownSound from "assets/audio/countdown.mp3";
 import { UserProfile } from "types";
-// import { FaVideoSlash } from "react-icons/fa6";
-
-// interface ChallengeData {
-//   youtubeId: string;
-//   url: string;
-// }
 
 interface Landmark {
   x: number;
@@ -44,11 +37,6 @@ interface VideoDataItem {
   title: string;
 }
 
-// const postChallenge = async (data: ChallengeData) => {
-//   const res = await axiosInstance.post("/api/v1/challenge", data);
-//   return res.data;
-// };
-
 const fetchYoutubeBlazePoseData = async (
   videoId: string
 ): Promise<YoutubeBlazePoseData> => {
@@ -65,18 +53,9 @@ export const Practice: React.FC = () => {
   const nav = useNavigate();
 
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [showAlertModal, setShowAlertModal] = useState<boolean>(false);
-  const [alertMessage, setAlertMessage] = useState<string>("");
   const setIsShortsVisible = useSetRecoilState(IsShortsVisibleAtom);
   const setRecordedVideoUrl = useSetRecoilState(RecordedVideoUrlAtom);
 
-  // Recoil 상태 설정
-  // const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
-  // const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
-
-  // 로컬 상태 관리
-  // const [inputUrl, setInputUrl] = useState<string>("");
-  // const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
@@ -107,26 +86,6 @@ export const Practice: React.FC = () => {
   };
 
   const sessionUser = fetchSessionUserData();
-
-  // API 요청 관련 mutation
-  // const mutation = useMutation({
-  //   mutationFn: postChallenge,
-  //   onMutate: (variables: ChallengeData) => {
-  //     setIsCompletionAlertModalOpen(true);
-  //     setIsWebcamVisible(true);
-  //     setCurrentYoutubeId(variables.youtubeId);
-  //   },
-  //   onSuccess: (data) => {
-  //     setIsWebcamVisible(false);
-  //     setCurrentYoutubeId("");
-  //     nav(`/practice/${data.data.youtubeId}`);
-  //   },
-  //   onError: () => {
-  //     setIsWebcamVisible(false);
-  //     setCurrentYoutubeId("");
-  //     nav("/home");
-  //   },
-  // });
 
   // YouTube BlazePose 데이터 쿼리
   const youtubeBlazePoseQuery = useQuery({
@@ -419,27 +378,6 @@ export const Practice: React.FC = () => {
   // UI 이벤트 핸들러
   const handleBackButtonClick = () => nav(-1);
   const handleChangeButtonClick = () => nav("/challenge");
-  // const handleSearchButtonClick = () => nav("/home");
-  // const validateUrl = (url: string) => url.toLowerCase().includes("shorts");
-  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setInputUrl(e.target.value);
-  //   setIsValidUrl(validateUrl(e.target.value));
-  // };
-
-  // const handleLoadVideo = () => {
-  //   const youtubeId = extractVideoId(inputUrl);
-  //   if (youtubeId) {
-  //     mutation.mutate({ youtubeId, url: inputUrl });
-  //     setInputUrl("");
-  //   } else {
-  //     console.error("올바른 Youtube Shorts URL이 아닙니다.");
-  //   }
-  // };
-
-  // const extractVideoId = (url: string): string | null => {
-  //   const match = url.match(/shorts\/([^?]+)/);
-  //   return match ? match[1] : null;
-  // };
 
   // 파이썬에서 영상 다운받는동안 대기시간에 홈으로 이동시켜줌
   const handleCloseIsCompletionAlertModal = () => {
@@ -542,29 +480,20 @@ export const Practice: React.FC = () => {
       const videoUrl = URL.createObjectURL(data.videoFile);
       setRecordedVideoUrl(videoUrl);
       setIsShortsVisible(true);
-
-      setAlertMessage("영상 분석이 시작되었습니다!");
-      setShowAlertModal(true);
       nav("/home");
     },
 
     onSuccess: (data) => {
       setIsAnalyzing(false);
-      setAlertMessage("영상 분석이 완료되었습니다!");
-      setShowAlertModal(true);
-      setTimeout(() => {
-        setIsShortsVisible(false);
-        setRecordedVideoUrl(null);
-        nav(`/report/${data.data.uuid}`);
-      }, 2000);
+      setIsShortsVisible(false);
+      setRecordedVideoUrl(null);
+      nav(`/report/${data.data.uuid}`);
     },
     onError: (error) => {
       console.error("제출 실패", error);
       setIsAnalyzing(false);
       setIsShortsVisible(false);
       setRecordedVideoUrl(null);
-      setAlertMessage("영상 제출에 실패했습니다. 다시 시도해주세요.");
-      setShowAlertModal(true);
     },
   });
 
@@ -761,11 +690,6 @@ export const Practice: React.FC = () => {
         }}
         onSubmit={handleSubmit}
         isPending={submitVideoMutation.isPending || isAnalyzing}
-      />
-      <AlertModal
-        isOpen={showAlertModal}
-        onClose={() => setShowAlertModal(false)}
-        message={alertMessage}
       />
     </>
   );
