@@ -231,6 +231,8 @@ public class UserChallengeService {
         log.info("설정된 폴더 경로 " + TEMP_DIRECTORY);
         log.info("uuid : " + request.getUuid());
 
+
+        Path thumbnailExtractPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + ".mp4");
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_merged.mp4");
 
         log.info("임시 비디오 경로 : " + tempVideoPath.toString());
@@ -243,10 +245,10 @@ public class UserChallengeService {
         try {
             // 영구 저장 경로로 이동 및 파일명 변경
             String finalFileName = request.getFileName() + ".mp4";
-            Path permanentVideoPath = Paths.get(PERMANENT_DIRECTORY, finalFileName);
+            Path permanentVideoPath = Paths.get(TEMP_DIRECTORY, finalFileName);
             Files.move(tempVideoPath, permanentVideoPath);
 
-            String thumbnailPath = extractThumbnail(permanentVideoPath, request.getFileName());
+            String thumbnailPath = extractThumbnail(thumbnailExtractPath, request.getFileName());
 
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
