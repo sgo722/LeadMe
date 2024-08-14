@@ -1,6 +1,7 @@
 package com.ssafy.withme.domain.challenge;
 
 import com.ssafy.withme.domain.BaseEntity;
+import com.ssafy.withme.domain.challengeHashtag.ChallengeHashTag;
 import com.ssafy.withme.domain.userchallenge.UserChallenge;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -33,15 +34,18 @@ public class Challenge extends BaseEntity {
 
     private int originalFps;
 
-
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<UserChallenge> userChallenges;
+
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<ChallengeHashTag> challengeHashTags;
 
     @Builder
     private Challenge(String youtubeId, String url, String title) {
         this.youtubeId = youtubeId;
         this.url = url;
         this.userChallenges = new ArrayList<>();
+        this.challengeHashTags = new ArrayList<>();
         this.title = title;
     }
 

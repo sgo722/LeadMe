@@ -44,4 +44,17 @@ public class ChallengeViewResponse {
                 .hashtags(hashtags)
                 .build();
     }
+
+    public static ChallengeViewResponse ofResponse(Challenge challenge) {
+        return ChallengeViewResponse.builder()
+                .challengeId(challenge.getId())
+                .thumbnail(challenge.getThumbnailUrl())
+                .url(challenge.getUrl())
+                .youtubeId(challenge.getYoutubeId())
+                .title(challenge.getTitle())
+                .hashtags(challenge.getChallengeHashTags().stream()
+                        .map(ch -> ch.getHashtag().getName())
+                        .toList())
+                .build();
+    }
 }
