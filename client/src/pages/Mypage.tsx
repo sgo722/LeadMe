@@ -64,6 +64,7 @@ const Mypage: React.FC = () => {
       setUser(data);
     },
     onError: (error: Error) => {
+      navigate("/404");
       console.error("Error fetching user Profile:", error);
     },
   });
@@ -88,7 +89,6 @@ const Mypage: React.FC = () => {
       console.log("feed", data.content);
     },
     onError: (error: Error) => {
-      navigate("/404");
       console.error("Error fetching user Feed:", error);
     },
   });
@@ -107,7 +107,6 @@ const Mypage: React.FC = () => {
       setIsFollowing(data.toLowerCase());
     },
     onError: (error: Error) => {
-      navigate("/404");
       console.error("Error checking follow status:", error);
     },
   });
@@ -458,6 +457,7 @@ const OneFeed = styled.div`
 const OneImg = styled.img`
   width: 200px;
   height: 355.5px;
+  background-color: #ffffff;
   border-radius: 8px;
   object-fit: cover;
   margin: 10px 0 12px;

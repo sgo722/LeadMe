@@ -6,6 +6,7 @@ import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeReq
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.global.annotation.CurrentUser;
 import com.ssafy.withme.global.error.ErrorCode;
+import com.ssafy.withme.global.exception.BusinessException;
 import com.ssafy.withme.global.exception.SessionNotFoundException;
 import com.ssafy.withme.global.response.SuccessResponse;
 import com.ssafy.withme.service.competition.CompetitionService;
@@ -82,10 +83,8 @@ public class CompetitionController {
         log.info("Current number of connections in session " + sessionId + ": " + activeConnectionSize);
 
         // 해당 세션 인원 1 증가하며 2명 이상인 경우에는 꽉 찼다고 반환한다.
-        if(!competitionService.incrementIfLessThenTwo(sessionId)) {
-            response.put("isFulled",  true);
-            return SuccessResponse.of(response);
-        }
+        if(!competitionService.incrementIfLessThenTwo(sessionId))
+            throw new BusinessException(ErrorCode.COMPETITION_IS_FULL);
 
         // 비밀번호가 설정된 경쟁전에 참여하는 경우
         if(request != null) {
