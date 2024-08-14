@@ -75,8 +75,14 @@ public class UserChallengeService {
     String AUDIO_DIRECTORY;
 
 
+//    @Value("${python-server.permanent-thumbnail-directory}")
+//    String THUMBNAIL_DIRECTORY;
+
+    @Value("${python-server.temporary-thumbnail-directory}")
+    String TEMPORARY_THUMBNAIL_DIRECTORY;
+
     @Value("${python-server.permanent-thumbnail-directory}")
-    String THUMBNAIL_DIRECTORY;
+    String PERMANENT_THUMBNAIL_DIRECTORY;
 
     private final UserChallengeRepository userChallengeRepository;
 
@@ -232,7 +238,7 @@ public class UserChallengeService {
         log.info("uuid : " + request.getUuid());
 
 
-        Path thumbnailExtractPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_flipped_temp.mp4");
+        Path thumbnailPath = Paths.get(TEMPORARY_THUMBNAIL_DIRECTORY, request.getUuid() + ".png");
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_merged.mp4");
 
         log.info("임시 비디오 경로 : " + tempVideoPath.toString());
@@ -241,6 +247,7 @@ public class UserChallengeService {
             throw new FileNotFoundException(NOT_EXISTS_USER_CHALLENGE_FILE);
         }
 
+        System.out.println("썸네일 경로 : " + thumbnailPath.toString());
 
         try {
             // 영구 저장 경로로 이동 및 파일명 변경
@@ -256,7 +263,7 @@ public class UserChallengeService {
             Files.move(tempVideoPath, permanentVideoPath);
 
 
-            String thumbnailPath = extractThumbnail(thumbnailExtractPath, user.getId(), request.getFileName());
+//            String thumbnailPath = extractThumbnail(thumbnailExtractPath, user.getId(), request.getFileName());
 
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
@@ -266,7 +273,7 @@ public class UserChallengeService {
                     .videoPath(PERMANENT_DIRECTORY + "/" + finalFileName)
                     .access(request.getAccess())
                     .uuid(request.getUuid())
-                    .thumbnailPath(thumbnailPath)
+                    .thumbnailPath(thumbnailPath.toString())
                     .build();
             UserChallenge savedUserChallenge = userChallengeRepository.save(userChallenge);
 
@@ -408,80 +415,6 @@ public class UserChallengeService {
 //        Files.deleteIfExists(outputPathObj);
 
         return mergedFile;
-    }
-
-    /**
-     * 썸네일 추출 기능
-     * @param videoPath
-     * @param fileName
-     * @return
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    @Transactional
-    public String extractThumbnail(Path videoPath, Long userId, String fileName) throws IOException, InterruptedException {
-        // 비디오 길이 확인
-        String durationCommand = String.format("ffmpeg -i %s", videoPath.toString());
-        Process process = Runtime.getRuntime().exec(durationCommand);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-
-        String line;
-        String durationStr = null;
-        Pattern pattern = Pattern.compile("Duration: (\\d{2}):(\\d{2}):(\\d{2}\\.\\d{2})");
-
-        while ((line = reader.readLine()) != null) {
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.find()) {
-                durationStr = matcher.group(0);
-                break;
-            }
-        }
-        process.waitFor();
-
-        if (durationStr == null) {
-            throw new IOException("Failed to retrieve video duration.");
-        }
-
-        log.info("비디오 길이 : " + durationStr);
-
-        // 비디오 길이를 초 단위로 변환
-        String[] timeParts = durationStr.split(":");
-        String[] secondPart = timeParts[3].split("//.");
-        int minutes = Integer.parseInt(timeParts[2]);
-        double seconds = Double.parseDouble(secondPart[0]);
-        double totalDuration = minutes * 60 + seconds;
-
-        // 3/5 지점 계산
-        double targetTime = totalDuration * 3 / 5;
-
-        // 썸네일 추출
-        String thumbnailFileName = fileName + ".png";
-//        Path thumbnailFolder = Paths.get(THUMBNAIL_DIRECTORY, String.valueOf(userId));
-//        if (!Files.exists(thumbnailFolder)) {
-//            Files.createDirectories(thumbnailFolder);
-//        }
-
-        Path thumbnailPath = Paths.get(THUMBNAIL_DIRECTORY + "/", thumbnailFileName);
-
-        // 디렉토리 존재 여부 확인 및 생성
-        Files.createDirectories(thumbnailPath.getParent());
-
-        // 수정된 부분 시작
-        String thumbnailCommand = String.format("ffmpeg -i %s -ss %f -vframes 1 %s", videoPath.toString(), targetTime, thumbnailPath.toString());
-        ProcessBuilder builder = new ProcessBuilder(thumbnailCommand.split(" "));
-        builder.redirectErrorStream(true);
-
-        Process thumbnailProcess = builder.start();
-
-        // 프로세스 출력 로그
-        reader = new BufferedReader(new InputStreamReader(thumbnailProcess.getInputStream()));
-
-
-        // 수정된 부분 끝
-
-        log.info("썸네일 경로 : " + thumbnailPath.toString());
-
-        return thumbnailPath.toString();
     }
 
     /**

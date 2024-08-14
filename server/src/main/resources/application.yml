@@ -72,7 +72,7 @@ python-server:
   temp-directory: /home/ubuntu/python/video/temporary
   permanent-directory: /home/ubuntu/python/video/user
   permanent-challenge-directory: /home/ubuntu/python/video/challenge
-  permanent-challenge-thumbnail-directory: /home/ubuntu/python/video/challenge/thumbnail
+  temporary-thumbnail-directory: /home/ubuntu/python/video/temporary/thumbnail
   permanent-thumbnail-directory: /home/ubuntu/python/video/user/thumbnail
   youtube-audio-directory: /home/ubuntu/python/video/challenge/audio
 
@@ -116,7 +116,7 @@ python-server:
   temp-directory: /home/ubuntu/python/video/temporary
   permanent-directory: /home/ubuntu/python/video/user
   permanent-challenge-directory: /home/ubuntu/python/video/challenge
-  permanent-challenge-thumbnail-directory: /home/ubuntu/python/video/challenge/thumbnail
+  temporary-thumbnail-directory: /home/ubuntu/python/video/temporary/thumbnail
   permanent-thumbnail-directory: /home/ubuntu/python/video/user/thumbnail
   youtube-audio-directory: /home/ubuntu/python/video/challenge/audio
 
