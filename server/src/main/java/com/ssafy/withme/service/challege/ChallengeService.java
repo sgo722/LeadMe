@@ -18,7 +18,6 @@ import com.ssafy.withme.service.challege.response.ChallengeViewResponse;
 import com.ssafy.withme.service.challege.response.ChallengeYoutubeIdResponse;
 import com.ssafy.withme.service.userChallenge.response.LandmarkResponse;
 import com.ssafy.withme.service.youtube.YouTubeService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.json.JSONException;
@@ -31,6 +30,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -56,6 +56,7 @@ import static com.ssafy.withme.global.error.ErrorCode.NOT_EXISTS_CHALLENGE_SKELE
 
 @RequiredArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class ChallengeService {
 
     private final HashtagRepository hashtagRepository;
