@@ -71,6 +71,11 @@ const submitRecordedVideo = async (data: FormData) => {
   return res.data;
 };
 
+// 랜덤 컬러
+const colors = ["#FB37FF", "#C882FF", "#33E9E9", "#FF0000", "#0051ff"];
+
+const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
+
 export const BattleRoom: React.FC = () => {
   const location = useLocation();
   const { token } = location.state as {
@@ -801,57 +806,103 @@ export const BattleRoom: React.FC = () => {
       const landmarks = challengeQuery.data.data.landmarks[frameIndex];
       if (!landmarks) return;
 
-      const connections = [
-        [11, 12],
-        [11, 13],
-        [13, 15],
-        [12, 14],
-        [14, 16],
-        [11, 23],
-        [12, 24],
-        [23, 24],
-        [23, 25],
-        [25, 27],
-        [27, 29],
-        [29, 31],
-        [24, 26],
-        [26, 28],
-        [28, 30],
-        [30, 32],
-      ];
+      const randomColor = getRandomColor();
 
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 2;
-      connections.forEach(([i, j]) => {
-        const start = landmarks[i];
-        const end = landmarks[j];
-        if (start && end) {
-          ctx.beginPath();
-          ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
-          ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
-          ctx.stroke();
-        }
-      });
+      ctx.strokeStyle = randomColor; // 주 색상
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)"; // 반투명 버전
+      ctx.shadowColor = randomColor; // 그림자 색상
+      ctx.shadowBlur = 4; // 블러 효과
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
-      const bodyJoints = [
-        11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
-      ];
-      bodyJoints.forEach((index) => {
-        const landmark = landmarks[index];
-        ctx.beginPath();
-        ctx.arc(
-          landmark.x * webcamCanvasRef.current!.width,
-          landmark.y * webcamCanvasRef.current!.height,
-          5,
-          0,
-          2 * Math.PI
-        );
-        ctx.fillStyle = "red";
-        ctx.fill();
-      });
+      // 몸통
+      drawBodyPart(ctx, [
+        landmarks[11],
+        landmarks[23],
+        landmarks[24],
+        landmarks[12],
+      ]);
+
+      // 팔
+      drawLimb(ctx, landmarks, [11, 13, 15, 17, 19, 21], 10, 5); // 왼팔
+      drawLimb(ctx, landmarks, [12, 14, 16, 18, 20, 22], 10, 5); // 오른팔
+
+      // 다리
+      drawLimb(ctx, landmarks, [23, 25, 27, 29, 31], 15, 10); // 왼쪽 다리
+      drawLimb(ctx, landmarks, [24, 26, 28, 30, 32], 15, 10); // 오른쪽 다리
     },
     [challengeQuery.data]
   );
+
+  // 몸통 그리기
+  const drawBodyPart = (ctx: CanvasRenderingContext2D, points: any[]) => {
+    ctx.beginPath();
+    ctx.moveTo(points[0].x * ctx.canvas.width, points[0].y * ctx.canvas.height);
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(
+        points[i].x * ctx.canvas.width,
+        points[i].y * ctx.canvas.height
+      );
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  };
+
+  // 팔다리를 곡선으로 그리는 함수
+  const drawLimb = (
+    ctx: CanvasRenderingContext2D,
+    landmarks: any[],
+    points: number[],
+    startWidth: number,
+    endWidth: number
+  ) => {
+    for (let i = 0; i < points.length - 1; i++) {
+      const start = landmarks[points[i]];
+      const end = landmarks[points[i + 1]];
+      const midX = (start.x + end.x) / 2;
+      const midY = (start.y + end.y) / 2;
+
+      const currentWidth =
+        startWidth - (i * (startWidth - endWidth)) / (points.length - 1);
+      const nextWidth =
+        startWidth - ((i + 1) * (startWidth - endWidth)) / (points.length - 1);
+
+      ctx.beginPath();
+      ctx.moveTo(
+        (start.x - currentWidth / 1000) * ctx.canvas.width,
+        start.y * ctx.canvas.height
+      );
+      ctx.lineTo(
+        (start.x + currentWidth / 1000) * ctx.canvas.width,
+        start.y * ctx.canvas.height
+      );
+      ctx.lineTo(
+        (end.x + nextWidth / 1000) * ctx.canvas.width,
+        end.y * ctx.canvas.height
+      );
+      ctx.lineTo(
+        (end.x - nextWidth / 1000) * ctx.canvas.width,
+        end.y * ctx.canvas.height
+      );
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 관절 부분을 원으로 그리기
+      ctx.beginPath();
+      ctx.arc(
+        midX * ctx.canvas.width,
+        midY * ctx.canvas.height,
+        currentWidth / 6, // 관절 원 지름 조절
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+      ctx.stroke();
+    }
+  };
 
   // 캔버스를 초기화하는 함수
   const clearCanvas = useCallback(() => {
