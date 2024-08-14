@@ -7,9 +7,7 @@ import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeReq
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeUpdateRequest;
 import com.ssafy.withme.domain.user.User;
-import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.AuthorizationException;
-import com.ssafy.withme.global.exception.BusinessException;
 import com.ssafy.withme.service.userChallenge.response.*;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
 import com.ssafy.withme.domain.challenge.Challenge;
@@ -234,6 +232,7 @@ public class UserChallengeService {
         log.info("uuid : " + request.getUuid());
 
 
+        Path thumbnailExtractPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "flipped_temp.mp4");
         Path tempVideoPath = Paths.get(TEMP_DIRECTORY, request.getUuid() + "_merged.mp4");
 
         log.info("임시 비디오 경로 : " + tempVideoPath.toString());
@@ -257,7 +256,7 @@ public class UserChallengeService {
             Files.move(tempVideoPath, permanentVideoPath);
 
 
-            String thumbnailPath = extractThumbnail(permanentVideoPath, user.getId(), request.getFileName());
+            String thumbnailPath = extractThumbnail(thumbnailExtractPath, user.getId(), request.getFileName());
 
             UserChallenge userChallenge = UserChallenge.builder()
                     .fileName(request.getFileName())
@@ -500,10 +499,8 @@ public class UserChallengeService {
 
         // 본인의 개인 피드를 조회한 경우 - access값이 private, public 모두 보여준다
         if(findUser.equals(user)){
-
-            log.info("===== 본인의 피드 조회 =====");
-
-            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserOrderByCreatedDateDesc(user.getId(), pageable);
+            System.out.println("본인");
+            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserOrderByCreatedDateDesc(user, pageable);
             return userChallengeByPaging
                     .map(userChallenge -> {
 //                        try {
@@ -519,9 +516,8 @@ public class UserChallengeService {
         // 타인의 개인피드를 조회한 경우 - access값이 public인 영상만 보여준다.
         if(!findUser.equals(user)){
 
-            log.info("===== 다른 유저의 피드 조회 =====");
-
-            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserAndAccessOrderByCreatedDateDesc(findUser.getId(), "public", pageable);
+            System.out.println("타인");
+            Page<UserChallenge> userChallengeByPaging = userChallengeRepository.findByUserAndAccessOrderByCreatedDateDesc(findUser, "public", pageable);
             return userChallengeByPaging
                     .map(userChallenge -> {
 //                        try {
@@ -535,56 +531,6 @@ public class UserChallengeService {
 
         }
         return null;
-    }
-
-    public UserChallengeFeedResponses findByKeyword(String keyword, Pageable pageable) {
-
-        Page<UserChallenge> findList = userChallengeRepository.findByKeyword(keyword, pageable);
-
-        return UserChallengeFeedResponses.builder()
-                .totalPage(findList.getTotalPages())
-                .totalElement(findList.getTotalElements())
-                .pageSize(findList.getPageable().getPageSize())
-                .size(findList.getSize())
-                .content(findList.stream()
-                        .map(c -> {
-                            try {
-                                byte[] video = Files.readAllBytes(Paths.get(c.getVideoPath()));
-
-                                return UserChallengeFeedResponse.of(c, video);
-                            } catch (Exception e) {
-
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .toList())
-                .build();
-
-
-//        List<UserChallengeFeedResponse> userChallengeFeedResponse = findUserChallenge.stream()
-//                .map(userChallenge -> {
-//                    try {
-//
-//                        byte[] video = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
-//
-//                        return UserChallengeFeedResponse.of(userChallenge, video);
-//                    } catch (Exception e) {
-//                        // 예외 처리 로직을 여기에 추가
-//                        e.printStackTrace();
-//                        return null; // 또는 다른 적절한 예외 처리 방법
-//                    }
-//                })
-//                .filter(Objects::nonNull) // null 값을 필터링하여 스트림에서 제외
-//                .collect(Collectors.toList());
-//
-//        int pageSize = findUserChallenge.getPageable().getPageSize();
-//        long totalElements = findUserChallenge.getTotalElements();
-//        int totalPages = findUserChallenge.getTotalPages();
-//        int size = findUserChallenge.getSize();
-//
-//        return new UserChallengeFeedResponses(size, totalElements, totalPages, pageSize, userChallengeFeedResponse);
-
     }
 
 
