@@ -1,40 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { Video } from "types/index";
 import { InteractionButtons } from "features/videoDetail/InteractionButtons";
-// import { CommentSection } from "features/videoDetail/CommentSection"; // 댓글 기능 주석처리
 
 interface VideoPlayerProps {
   video: Video;
   isActive: boolean;
-  // showComments: boolean; // 댓글 기능 주석처리
-  // onToggleComments: () => void; // 댓글 기능 주석처리
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   video,
-  // isActive,
-  // showComments, // 댓글 기능 주석처리
-  // onToggleComments, // 댓글 기능 주석처리
+  isActive,
 }) => {
+  const [isMuted, setIsMuted] = useState(true);
+
+  const toggleSound = () => {
+    setIsMuted(!isMuted);
+  };
+
   return (
-    <VideoPlayerWrapper /*  $isActive={isActive} $showComments={showComments} */
-    >
+    <VideoPlayerWrapper $isActive={isActive}>
       <VideoContent>
         <VideoThumbnail src={video.src} alt={video.title} />
         <InteractionButtons
           likes={video.likes}
-          // commentCount={video.comments.length}
-          // onToggleComments={onToggleComments} // 댓글 기능 주석처리
+          isMuted={isMuted}
+          onToggleSound={toggleSound}
         />
       </VideoContent>
-      {/* <CommentSection show={showComments} userChallengeId={video.id} /> */}
-      {/* 댓글 기능 주석처리 */}
     </VideoPlayerWrapper>
   );
 };
 
-const VideoPlayerWrapper = styled.div`
+const VideoPlayerWrapper = styled.div<{ $isActive: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
