@@ -2,22 +2,20 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { FeedDetail } from "types/index";
 import { InteractionButtons } from "features/videoDetail/InteractionButtons";
-// import { CommentSection } from "features/videoDetail/CommentSection"; // 댓글 기능 주석 처리
 
 interface VideoPlayerProps {
   video: FeedDetail;
-  // showComments: boolean; // 댓글 기능 주석 처리
-  // onToggleComments: () => void; // 댓글 기능 주석 처리
   userChallengeId: number;
+  isActive: boolean;
 }
 
 const FeedPlayer: React.FC<VideoPlayerProps> = ({
   video,
-  // showComments, // 댓글 기능 주석 처리
-  // onToggleComments, // 댓글 기능 주석 처리
   userChallengeId,
+  isActive,
 }) => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(!isActive);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -35,20 +33,40 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
     }
   }, [video.video]);
 
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isActive;
+      setIsMuted(!isActive);
+    }
+  }, [isActive]);
+
+  const toggleSound = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
+
   return (
-    <VideoPlayerWrapper /* $showComments={showComments} */>
+    <VideoPlayerWrapper>
       <VideoContent>
         {videoUrl && (
-          <VideoElement ref={videoRef} src={videoUrl} controls autoPlay loop />
+          <VideoElement
+            ref={videoRef}
+            src={videoUrl}
+            controls
+            autoPlay
+            loop
+            muted={isMuted}
+            playsInline // 모바일에서 인라인 재생을 위해
+          />
         )}
         <InteractionButtons
           likes={video.likes}
-          // commentCount={0} // 댓글 기능 주석 처리
-          // onToggleComments={onToggleComments} // 댓글 기능 주석 처리
+          isMuted={isMuted}
+          onToggleSound={toggleSound}
         />
       </VideoContent>
-      {/* <CommentSection show={showComments} userChallengeId={userChallengeId} /> */}
-      {/* 댓글 기능 주석 처리 */}
     </VideoPlayerWrapper>
   );
 };

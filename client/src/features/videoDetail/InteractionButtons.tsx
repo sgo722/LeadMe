@@ -1,17 +1,17 @@
 import React from "react";
 import styled from "styled-components";
-import { FaHeart, FaVolumeUp } from "react-icons/fa";
+import { FaHeart, FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 
 interface InteractionButtonsProps {
   likes: number;
-  // commentCount: number;
-  // onToggleComments: () => void; // 댓글 기능 주석처리
+  isMuted: boolean;
+  onToggleSound: () => void;
 }
 
 export const InteractionButtons: React.FC<InteractionButtonsProps> = ({
   likes,
-  // commentCount,
-  // onToggleComments, // 댓글 기능 주석처리
+  isMuted,
+  onToggleSound,
 }) => {
   return (
     <ButtonsWrapper>
@@ -19,12 +19,8 @@ export const InteractionButtons: React.FC<InteractionButtonsProps> = ({
         <Heart size={17} />
         <span>{likes}</span>
       </Button>
-      {/* <Button onClick={onToggleComments}>
-        <Comment size={17} />
-        <span>{commentCount}</span>
-      </Button> */}
-      <Button onClick={() => console.log("Sound toggled")}>
-        <FaVolumeUp size={20} />
+      <Button onClick={onToggleSound}>
+        {isMuted ? <FaVolumeMute size={20} /> : <FaVolumeUp size={20} />}
       </Button>
     </ButtonsWrapper>
   );

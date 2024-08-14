@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import Header from "components/Header";
@@ -19,7 +19,8 @@ interface FeedProps {
 
 const Feed = () => {
   const [feed, setFeed] = useState<FeedDetail[]>([]);
-  // const [showComments, setShowComments] = useState<number | null>(null);
+  const [activeVideoId, setActiveVideoId] = useState<number | null>(null);
+  const videoRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const location = useLocation();
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
@@ -107,13 +108,29 @@ const Feed = () => {
     }
   }, [userId]);
 
-  // const toggleComments = (userChallengeId: number) => {
-  //   if (showComments === userChallengeId) {
-  //     setShowComments(null);
-  //   } else {
-  //     setShowComments(userChallengeId);
-  //   }
-  // };
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const videoId = Number(entry.target.getAttribute("data-video-id"));
+            setActiveVideoId(videoId);
+          }
+        });
+      },
+      { threshold: 0.5 } // 50% 이상 보일 때 활성화로 간주
+    );
+
+    Object.values(videoRefs.current).forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      Object.values(videoRefs.current).forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, [feed]);
 
   const handleSearch = (searchTerm: string) => {
     console.log(searchTerm);
@@ -124,17 +141,21 @@ const Feed = () => {
     <PageLayout>
       <Header stickyOnly />
       <SearchBarWrapper>
-        <SearchBar width={650} navigation={false} onSearch={handleSearch} />
+        <SearchBar width={600} navigation={false} onSearch={handleSearch} />
       </SearchBarWrapper>
       <VideoContainer>
         {feed.map((video) => (
-          <FeedPlayer
+          <div
             key={video.userChallengeId}
-            video={video}
-            // showComments={showComments === video.userChallengeId} // 댓글 기능 주석처리
-            // onToggleComments={() => toggleComments(video.userChallengeId)} // 댓글 기능 주석처리
-            userChallengeId={video.userChallengeId}
-          />
+            ref={(el) => (videoRefs.current[video.userChallengeId] = el)}
+            data-video-id={video.userChallengeId}
+          >
+            <FeedPlayer
+              video={video}
+              userChallengeId={video.userChallengeId}
+              isActive={activeVideoId === video.userChallengeId}
+            />
+          </div>
         ))}
       </VideoContainer>
     </PageLayout>
