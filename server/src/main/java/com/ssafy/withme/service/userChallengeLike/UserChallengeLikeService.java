@@ -49,7 +49,7 @@ public class UserChallengeLikeService {
                     UserChallengeLike newUserChallengeLike = UserChallengeLike.builder()
                             .user(user)
                             .userChallenge(userChallenge)
-                            .isLike(true)
+                            .isLike(false)
                             .build();
                     userChallengeLikeRepository.save(newUserChallengeLike);
                 }
