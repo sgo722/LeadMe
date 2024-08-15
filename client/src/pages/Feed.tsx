@@ -25,6 +25,8 @@ const Feed = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
 
+  const selectedVideoIndex = location.state?.selectedVideoIndex || 0;
+
   const mutationFeed = useMutation<FeedProps, Error, number>({
     mutationFn: async (page: number) => {
       const response = await axiosInstance.get<ResponseData<FeedProps>>(
@@ -68,8 +70,9 @@ const Feed = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
-      console.log("특정유저 피드", data);
-      setFeed(data);
+      const reversedData = data.reverse(); // 데이터를 뒤집어서 저장
+      console.log("특정유저 피드", reversedData);
+      setFeed(reversedData);
     },
     onError: (error: Error) => {
       console.error("Error fetching user Feed:", error);
@@ -109,6 +112,16 @@ const Feed = () => {
   }, [userId]);
 
   useEffect(() => {
+    if (feed.length > 0 && videoRefs.current[selectedVideoIndex]) {
+      videoRefs.current[selectedVideoIndex]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      setActiveVideoId(feed[selectedVideoIndex].userChallengeId);
+    }
+  }, [feed, selectedVideoIndex]);
+
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -118,7 +131,7 @@ const Feed = () => {
           }
         });
       },
-      { threshold: 0.5 } // 50% 이상 보일 때 활성화로 간주
+      { threshold: 0.5 }
     );
 
     Object.values(videoRefs.current).forEach((ref) => {
@@ -148,10 +161,10 @@ const Feed = () => {
         <SearchBar width={600} navigation={false} onSearch={handleSearch} />
       </SearchBarWrapper>
       <VideoContainer>
-        {feed.map((video) => (
+        {feed.map((video, index) => (
           <div
             key={video.userChallengeId}
-            ref={(el) => (videoRefs.current[video.userChallengeId] = el)}
+            ref={(el) => (videoRefs.current[index] = el)}
             data-video-id={video.userChallengeId}
           >
             <FeedPlayer
