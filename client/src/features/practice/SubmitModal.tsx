@@ -1,4 +1,7 @@
+import { useState } from "react";
 import styled, { keyframes } from "styled-components";
+import { CompletionAlertModal } from "components/CompletionAlertModal";
+
 interface SubmitModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,30 +14,49 @@ export const SubmitModal: React.FC<SubmitModalProps> = ({
   onSubmit,
   isPending,
 }) => {
+  const [showCompletionAlert, setShowCompletionAlert] =
+    useState<boolean>(false);
+
+  // 제출 버튼 클릭 핸들러
+  const handleSubmit = () => {
+    setShowCompletionAlert(true);
+  };
+
+  // CompletionAlertModal 닫기 핸들러
+  const handleCompletionAlertClose = () => {
+    setShowCompletionAlert(false);
+    onSubmit();
+  };
   if (!isOpen) return null;
 
   return (
-    <ModalOverlay>
-      <ModalContent>
-        <ModalTitle>
-          녹화가 완료되었습니다.
-          <br /> 영상을 제출하시겠습니까?
-        </ModalTitle>
-        {isPending ? (
-          <SpinnerWrapper>
-            <Spinner />
-            제출중
-          </SpinnerWrapper>
-        ) : (
-          <ButtonGroup>
-            <ModalButton onClick={onClose}>취소</ModalButton>
-            <ModalButton onClick={onSubmit} $primary>
-              제출
-            </ModalButton>
-          </ButtonGroup>
-        )}
-      </ModalContent>
-    </ModalOverlay>
+    <>
+      <ModalOverlay>
+        <ModalContent>
+          <ModalTitle>
+            녹화가 완료되었습니다.
+            <br /> 영상을 제출하시겠습니까?
+          </ModalTitle>
+          {isPending ? (
+            <SpinnerWrapper>
+              <Spinner />
+              제출중
+            </SpinnerWrapper>
+          ) : (
+            <ButtonGroup>
+              <ModalButton onClick={onClose}>취소</ModalButton>
+              <ModalButton onClick={handleSubmit} $primary>
+                제출
+              </ModalButton>
+            </ButtonGroup>
+          )}
+        </ModalContent>
+      </ModalOverlay>
+      <CompletionAlertModal
+        isOpen={showCompletionAlert}
+        onClose={handleCompletionAlertClose}
+      />
+    </>
   );
 };
 
