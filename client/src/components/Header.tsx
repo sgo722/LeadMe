@@ -361,7 +361,9 @@ const Header: React.FC<HeaderProps> = ({
       )}
       <StickyNav>
         <NavContent>
-          <StyledLink to="/home">home</StyledLink>
+          <StyledLink to="/home" data-joyride="home">
+            home
+          </StyledLink>
           <StyledLink to="/feed" data-joyride="feed">
             feed
           </StyledLink>
@@ -608,10 +610,31 @@ const StyledLink = styled(Link)`
   text-decoration: none;
   padding: 9px 14px;
   margin: 0 16px;
+  position: relative;
+  display: inline-block;
+
+  &::after {
+    content: attr(data-joyride);
+    content: attr(data-joyride) / "";
+    height: 2px;
+    bottom: 3px;
+    position: absolute;
+    left: 14px;
+    transform: scaleX(0);
+    transform-origin: left;
+    background-color: #ee5050;
+    transition: transform 0.3s ease-out;
+    white-space: nowrap;
+    color: transparent;
+    pointer-events: none;
+  }
 
   &:hover {
-    color: #ff7676;
-    text-decoration: underline;
+    color: #ee5050;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
   }
 `;
 
