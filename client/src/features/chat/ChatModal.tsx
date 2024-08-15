@@ -87,7 +87,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({
                   if (
                     prevMessages.some(
                       (m) =>
-                        m.time === message.time && m.message === message.message
+                        m.time === formatTime(message.time) &&
+                        m.message === message.message
                     )
                   ) {
                     return prevMessages; // 중복 메시지 무시
