@@ -31,6 +31,63 @@ interface HeaderProps {
   showGuide?: boolean;
 }
 
+// 가이드 멘트
+const steps: Step[] = [
+  {
+    target: '[data-joyride="feed"]',
+    content: (
+      <>
+        회원들의 피드를
+        <br />볼 수 있어요 !
+      </>
+    ),
+    disableBeacon: true,
+  },
+  {
+    target: '[data-joyride="challenge"]',
+    content: (
+      <>
+        챌린지를 연습, 녹화
+        <br />할 수 있어요 !
+      </>
+    ),
+    disableBeacon: true,
+  },
+  {
+    target: '[data-joyride="battle"]',
+    content: (
+      <>
+        친구와 챌린지
+        <br />
+        대결을 할 수 있어요 !
+      </>
+    ),
+    disableBeacon: true,
+  },
+  {
+    target: '[data-joyride="guide"]',
+    content: (
+      <>
+        원하는 챌린지를
+        <br />
+        골라 연습할 수 있어요!
+      </>
+    ),
+    disableBeacon: true,
+  },
+  {
+    target: '[data-joyride="rank"]',
+    content: (
+      <>
+        사용자들의 랭킹을
+        <br />
+        확인할 수 있어요!
+      </>
+    ),
+    disableBeacon: true,
+  },
+];
+
 const Header: React.FC<HeaderProps> = ({
   stickyOnly = false,
   loginModal: externalLoginModal,
@@ -40,84 +97,6 @@ const Header: React.FC<HeaderProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
   const [runGuide, setRunGuide] = useState<boolean>(false);
-
-  // 가이드
-  useEffect(() => {
-    if (showGuide) {
-      const hasSeenGuide = localStorage.getItem("hasSeenHomeGuide");
-      if (!hasSeenGuide) {
-        setRunGuide(true);
-        localStorage.setItem("hasSeenHomeGuide", "true");
-      }
-    }
-  }, [showGuide]);
-
-  // 가이드 멘트
-  const steps: Step[] = [
-    {
-      target: '[data-joyride="feed"]',
-      content: (
-        <>
-          회원들의 피드를
-          <br />볼 수 있어요 !
-        </>
-      ),
-      disableBeacon: true,
-    },
-    {
-      target: '[data-joyride="challenge"]',
-      content: (
-        <>
-          챌린지를 연습, 녹화
-          <br />할 수 있어요 !
-        </>
-      ),
-      disableBeacon: true,
-    },
-    {
-      target: '[data-joyride="battle"]',
-      content: (
-        <>
-          친구와 챌린지
-          <br />
-          대결을 할 수 있어요 !
-        </>
-      ),
-      disableBeacon: true,
-    },
-    {
-      target: '[data-joyride="guide"]',
-      content: (
-        <>
-          원하는 챌린지를
-          <br />
-          골라 연습할 수 있어요!
-        </>
-      ),
-      disableBeacon: true,
-    },
-    {
-      target: '[data-joyride="rank"]',
-      content: (
-        <>
-          사용자들의 랭킹을
-          <br />
-          확인할 수 있어요!
-        </>
-      ),
-      disableBeacon: true,
-    },
-  ];
-
-  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
-    const { action, status, type } = data;
-    if (type === EVENTS.STEP_AFTER && action === ACTIONS.CLOSE) {
-      setRunGuide(false);
-    } else if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      setRunGuide(false);
-    }
-  }, []);
-
   //props로 상태를 받으면 받은걸 사용하고 없으면 내부 상태 사용
   const [internalLoginModal, setInternalLoginModal] = useState<boolean>(false);
   const [sessionUser, setSessionUser] = useRecoilState(userProfileState);
@@ -135,6 +114,26 @@ const Header: React.FC<HeaderProps> = ({
 
   const accessToken = useRecoilValue(accessTokenState);
   const isLogin = !!accessToken;
+
+  // 가이드
+  useEffect(() => {
+    if (showGuide) {
+      const hasSeenGuide = localStorage.getItem("hasSeenHomeGuide");
+      if (!hasSeenGuide) {
+        setRunGuide(true);
+        localStorage.setItem("hasSeenHomeGuide", "true");
+      }
+    }
+  }, [showGuide]);
+
+  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
+    const { action, status, type } = data;
+    if (type === EVENTS.STEP_AFTER && action === ACTIONS.CLOSE) {
+      setRunGuide(false);
+    } else if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setRunGuide(false);
+    }
+  }, []);
 
   const mutation = useMutation<UserProfile, Error, string>({
     mutationFn: async (token: string): Promise<UserProfile> => {
@@ -548,6 +547,7 @@ const Mypage = styled.div`
   cursor: default;
 
   &:hover {
+    color: #ff7676;
     div {
       display: block;
     }
