@@ -69,7 +69,7 @@ export const ShortsModal: React.FC = () => {
         }}
       >
         {recordedVideoUrl ? (
-          <Video src={recordedVideoUrl} controls loop muted autoPlay />
+          <Video src={recordedVideoUrl} loop muted autoPlay />
         ) : (
           <AnalyzingText>영상 분석 중...</AnalyzingText>
         )}
@@ -150,4 +150,5 @@ const Video = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: scaleX(-1);
 `;

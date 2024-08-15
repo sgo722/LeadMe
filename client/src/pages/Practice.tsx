@@ -12,7 +12,6 @@ import { axiosInstance } from "axiosInstance/apiClient";
 import { useSetRecoilState } from "recoil";
 import { IsShortsVisibleAtom, RecordedVideoUrlAtom } from "stores/index";
 import { SubmitModal } from "features/practice/SubmitModal";
-import { CompletionAlertModal } from "components/CompletionAlertModal";
 import { TiMediaRecord } from "react-icons/ti";
 import { MdOutlineSpeed } from "react-icons/md";
 import countdownSound from "assets/audio/countdown.mp3";
@@ -62,8 +61,6 @@ export const Practice: React.FC = () => {
   const setIsShortsVisible = useSetRecoilState(IsShortsVisibleAtom);
   const setRecordedVideoUrl = useSetRecoilState(RecordedVideoUrlAtom);
 
-  const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
-    useState<boolean>(false);
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
   const [webcamRunning, setWebcamRunning] = useState<boolean>(false);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
@@ -514,12 +511,6 @@ export const Practice: React.FC = () => {
   const handleBackButtonClick = () => nav(-1);
   const handleChangeButtonClick = () => nav("/challenge");
 
-  // 파이썬에서 영상 다운받는동안 대기시간에 홈으로 이동시켜줌
-  const handleCloseIsCompletionAlertModal = () => {
-    setIsCompletionAlertModalOpen(false);
-    nav("/home");
-  };
-
   const startRecording = () => {
     setCountdown(3);
     const countdownInterval = setInterval(() => {
@@ -615,7 +606,6 @@ export const Practice: React.FC = () => {
       const videoUrl = URL.createObjectURL(data.videoFile);
       setRecordedVideoUrl(videoUrl);
       setIsShortsVisible(true);
-      nav("/home");
     },
 
     onSuccess: (data) => {
@@ -644,11 +634,6 @@ export const Practice: React.FC = () => {
         challengeId: youtubeBlazePoseQuery.data.challengeId,
       });
     }
-    console.log(
-      "전송 할 데이터들",
-      blob,
-      youtubeBlazePoseQuery?.data?.challengeId
-    );
   };
 
   useEffect(() => {
@@ -916,10 +901,6 @@ export const Practice: React.FC = () => {
           </VideoWrapper>
         </Content>
       </Container>
-      <CompletionAlertModal
-        isOpen={isCompletionAlertModalOpen}
-        onClose={handleCloseIsCompletionAlertModal}
-      />
       <SubmitModal
         isOpen={showSubmitModal}
         onClose={() => {
