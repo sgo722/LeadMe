@@ -38,7 +38,7 @@ public class UserChallengeLikeService {
 
         Optional<UserChallengeLike> userChallengeLikeOptional = userChallengeLikeRepository.findByUserIdAndUserChallengeId(user.getId(), userChallenge.getId());
         // 해당 유저 챌린지 좋아요가 테이블내에 존재하고 현재 좋아요 상태이면
-//        boolean isLikeBefore = userChallengeLikeOptional.isPresent() && userChallengeLikeOptional.get().getIsLike();
+        boolean isLikeBefore = userChallengeLikeOptional.isPresent() && userChallengeLikeOptional.get().getIsLike();
 
         log.info("여기까지옴?");
         // 좋아요 상태 변경
@@ -55,24 +55,16 @@ public class UserChallengeLikeService {
                 }
         );
 
-        // redis 내부 체크 조건도 추가해야 제대로 돌아감
-        boolean isLikeBefore = userChallengeLikeOptional.isPresent()
-                && userChallengeLikeOptional.get().getIsLike();
-
         ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
         String key = "user_likes";
 
-        // Redis에 저장된 유저의 점수 조회 (좋아요 수)
-        Double userLikeScore = zSetOperations.score(key, user.getNickname());
-        boolean isLikedInRedis = userLikeScore != null && userLikeScore > 0;
-
         log.info("여기는?");
-        if(isLikeBefore && !isLikedInRedis) {
+        if(isLikeBefore) {
             // 좋아요 취소 -> redis에 저장된 유저 좋아요 수 감소
             zSetOperations.incrementScore(key, user.getNickname(), -1);
             userChallenge.clickLike(-1);
         }
-        else if (isLikedInRedis){
+        else {
             // 좋아요 -> redis에 저장된 유저 좋아요 수 증가
             zSetOperations.incrementScore(key, user.getNickname(), 1);
             userChallenge.clickLike(1);
