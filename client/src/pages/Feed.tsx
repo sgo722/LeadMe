@@ -9,6 +9,7 @@ import { ResponseData, FeedDetail } from "types/index";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
 import { getJWTHeader } from "axiosInstance/apiClient";
+import { ensureHttps } from "utils/urlUtils";
 
 interface FeedProps {
   totalPage: number;
@@ -21,8 +22,12 @@ interface FeedProps {
 const Feed = () => {
   const [feed, setFeed] = useState<FeedDetail[]>([]);
   const [activeVideoId, setActiveVideoId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // 로딩 상태 추가
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isFetchingMore, setIsFetchingMore] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(true);
   const videoRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const lastActiveVideoId = useRef<number | null>(null); // 마지막으로 활성화된 비디오 ID를 저장
   const location = useLocation();
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
@@ -41,27 +46,32 @@ const Feed = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
-      const newFeed = data.content;
-      console.log("피드", newFeed);
-      setFeed(newFeed);
+      setFeed((prevFeed) => {
+        const newFeed = data.content.filter(
+          (newVideo) =>
+            !prevFeed.some(
+              (existingVideo) =>
+                existingVideo.userChallengeId === newVideo.userChallengeId
+            )
+        );
+
+        if (newFeed.length > 0) {
+          return [...prevFeed, ...newFeed];
+        }
+        return prevFeed;
+      });
+
       setIsLoading(false);
+      setIsFetchingMore(false);
+      setHasMore(data.content.length > 0);
 
-      // if (newFeed.length > 0) {
-      //   const firstNewFeedId = newFeed[0].userChallengeId;
-
-      //   const isDuplicate = feed.some(
-      //     (item) => item.userChallengeId === firstNewFeedId
-      //   );
-
-      //   if (!isDuplicate) {
-      //     console.log("새로운 데이터", newFeed);
-      // setFeed((prevFeed) => [...prevFeed, ...newFeed]);
-      //   }
-      // }
+      // 현재 보고 있는 영상이 계속 유지되도록 함 (스크롤 없이)
+      lastActiveVideoId.current = activeVideoId;
     },
     onError: (error: Error) => {
       console.error("Error fetching user Feed:", error);
-      setIsLoading(false); // 에러 발생 시에도 로딩 상태 false로 변경
+      setIsLoading(false);
+      setIsFetchingMore(false);
     },
   });
 
@@ -76,14 +86,14 @@ const Feed = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
-      const reversedData = data.reverse(); // 데이터를 뒤집어서 저장
-      console.log("특정유저 피드", reversedData);
+      const reversedData = data.reverse();
       setFeed(reversedData);
-      setIsLoading(false); // 데이터 로드 완료 후 로딩 상태 false로 변경
+      setIsLoading(false);
+      setHasMore(false);
     },
     onError: (error: Error) => {
       console.error("Error fetching user Feed:", error);
-      setIsLoading(false); // 에러 발생 시에도 로딩 상태 false로 변경
+      setIsLoading(false);
       alert("로그인 후 이용 가능한 서비스 입니다.");
       navigate("/home");
     },
@@ -100,13 +110,13 @@ const Feed = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
-      console.log("검색결과:", data);
       setFeed(data);
-      setIsLoading(false); // 데이터 로드 완료 후 로딩 상태 false로 변경
+      setIsLoading(false);
+      setHasMore(false);
     },
     onError: (error: Error) => {
       console.error("Error fetching search results:", error);
-      setIsLoading(false); // 에러 발생 시에도 로딩 상태 false로 변경
+      setIsLoading(false);
     },
   });
 
@@ -114,9 +124,9 @@ const Feed = () => {
     if (userId) {
       mutationUserFeed.mutate(userId);
     } else if (location.pathname === "/feed") {
-      mutationFeed.mutate(0);
+      mutationFeed.mutate(page);
     }
-  }, [userId]);
+  }, [userId, page]);
 
   useEffect(() => {
     if (feed.length > 0 && videoRefs.current[selectedVideoIndex]) {
@@ -135,6 +145,17 @@ const Feed = () => {
           if (entry.isIntersecting) {
             const videoId = Number(entry.target.getAttribute("data-video-id"));
             setActiveVideoId(videoId);
+
+            const lastIndex = feed.length - 1;
+            if (
+              feed[lastIndex]?.userChallengeId === videoId &&
+              hasMore &&
+              !isFetchingMore
+            ) {
+              console.log("다음 영상 가져오기");
+              setIsFetchingMore(true);
+              setPage((prevPage) => prevPage + 1);
+            }
           }
         });
       },
@@ -150,11 +171,10 @@ const Feed = () => {
         if (ref) observer.unobserve(ref);
       });
     };
-  }, [feed]);
+  }, [feed, hasMore, isFetchingMore]);
 
   const handleSearch = (searchTerm: string) => {
-    console.log(searchTerm);
-    setIsLoading(true); // 검색할 때 로딩 상태 true로 설정
+    setIsLoading(true);
     mutationSearchFeed.mutate(searchTerm);
   };
 
@@ -173,7 +193,6 @@ const Feed = () => {
         feed.findIndex((video) => video.userChallengeId === deletedVideoId) + 1;
       const nextVideo = newFeed[nextIndex % newFeed.length];
 
-      // 0.5초 대기 후 다음 비디오로 스크롤
       setTimeout(() => {
         setActiveVideoId(nextVideo.userChallengeId);
         videoRefs.current[nextIndex % newFeed.length]?.scrollIntoView({
@@ -193,7 +212,7 @@ const Feed = () => {
         <SearchBar width={600} navigation={false} onSearch={handleSearch} />
       </SearchBarWrapper>
       <VideoContainer>
-        {isLoading ? ( // 로딩 중일 때 로딩 스피너 표시
+        {isLoading ? (
           <LoadingSpinner />
         ) : (
           feed.map((video, index) => (
@@ -206,12 +225,12 @@ const Feed = () => {
                 video={video}
                 userChallengeId={video.userChallengeId}
                 isActive={activeVideoId === video.userChallengeId}
-                onVideoDeleted={() => handleVideoDeleted(video.userChallengeId)} // 콜백 함수 전달
+                onVideoDeleted={() => handleVideoDeleted(video.userChallengeId)}
               />
               <Profile>
                 <div>
                   <ProfileImg
-                    src={video.profileImg}
+                    src={ensureHttps(video.profileImg)}
                     alt={video.nickname}
                     onClick={() => handleProfileClick(video.userId)}
                   />
@@ -220,6 +239,11 @@ const Feed = () => {
               </Profile>
             </div>
           ))
+        )}
+        {isFetchingMore && (
+          <LoadingSpinnerWrapper>
+            <LoadingSpinner />
+          </LoadingSpinnerWrapper>
         )}
       </VideoContainer>
     </PageLayout>
@@ -291,6 +315,13 @@ const Title = styled.div`
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+`;
+
+const LoadingSpinnerWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
 `;
 
 export default Feed;
