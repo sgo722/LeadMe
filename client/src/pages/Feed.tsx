@@ -232,7 +232,7 @@ const Feed = () => {
         {isLoading ? (
           <LoadingSpinner />
         ) : (
-          feed.map((video, _) => (
+          feed.map((video) => (
             <div
               key={video.userChallengeId}
               ref={(el) => (videoRefs.current[video.userChallengeId] = el)}

@@ -520,12 +520,10 @@ export const Practice: React.FC = () => {
       animationFrameId = requestAnimationFrame(detectPose);
     };
 
-    console.log("블레이즈포즈 시작");
     animationFrameId = requestAnimationFrame(detectPose);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      console.log("블레이즈포즈 중지");
     };
   }, [poseLandmarker, isPoseDetectionRunning]);
 
@@ -571,10 +569,7 @@ export const Practice: React.FC = () => {
     let cleanup: (() => void) | undefined;
 
     if (isPoseDetectionRunning) {
-      console.log("블레이즈포즈 감지 시작");
       cleanup = predictWebcam();
-    } else {
-      console.log("블레이즈포즈 감지 중지");
     }
 
     return () => {

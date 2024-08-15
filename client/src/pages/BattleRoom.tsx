@@ -145,7 +145,6 @@ export const BattleRoom: React.FC = () => {
     },
     onSuccess: (data) => {
       const score = Math.floor(data.data * 100);
-      console.log("영상제출 성공, 반환값:", score);
       // 내 점수 입력
       setMyScore(score);
       setIsSubmitting(false);
@@ -158,7 +157,7 @@ export const BattleRoom: React.FC = () => {
       }
     },
     onError: (error) => {
-      console.log("녹화영상 제출 실패", error);
+      console.error("녹화영상 제출 실패", error);
       setIsSubmitting(false);
       setIsScoreCalculating(false);
     },
@@ -197,21 +196,6 @@ export const BattleRoom: React.FC = () => {
     setSubscribers([]);
   }, [session, publisher, subscribers]);
 
-  // 블레이즈포즈 안정화되면 지우기
-  useEffect(() => {
-    if (challengeQuery.isSuccess) {
-      console.log("블레이즈포즈 데이터:", challengeQuery.data.data.landmarks);
-    }
-    if (challengeQuery.isError) {
-      console.error("블레이즈포즈 가져오다가 에러남:", challengeQuery.error);
-    }
-  }, [
-    challengeQuery.isSuccess,
-    challengeQuery.isError,
-    challengeQuery.data,
-    challengeQuery.error,
-  ]);
-
   // 방장 여부 확인
   const {
     data: hostData,
@@ -236,7 +220,6 @@ export const BattleRoom: React.FC = () => {
         sessionStorage.getItem("user_profile") || "{}"
       ).id;
       setIsHost(hostId === userId);
-      console.log("방장여부:", isHost);
     }
   }, [hostData, isHost]);
 
@@ -269,7 +252,6 @@ export const BattleRoom: React.FC = () => {
       });
     },
     onSuccess: () => {
-      console.log("세션 종료 성공");
       cleanupSession();
     },
     onError: (error) => {
@@ -469,7 +451,6 @@ export const BattleRoom: React.FC = () => {
 
         mediaRecorder.start();
         setIsRecording(true);
-        console.log("녹화 시작");
       } catch (error) {
         console.error("MediaRecorder 생성 실패:", error);
       }
@@ -481,8 +462,6 @@ export const BattleRoom: React.FC = () => {
   // 녹화 데이터 처리, 영상 제출 api 호출
   useEffect(() => {
     if (battleStart && recordedBlob && recordedBlob.size > 0) {
-      console.log("녹화된 영상 크기:", recordedBlob.size);
-
       const formData = new FormData();
       const blob = new Blob(
         [
@@ -517,7 +496,6 @@ export const BattleRoom: React.FC = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      console.log("녹화 끝");
 
       // 녹화 중지 후 Blob 생성
       const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
@@ -567,8 +545,6 @@ export const BattleRoom: React.FC = () => {
   useEffect(() => {
     if (session) {
       const handleSignal = (event: SignalEvent) => {
-        console.log("Received signal:", event);
-
         const signalType = event.type.replace("signal:", "");
         let signalData: SignalData;
 
@@ -595,7 +571,6 @@ export const BattleRoom: React.FC = () => {
           case "user-joined":
             if (signalData.name && signalData.name !== userProfile?.name) {
               setPeerName(signalData.name);
-              console.log("Peer joined:", signalData.name);
             }
             break;
           case "user-left":
@@ -604,14 +579,12 @@ export const BattleRoom: React.FC = () => {
           case "user-ready":
             if (typeof signalData.ready === "boolean") {
               setPeerReady(signalData.ready);
-              console.log("상대방 준비 상태:", signalData.ready);
             }
             if (signalData.resetScores) {
               resetScores();
             }
             break;
           case "video-selected":
-            console.log("비디오 선택됨:", signalData);
             if (
               signalData.selectedVideoId !== null &&
               signalData.selectedVideoId !== undefined
@@ -627,7 +600,6 @@ export const BattleRoom: React.FC = () => {
             setIsVideoConfirmed(false);
             break;
           case "video-confirmed":
-            console.log("비디오 확인됨:", signalData);
             if (signalData.isVideoConfirmed !== undefined) {
               setIsVideoConfirmed(signalData.isVideoConfirmed);
               if (signalData.selectedYoutubeId) {
@@ -636,7 +608,6 @@ export const BattleRoom: React.FC = () => {
             }
             break;
           case "video-cancelled":
-            console.log("비디오 취소됨");
             setIsVideoConfirmed(false);
             setSelectedVideo(null);
             if (signalData.resetScores) {
@@ -644,7 +615,6 @@ export const BattleRoom: React.FC = () => {
             }
             break;
           case "battle-start":
-            console.log("배틀 시작 신호 수신:", signalData);
             if (signalData.start) {
               startBattle();
             }
@@ -656,7 +626,6 @@ export const BattleRoom: React.FC = () => {
             }
             break;
           case "host-left":
-            console.log("방장이 나갔습니다");
             if (signalData.hostLeft) {
               handleHostLeft();
             }
@@ -776,11 +745,9 @@ export const BattleRoom: React.FC = () => {
 
   // 컴포넌트가 마운트될때나 token이 변경될 때 실행
   useEffect(() => {
-    console.log("BattleRoom mounted");
     initializeSession();
 
     return () => {
-      console.log("BattleRoom unmounted");
       if (session) {
         session.disconnect();
       }
