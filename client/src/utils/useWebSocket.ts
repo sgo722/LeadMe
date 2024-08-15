@@ -1,13 +1,33 @@
 import { useEffect, useRef, useCallback, useState } from "react";
-import { Client } from "@stomp/stompjs";
+import { Client, StompSubscription, IFrame, IMessage } from "@stomp/stompjs";
 import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
 import { sockUrl } from "axiosInstance/constants";
 
-const useWebSocket = () => {
+export interface ChatMessageDto {
+  type: string;
+  roomId: number;
+  userId: number;
+  nickname: string;
+  message: string;
+  time: string;
+  status: string;
+}
+interface WebSocketHook {
+  connectWebSocket: () => void;
+  subscribeToChannel: (
+    channel: string,
+    callback: (message: ChatMessageDto) => void
+  ) => void;
+  sendMessage: (destination: string, body: ChatMessageDto) => void;
+}
+
+const useWebSocket = (): WebSocketHook => {
   const clientRef = useRef<Client | null>(null);
   const accessToken = useRecoilValue(accessTokenState);
-  const [subscriptions, setSubscriptions] = useState<Record<string, any>>({});
+  const [subscriptions, setSubscriptions] = useState<
+    Record<string, StompSubscription>
+  >({});
 
   useEffect(() => {
     if (!accessToken || (clientRef.current && clientRef.current.connected))
@@ -18,7 +38,7 @@ const useWebSocket = () => {
       connectHeaders: {
         Authorization: `Bearer ${accessToken}`,
       },
-      debug: (str) => {
+      debug: (str: string) => {
         console.log(new Date(), str);
       },
       onConnect: () => {
@@ -27,14 +47,14 @@ const useWebSocket = () => {
       onDisconnect: () => {
         console.log("Disconnected from WebSocket server");
       },
-      onStompError: (frame) => {
+      onStompError: (frame: IFrame) => {
         console.error("Broker reported error: " + frame.headers["message"]);
         console.error("Additional details: " + frame.body);
       },
-      onWebSocketError: (event) => {
+      onWebSocketError: (event: Event) => {
         console.error("WebSocket error:", event);
       },
-      onWebSocketClose: (event) => {
+      onWebSocketClose: (event: CloseEvent) => {
         console.log("WebSocket closed:", event);
       },
     });
@@ -50,7 +70,7 @@ const useWebSocket = () => {
   }, [accessToken]);
 
   const sendMessage = useCallback(
-    (destination: string, body: any) => {
+    (destination: string, body: ChatMessageDto) => {
       if (clientRef.current && clientRef.current.connected) {
         clientRef.current.publish({
           destination: destination,
@@ -77,24 +97,26 @@ const useWebSocket = () => {
   }, []);
 
   const subscribeToChannel = useCallback(
-    (channel: string, callback: (message: any) => void) => {
+    (channel: string, callback: (message: ChatMessageDto) => void) => {
       if (clientRef.current && clientRef.current.connected) {
-        // 이미 구독된 채널이 있으면 새 구독을 만들지 않음
         if (subscriptions[channel]) {
           console.log(`Already subscribed to channel ${channel}`);
           return;
         }
 
-        const subscription = clientRef.current.subscribe(channel, (message) => {
-          console.log(`Message received from ${channel}:`, message.body);
-          callback(JSON.parse(message.body));
-        });
+        const subscription = clientRef.current.subscribe(
+          channel,
+          (message: IMessage) => {
+            console.log(`Message received from ${channel}:`, message.body);
+            callback(JSON.parse(message.body) as ChatMessageDto);
+          }
+        );
 
         setSubscriptions((prevSubscriptions) => ({
           ...prevSubscriptions,
           [channel]: subscription,
         }));
-        console.log("구독 중인 채널", subscribeToChannel);
+        console.log("구독 중인 채널", Object.keys(subscriptions));
 
         console.log(`Subscribed to channel ${channel}`);
       } else {
