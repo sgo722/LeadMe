@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { FeedDetail } from "types/index";
 import { InteractionButtons } from "features/videoDetail/InteractionButtons";
+import { axiosInstance } from "axiosInstance/apiClient"; // axios 인스턴스 가져오기
 
 interface VideoPlayerProps {
   video: FeedDetail;
@@ -16,11 +17,11 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(!isActive);
+  const [isLiked, setIsLiked] = useState(video.isLiked);
+  const [likes, setLikes] = useState(video.likes);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    console.log(userChallengeId);
-
     if (video.video) {
       const base64String = video.video;
       const videoBlob = fetch(`data:video/mp4;base64,${base64String}`).then(
@@ -47,6 +48,25 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
+  const toggleLike = async () => {
+    try {
+      if (isLiked) {
+        // 좋아요 취소 API 요청
+        await axiosInstance.delete("/api/v1/commentLike", {
+          data: { userChallengeId }, // 요청 데이터로 userChallengeId 전송
+        });
+        setLikes(likes - 1); // 좋아요 수 감소
+      } else {
+        // 좋아요 추가 API 요청
+        await axiosInstance.post("/api/v1/commentLike", { userChallengeId });
+        setLikes(likes + 1); // 좋아요 수 증가
+      }
+      setIsLiked(!isLiked); // 좋아요 여부 토글
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
+
   return (
     <VideoPlayerWrapper>
       <VideoContent>
@@ -58,13 +78,15 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
             autoPlay
             loop
             muted={isMuted}
-            playsInline // 모바일에서 인라인 재생을 위해
+            playsInline
           />
         )}
         <InteractionButtons
-          likes={video.likes}
+          likes={likes}
           isMuted={isMuted}
+          isLiked={isLiked}
           onToggleSound={toggleSound}
+          onToggleLike={toggleLike}
         />
       </VideoContent>
     </VideoPlayerWrapper>

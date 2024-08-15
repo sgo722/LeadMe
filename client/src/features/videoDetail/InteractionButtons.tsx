@@ -5,18 +5,22 @@ import { FaHeart, FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 interface InteractionButtonsProps {
   likes: number;
   isMuted: boolean;
+  isLiked: boolean;
   onToggleSound: () => void;
+  onToggleLike: () => void;
 }
 
 export const InteractionButtons: React.FC<InteractionButtonsProps> = ({
   likes,
   isMuted,
+  isLiked,
   onToggleSound,
+  onToggleLike,
 }) => {
   return (
     <ButtonsWrapper>
-      <Button>
-        <Heart size={17} />
+      <Button onClick={onToggleLike}>
+        <Heart size={17} isLiked={isLiked} />
         <span>{likes}</span>
       </Button>
       <Button onClick={onToggleSound}>
@@ -56,16 +60,12 @@ const Button = styled.button`
   span {
     font-size: 12px;
     margin-top: 5px;
-
     position: absolute;
     bottom: 5px;
   }
 `;
 
-const Heart = styled(FaHeart)`
+const Heart = styled(FaHeart)<{ isLiked: boolean }>`
   margin-bottom: 8px;
+  color: ${({ isLiked }) => (isLiked ? "#ee5050" : "#d2d2d2")};
 `;
-
-// const Comment = styled(FaComment)`
-//   margin-bottom: 10px;
-// `;

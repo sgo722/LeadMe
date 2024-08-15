@@ -67,6 +67,7 @@ export interface ChallengeItem {
 }
 
 export interface FeedDetail {
+  isLiked: boolean;
   nickname: string;
   profileImg: string;
   userId: number;

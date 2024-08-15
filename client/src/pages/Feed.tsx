@@ -137,6 +137,10 @@ const Feed = () => {
     mutationSearchFeed.mutate(searchTerm);
   };
 
+  const handleProfileClick = (id: number) => {
+    navigate(`/mypage/${id}`);
+  };
+
   return (
     <PageLayout>
       <Header stickyOnly />
@@ -155,6 +159,16 @@ const Feed = () => {
               userChallengeId={video.userChallengeId}
               isActive={activeVideoId === video.userChallengeId}
             />
+            <Profile>
+              <div>
+                <ProfileImg
+                  src={video.profileImg}
+                  alt={video.nickname}
+                  onClick={() => handleProfileClick(video.userId)}
+                />
+              </div>
+              <Title>{video.title}</Title>
+            </Profile>
           </div>
         ))}
       </VideoContainer>
@@ -186,6 +200,47 @@ const VideoContainer = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+
+  & > div {
+    position: relative;
+  }
+`;
+
+const Profile = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 60px;
+  top: 22px;
+  z-index: 100;
+  border-radius: 6px 6px 0 0;
+  padding: 0 14px;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+`;
+
+const ProfileImg = styled.img`
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  margin-right: 12px;
+  cursor: pointer;
+`;
+
+const Title = styled.div`
+  width: 100%;
+  color: #ffffff;
+  font-family: "Noto Sans KR", sans-serif;
+
+  max-height: 45px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 `;
 
 export default Feed;
