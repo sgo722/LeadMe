@@ -45,7 +45,6 @@ public class UserChallengeLikeService {
         userChallengeLikeOptional.ifPresentOrElse(
                 UserChallengeLike::updateLike,
                 () -> {
-                    // 새로운 좋아요 추가
                     UserChallengeLike newUserChallengeLike = UserChallengeLike.builder()
                             .user(user)
                             .userChallenge(userChallenge)
