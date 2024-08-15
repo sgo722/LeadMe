@@ -18,7 +18,7 @@ export const DeleteConfirmationModal: React.FC<
         <ModalText>해당 영상을 삭제하시겠습니까?</ModalText>
         <ButtonsWrapper>
           <ModalButton onClick={onDelete}>삭제</ModalButton>
-          <ModalButton onClick={onClose} cancel>
+          <ModalButton onClick={onClose} $cancel>
             취소
           </ModalButton>
         </ButtonsWrapper>
@@ -61,9 +61,9 @@ const ButtonsWrapper = styled.div`
   justify-content: space-around;
 `;
 
-const ModalButton = styled.button<{ cancel?: boolean }>`
+const ModalButton = styled.button<{ $cancel?: boolean }>`
   padding: 10px 20px;
-  background-color: ${({ cancel }) => (cancel ? "#ccc" : "#ee5050")};
+  background-color: ${({ $cancel }) => ($cancel ? "#ccc" : "#ee5050")};
   color: white;
   border: none;
   border-radius: 5px;
@@ -72,6 +72,6 @@ const ModalButton = styled.button<{ cancel?: boolean }>`
   margin: 0 10px;
 
   &:hover {
-    background-color: ${({ cancel }) => (cancel ? "#bbb" : "#ff6b6b")};
+    background-color: ${({ $cancel }) => ($cancel ? "#bbb" : "#ff6b6b")};
   }
 `;

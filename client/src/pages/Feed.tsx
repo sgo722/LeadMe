@@ -41,18 +41,21 @@ const Feed = () => {
     onSuccess: (data) => {
       const newFeed = data.content;
 
-      if (newFeed.length > 0) {
-        const firstNewFeedId = newFeed[0].userChallengeId;
+      console.log("피드", newFeed);
+      setFeed(newFeed);
 
-        const isDuplicate = feed.some(
-          (item) => item.userChallengeId === firstNewFeedId
-        );
+      // if (newFeed.length > 0) {
+      //   const firstNewFeedId = newFeed[0].userChallengeId;
 
-        if (!isDuplicate) {
-          console.log("새로운 데이터", newFeed);
-          setFeed((prevFeed) => [...prevFeed, ...newFeed]);
-        }
-      }
+      //   const isDuplicate = feed.some(
+      //     (item) => item.userChallengeId === firstNewFeedId
+      //   );
+
+      //   if (!isDuplicate) {
+      //     console.log("새로운 데이터", newFeed);
+      // setFeed((prevFeed) => [...prevFeed, ...newFeed]);
+      //   }
+      // }
     },
     onError: (error: Error) => {
       console.error("Error fetching user Feed:", error);
@@ -76,6 +79,8 @@ const Feed = () => {
     },
     onError: (error: Error) => {
       console.error("Error fetching user Feed:", error);
+      alert("로그인 후 이용 가능한 서비스 입니다.");
+      navigate("/home");
     },
   });
 
@@ -100,12 +105,7 @@ const Feed = () => {
 
   useEffect(() => {
     if (userId) {
-      if (getJWTHeader()) {
-        mutationUserFeed.mutate(userId);
-      } else {
-        alert("로그인 후 이용 가능한 서비스입니다.");
-        navigate("/home");
-      }
+      mutationUserFeed.mutate(userId);
     } else if (location.pathname === "/feed") {
       mutationFeed.mutate(0);
     }
@@ -154,6 +154,30 @@ const Feed = () => {
     navigate(`/mypage/${id}`);
   };
 
+  const handleVideoDeleted = (deletedVideoId: number) => {
+    const newFeed = feed.filter(
+      (video) => video.userChallengeId !== deletedVideoId
+    );
+    setFeed(newFeed);
+
+    if (newFeed.length > 0) {
+      const nextIndex =
+        feed.findIndex((video) => video.userChallengeId === deletedVideoId) + 1;
+      const nextVideo = newFeed[nextIndex % newFeed.length];
+
+      // 0.5초 대기 후 다음 비디오로 스크롤
+      setTimeout(() => {
+        setActiveVideoId(nextVideo.userChallengeId);
+        videoRefs.current[nextIndex % newFeed.length]?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 500);
+    } else {
+      setActiveVideoId(null);
+    }
+  };
+
   return (
     <PageLayout>
       <Header stickyOnly />
@@ -171,6 +195,7 @@ const Feed = () => {
               video={video}
               userChallengeId={video.userChallengeId}
               isActive={activeVideoId === video.userChallengeId}
+              onVideoDeleted={() => handleVideoDeleted(video.userChallengeId)} // 콜백 함수 전달
             />
             <Profile>
               <div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { FeedDetail } from "types/index";
 import { InteractionButtons } from "features/videoDetail/InteractionButtons";
 import { axiosInstance } from "axiosInstance/apiClient";
@@ -9,17 +9,20 @@ interface VideoPlayerProps {
   video: FeedDetail;
   userChallengeId: number;
   isActive: boolean;
+  onVideoDeleted: () => void;
 }
 
 const FeedPlayer: React.FC<VideoPlayerProps> = ({
   video,
   userChallengeId,
   isActive,
+  onVideoDeleted,
 }) => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(!isActive);
   const [isLiked, setIsLiked] = useState(video.isLiked);
   const [likes, setLikes] = useState(video.likes);
+  const [isDeleting, setIsDeleting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const fetchSessionUserData = () => {
@@ -58,18 +61,14 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
 
   const toggleLike = async () => {
     try {
+      await axiosInstance.post(
+        `/api/v1/userChallenge/like/${userChallengeId}`,
+        {},
+        { headers: getJWTHeader() }
+      );
       if (isLiked) {
-        await axiosInstance.delete("/api/v1/userChallenge/like", {
-          headers: getJWTHeader(),
-          data: { userChallengeId },
-        });
         setLikes(likes - 1);
       } else {
-        await axiosInstance.post(
-          "/api/v1/userChallenge/like",
-          { userChallengeId },
-          { headers: getJWTHeader() }
-        );
         setLikes(likes + 1);
       }
 
@@ -80,18 +79,21 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const deleteVideo = async () => {
-    try {
-      await axiosInstance.delete(`/api/v1/userChallenge/${userChallengeId}`, {
-        headers: getJWTHeader(),
-      });
-      // 삭제 후 필요한 추가 동작 (예: 피드에서 해당 비디오 제거 등)
-    } catch (error) {
-      console.error("영상 삭제 중 오류 발생:", error);
-    }
+    setIsDeleting(true);
+    setTimeout(async () => {
+      try {
+        await axiosInstance.delete(`/api/v1/userChallenge/${userChallengeId}`, {
+          headers: getJWTHeader(),
+        });
+        onVideoDeleted();
+      } catch (error) {
+        console.error("영상 삭제 중 오류 발생:", error);
+      }
+    }, 500);
   };
 
   return (
-    <VideoPlayerWrapper>
+    <VideoPlayerWrapper $isDeleting={isDeleting}>
       <VideoContent>
         {videoUrl && (
           <VideoElement
@@ -108,17 +110,26 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
           likes={likes}
           isMuted={isMuted}
           isLiked={isLiked}
-          isOwner={sessionUser?.id === video.userId} // 소유자 여부 확인
+          isOwner={sessionUser?.id === video.userId}
           onToggleSound={toggleSound}
           onToggleLike={toggleLike}
-          onDelete={deleteVideo} // 삭제 함수 전달
+          onDelete={deleteVideo}
         />
       </VideoContent>
     </VideoPlayerWrapper>
   );
 };
 
-const VideoPlayerWrapper = styled.div`
+const fadeOut = keyframes`
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+`;
+
+const VideoPlayerWrapper = styled.div<{ $isDeleting: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -128,6 +139,7 @@ const VideoPlayerWrapper = styled.div`
   width: 100%;
   padding-bottom: 3vh;
   scroll-snap-align: center;
+  animation: ${({ $isDeleting }) => $isDeleting && fadeOut} 0.5s ease-out;
 `;
 
 const VideoElement = styled.video`
