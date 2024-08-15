@@ -8,7 +8,7 @@ import {
   refreshTokenExpireTimeState,
   userProfileState,
 } from "stores/authAtom";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { FaYoutube } from "react-icons/fa";
 import { LoginModal } from "components/LoginModal";
 import useAuth from "hooks/useAuth";
@@ -351,32 +351,32 @@ const Header: React.FC<HeaderProps> = ({
                 YouTube
                 <FaYoutube />
               </SnsBox>
-              {/* <SnsBox>
-                TikTok
-                <FaTiktok />
-              </SnsBox> */}
             </TopRight>
           </Top>
         </HeaderWrapper>
       )}
       <StickyNav>
         <NavContent>
-          <StyledLink to="/home" data-joyride="home">
+          <StyledLink to="/home" data-text="home">
             home
           </StyledLink>
-          <StyledLink to="/feed" data-joyride="feed">
+          <StyledLink to="/feed" data-joyride="feed" data-text="feed">
             feed
           </StyledLink>
-          <StyledLink to="/challenge" data-joyride="challenge">
+          <StyledLink
+            to="/challenge"
+            data-joyride="challenge"
+            data-text="challenge"
+          >
             challenge
           </StyledLink>
-          <StyledLink to="/battle" data-joyride="battle">
+          <StyledLink to="/battle" data-joyride="battle" data-text="battle">
             battle
           </StyledLink>
-          <StyledLink to="/guide" data-joyride="guide">
+          <StyledLink to="/guide" data-joyride="guide" data-text="guide">
             guide
           </StyledLink>
-          <StyledLink to="/rank" data-joyride="rank">
+          <StyledLink to="/rank" data-joyride="rank" data-text="rank">
             rank
           </StyledLink>
           {isLogin && sessionUser ? (
@@ -385,17 +385,24 @@ const Header: React.FC<HeaderProps> = ({
                 mypage
                 <Fake>
                   <LeftHoverBox>
-                    <HoverLink to={`/mypage/${sessionUser.id}`}>
+                    <HoverDiv
+                      data-text="마이페이지"
+                      onClick={() => navigate(`/mypage/${sessionUser.id}`)}
+                    >
                       마이페이지
-                    </HoverLink>
+                    </HoverDiv>
                     <Hr />
-                    <HoverDiv onClick={() => navigate("/chat")}>
+                    <HoverDiv
+                      data-text="메시지 목록"
+                      onClick={() => navigate("/chat")}
+                    >
                       메세지 목록
                     </HoverDiv>
                   </LeftHoverBox>
                 </Fake>
               </Mypage>
               <LeftBtn
+                data-text="logout"
                 onClick={() => {
                   logout();
                 }}
@@ -406,6 +413,7 @@ const Header: React.FC<HeaderProps> = ({
           ) : (
             <LeftContainer>
               <LeftBtn
+                data-text="login"
                 onClick={() => {
                   setLoginModal(!loginModal);
                 }}
@@ -419,6 +427,34 @@ const Header: React.FC<HeaderProps> = ({
     </>
   );
 };
+
+// 밑줄 효과를 위한 공통 스타일
+const underlineEffect = css`
+  position: relative;
+  display: inline-block;
+  &:hover {
+    color: #ff7676;
+  }
+  &::after {
+    content: attr(data-text);
+    content: attr(data-text) / "";
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    height: 2px;
+    color: transparent;
+    background-color: #ee5050;
+    transform: translateX(-50%) scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease-out;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  &:hover::after {
+    transform: translateX(-50%) scaleX(1);
+  }
+`;
 
 const HeaderWrapper = styled.header`
   min-width: 1080px;
@@ -496,13 +532,8 @@ const LeftBtn = styled.div`
   background-color: inherit;
   text-decoration: none;
   margin: 0 12px;
-  position: relative;
   cursor: pointer;
-
-  &:hover {
-    color: #ff7676;
-    text-decoration: underline;
-  }
+  ${underlineEffect}
 `;
 
 const Mypage = styled.div`
@@ -514,7 +545,6 @@ const Mypage = styled.div`
   background-color: inherit;
   text-decoration: none;
   margin: 0 12px;
-  position: relative;
   cursor: default;
 
   &:hover {
@@ -527,7 +557,7 @@ const Mypage = styled.div`
 const Fake = styled.div`
   display: none;
   position: absolute;
-  left: -44px;
+  left: -30px;
   top: 30px;
   padding: 16px;
 `;
@@ -546,17 +576,6 @@ const LeftHoverBox = styled.div`
   cursor: default;
 `;
 
-const HoverLink = styled(Link)`
-  display: block;
-  color: #ee5050;
-  text-align: center;
-  font-size: 15px;
-  font-family: "Noto Sans KR", sans-serif;
-  text-decoration: none;
-  padding: 8px;
-  margin: 6px;
-`;
-
 const HoverDiv = styled.div`
   display: block;
   color: #ee5050;
@@ -566,6 +585,8 @@ const HoverDiv = styled.div`
   text-decoration: none;
   padding: 8px;
   margin: 6px;
+  cursor: pointer;
+  ${underlineEffect}
 `;
 
 const StickyNav = styled.nav`
@@ -610,32 +631,8 @@ const StyledLink = styled(Link)`
   text-decoration: none;
   padding: 9px 14px;
   margin: 0 16px;
-  position: relative;
   display: inline-block;
-
-  &::after {
-    content: attr(data-joyride);
-    content: attr(data-joyride) / "";
-    height: 2px;
-    bottom: 3px;
-    position: absolute;
-    left: 14px;
-    transform: scaleX(0);
-    transform-origin: left;
-    background-color: #ee5050;
-    transition: transform 0.3s ease-out;
-    white-space: nowrap;
-    color: transparent;
-    pointer-events: none;
-  }
-
-  &:hover {
-    color: #ee5050;
-  }
-
-  &:hover::after {
-    transform: scaleX(1);
-  }
+  ${underlineEffect}
 `;
 
 const Hr = styled.hr`
