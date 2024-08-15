@@ -7,6 +7,7 @@ import com.ssafy.withme.controller.userchallenge.request.UserChallengeAnalyzeReq
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeDeleteRequest;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeUpdateRequest;
 import com.ssafy.withme.domain.user.User;
+import com.ssafy.withme.global.error.ErrorCode;
 import com.ssafy.withme.global.exception.AuthorizationException;
 import com.ssafy.withme.service.userChallenge.response.*;
 import com.ssafy.withme.controller.userchallenge.request.UserChallengeSaveRequest;
@@ -510,13 +511,12 @@ public class UserChallengeService {
 
     @Transactional
     public void delete(User user, Long userChallengeId) {
+
         UserChallenge userChallenge = userChallengeRepository.findById(userChallengeId).orElseThrow(() -> {
             throw new EntityNotFoundException(NOT_EXISTS_USER_CHALLENGE_FILE);
         });
 
-
-        User userChallengeMakeUser = userChallenge.getUser();
-        if(user != userChallengeMakeUser){
+        if(userChallenge.getUser().getId() != user.getId()){
             throw new AuthorizationException(NOT_AUTHORIZATION);
         }
 
