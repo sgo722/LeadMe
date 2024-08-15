@@ -30,6 +30,7 @@ export const Loader: React.FC<LoaderProps> = ({ isCompleted = false }) => {
     <Html center>
       <BlurredBackground />
       <Container>
+        <Text>크롬 설정 - 시스템 - 그래픽 가속을 켜주세요</Text>
         <ProgressBar>{isCompleted ? 100 : progress.progress}%</ProgressBar>
         <EnterBtn
           onClick={() => {
@@ -72,13 +73,15 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  gap: 20px;
+  gap: 30px;
 `;
 const ProgressBar = styled.div`
   font-size: 24px;
   color: #ccc;
+  font-family: Rajdhani;
 `;
 const EnterBtn = styled.button`
+  font-family: Rajdhani;
   animation: ${blink} 1.5s infinite;
   transition-duration: 0.4s;
   font-size: 16px;
@@ -94,4 +97,12 @@ const EnterBtn = styled.button`
     color: #ee5050;
     animation: none;
   }
+`;
+
+const Text = styled.p`
+  font-family: Rajdhani;
+  width: 100vw;
+  text-align: center;
+  color: #eee;
+  font-size: 30px;
 `;
