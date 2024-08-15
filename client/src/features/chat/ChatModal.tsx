@@ -4,7 +4,7 @@ import axios from "axios";
 import useWebSocket from "utils/useWebSocket";
 import { baseUrl } from "axiosInstance/constants";
 
-interface ChatMessageDto {
+export interface ChatMessageDto {
   type: string;
   roomId: number;
   userId: number;
@@ -22,15 +22,6 @@ interface ChatModalProps {
   partnerNickname: string | null;
   partnerId: number | null;
   partnerProfile: string | null;
-}
-
-interface WebSocketHook {
-  sendMessage: (destination: string, body: ChatMessageDto) => void;
-  subscribeToChannel: (
-    channel: string,
-    callback: (message: ChatMessageDto) => void
-  ) => void;
-  // connectWebSocket: () => void;
 }
 
 const formatTime = (timeString: string) => {
@@ -59,7 +50,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   const [newMessage, setNewMessage] = useState<string>("");
   const [roomId, setRoomId] = useState<number | null>(null);
 
-  const { sendMessage, subscribeToChannel } = useWebSocket() as WebSocketHook;
+  const { sendMessage, subscribeToChannel } = useWebSocket();
 
   useEffect(() => {
     if (isOpen && partnerId) {
