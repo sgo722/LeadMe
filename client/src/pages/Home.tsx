@@ -20,7 +20,7 @@ const imageData: ImageData[] = [
 const Home: React.FC = () => {
   return (
     <>
-      <Header />
+      <Header showGuide={true} />
       <Container>
         <MainSection>
           <SearchBar navigation />
