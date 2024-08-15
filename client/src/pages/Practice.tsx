@@ -9,20 +9,15 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
-// import { useSetRecoilState } from "recoil";
-// import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
-import { CompletionAlertModal } from "components/CompletionAlertModal";
+import { useSetRecoilState } from "recoil";
+import { IsShortsVisibleAtom, RecordedVideoUrlAtom } from "stores/index";
 import { SubmitModal } from "features/practice/SubmitModal";
+import { CompletionAlertModal } from "components/CompletionAlertModal";
 import { TiMediaRecord } from "react-icons/ti";
 import { MdOutlineSpeed } from "react-icons/md";
 import countdownSound from "assets/audio/countdown.mp3";
 import { UserProfile } from "types";
-// import { FaVideoSlash } from "react-icons/fa6";
-
-// interface ChallengeData {
-//   youtubeId: string;
-//   url: string;
-// }
+import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
 
 interface Landmark {
   x: number;
@@ -43,11 +38,6 @@ interface VideoDataItem {
   title: string;
 }
 
-// const postChallenge = async (data: ChallengeData) => {
-//   const res = await axiosInstance.post("/api/v1/challenge", data);
-//   return res.data;
-// };
-
 const fetchYoutubeBlazePoseData = async (
   videoId: string
 ): Promise<YoutubeBlazePoseData> => {
@@ -62,14 +52,10 @@ export const Practice: React.FC = () => {
   // URL 파라미터에서 videoId 추출
   const { videoId } = useParams<{ videoId?: string }>();
   const nav = useNavigate();
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const setIsShortsVisible = useSetRecoilState(IsShortsVisibleAtom);
+  const setRecordedVideoUrl = useSetRecoilState(RecordedVideoUrlAtom);
 
-  // Recoil 상태 설정
-  // const setIsWebcamVisible = useSetRecoilState(IsShortsVisibleAtom);
-  // const setCurrentYoutubeId = useSetRecoilState(CurrentYoutubeIdAtom);
-
-  // 로컬 상태 관리
-  // const [inputUrl, setInputUrl] = useState<string>("");
-  // const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
   const [isCompletionAlertModalOpen, setIsCompletionAlertModalOpen] =
     useState<boolean>(false);
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
@@ -87,6 +73,8 @@ export const Practice: React.FC = () => {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]); // 녹화영상 관리
   const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false); // 제출 모달 상태
   const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
+  const [runPracticeGuide, setRunPracticeGuide] = useState<boolean>(false); // practice 가이드 상태
+  const [runGuide, setRunGuide] = useState<boolean>(false); // practice/:videoId 가이드 상태
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -94,32 +82,100 @@ export const Practice: React.FC = () => {
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오
 
+  // 가이드 Ref
+  const playbackRateRef = useRef<HTMLButtonElement>(null);
+  const playPauseRef = useRef<HTMLButtonElement>(null);
+  const changeVideoRef = useRef<HTMLButtonElement>(null);
+  const recordRef = useRef<HTMLButtonElement>(null);
+
+  // 가이드 step
+  const steps: Step[] = [
+    {
+      target: ".playback-rate",
+      content: "재생 속도를 조절할 수 있어요.",
+      disableBeacon: true,
+      placement: "right",
+    },
+    {
+      target: ".play-pause",
+      content: "챌린지 영상을 재생하거나 일시정지할 수 있어요.",
+      disableBeacon: true,
+      placement: "right",
+    },
+    {
+      target: ".change-video",
+      content: "챌린지 영상을 변경할 수 있어요.",
+      disableBeacon: true,
+      placement: "right",
+    },
+    {
+      target: ".record",
+      content: "당신의 춤을 녹화하고 AI 평가 시스템으로 점수를 받아보세요!",
+      disableBeacon: true,
+      placement: "right",
+    },
+  ];
+
+  const practiceSteps: Step[] = [
+    {
+      target: ".challenge-list",
+      content: "챌린지 목록에서 원하는 챌린지를 선택해주세요.",
+      disableBeacon: true,
+      placement: "right",
+    },
+    // 필요한 경우 추가 단계를 여기에 추가할 수 있습니다.
+  ];
+
+  // 맨 처음 방문시에만 자동으로 가이드 뜨도록
+  useEffect(() => {
+    // url이 /practice/:videoId 일 경우
+    if (videoId) {
+      const hasSeenGuide = localStorage.getItem("hasSeenGuide");
+      if (!hasSeenGuide) {
+        setRunGuide(true);
+        localStorage.setItem("hasSeenGuide", "true");
+      }
+    }
+    // url이 /practice 일 경우
+    if (!videoId) {
+      const hasSeenPracticeGuide = localStorage.getItem("hasSeenPracticeGuide");
+      if (!hasSeenPracticeGuide) {
+        setRunPracticeGuide(true);
+        localStorage.setItem("hasSeenPracticeGuide", "true");
+      }
+    }
+  }, [videoId]);
+
+  const handleJoyrideCallback = useCallback(
+    (data: CallBackProps) => {
+      const { status } = data;
+      if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+        if (videoId) {
+          setRunGuide(false);
+        }
+        if (!videoId) {
+          setRunPracticeGuide(false);
+        }
+      }
+    },
+    [videoId]
+  );
+
+  const startGuide = () => {
+    if (videoId) {
+      setRunGuide(true);
+    }
+    if (!videoId) {
+      setRunPracticeGuide(true);
+    }
+  };
+
   const fetchSessionUserData = () => {
     const userData = sessionStorage.getItem("user_profile");
     return userData ? (JSON.parse(userData) as UserProfile) : null;
   };
 
   const sessionUser = fetchSessionUserData();
-
-  // API 요청 관련 mutation
-  // const mutation = useMutation({
-  //   mutationFn: postChallenge,
-  //   onMutate: (variables: ChallengeData) => {
-  //     setIsCompletionAlertModalOpen(true);
-  //     setIsWebcamVisible(true);
-  //     setCurrentYoutubeId(variables.youtubeId);
-  //   },
-  //   onSuccess: (data) => {
-  //     setIsWebcamVisible(false);
-  //     setCurrentYoutubeId("");
-  //     nav(`/practice/${data.data.youtubeId}`);
-  //   },
-  //   onError: () => {
-  //     setIsWebcamVisible(false);
-  //     setCurrentYoutubeId("");
-  //     nav("/home");
-  //   },
-  // });
 
   // YouTube BlazePose 데이터 쿼리
   const youtubeBlazePoseQuery = useQuery({
@@ -412,27 +468,6 @@ export const Practice: React.FC = () => {
   // UI 이벤트 핸들러
   const handleBackButtonClick = () => nav(-1);
   const handleChangeButtonClick = () => nav("/challenge");
-  // const handleSearchButtonClick = () => nav("/home");
-  // const validateUrl = (url: string) => url.toLowerCase().includes("shorts");
-  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setInputUrl(e.target.value);
-  //   setIsValidUrl(validateUrl(e.target.value));
-  // };
-
-  // const handleLoadVideo = () => {
-  //   const youtubeId = extractVideoId(inputUrl);
-  //   if (youtubeId) {
-  //     mutation.mutate({ youtubeId, url: inputUrl });
-  //     setInputUrl("");
-  //   } else {
-  //     console.error("올바른 Youtube Shorts URL이 아닙니다.");
-  //   }
-  // };
-
-  // const extractVideoId = (url: string): string | null => {
-  //   const match = url.match(/shorts\/([^?]+)/);
-  //   return match ? match[1] : null;
-  // };
 
   // 파이썬에서 영상 다운받는동안 대기시간에 홈으로 이동시켜줌
   const handleCloseIsCompletionAlertModal = () => {
@@ -527,20 +562,28 @@ export const Practice: React.FC = () => {
 
       return res.data;
     },
-
-    onSuccess: (data) => {
+    onMutate: (data) => {
+      setIsAnalyzing(true);
       setShowSubmitModal(false);
       setRecordedChunks([]);
-      // 이제 레포트페이지로 이동
+
+      const videoUrl = URL.createObjectURL(data.videoFile);
+      setRecordedVideoUrl(videoUrl);
+      setIsShortsVisible(true);
+      nav("/home");
+    },
+
+    onSuccess: (data) => {
+      setIsAnalyzing(false);
+      setIsShortsVisible(false);
+      setRecordedVideoUrl(null);
       nav(`/report/${data.data.uuid}`);
     },
-    onError: (error, variables) => {
+    onError: (error) => {
       console.error("제출 실패", error);
-      console.log("전송 시도한 데이터:", {
-        videoFileSize: variables.videoFile.size,
-        userId: variables.userId,
-        challengeId: variables.challengeId,
-      });
+      setIsAnalyzing(false);
+      setIsShortsVisible(false);
+      setRecordedVideoUrl(null);
     },
   });
 
@@ -579,6 +622,70 @@ export const Practice: React.FC = () => {
 
   return (
     <>
+      <Joyride
+        steps={videoId ? steps : practiceSteps}
+        run={videoId ? runGuide : runPracticeGuide}
+        continuous
+        showSkipButton
+        showProgress
+        disableOverlayClose
+        disableCloseOnEsc
+        spotlightClicks
+        styles={{
+          options: {
+            arrowColor: "#ffffff",
+            backgroundColor: "#ffffff",
+            overlayColor: "rgba(0, 0, 0, 0.5)",
+            primaryColor: "#ee5050",
+            textColor: "#333333",
+            zIndex: 99999,
+          },
+          tooltip: {
+            backgroundColor: "#ffffff",
+            borderRadius: "14px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            padding: "16px",
+          },
+          tooltipContainer: {
+            textAlign: "center",
+          },
+
+          tooltipContent: {
+            fontSize: "20px",
+            lineHeight: "1.5",
+            color: "#ee5050",
+          },
+          buttonNext: {
+            backgroundColor: "#ee5050",
+            borderRadius: "4px",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            padding: "8px 16px",
+            transition: "background-color 0.3s ease",
+          },
+          buttonBack: {
+            color: "#ee5050",
+            backgroundColor: "#ffffff",
+            border: "1px solid #ee5050",
+            borderRadius: "4px",
+            fontSize: "14px",
+            fontWeight: "500",
+            marginRight: "8px",
+            padding: "8px 16px",
+          },
+          buttonSkip: {
+            color: "#999999",
+            fontSize: "14px",
+          },
+          buttonClose: {
+            color: "#ee5050",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        }}
+        callback={handleJoyrideCallback}
+      />
       <Header stickyOnly />
       <Container>
         {videoId && (
@@ -612,7 +719,7 @@ export const Practice: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <ChallengeList>
+                  <ChallengeList className="challenge-list">
                     <Title>Challenge!</Title>
                     <ScrollableList>
                       {Array.isArray(videoList) && videoList.length > 0 ? (
@@ -635,6 +742,8 @@ export const Practice: React.FC = () => {
                 <Buttons>
                   <ButtonWrapper>
                     <Button
+                      className="playback-rate"
+                      ref={playbackRateRef}
                       onClick={() => setShowPlaybackRates(!showPlaybackRates)}
                     >
                       <MdOutlineSpeed style={{ fontSize: "25px" }} />
@@ -654,7 +763,11 @@ export const Practice: React.FC = () => {
                       </PlaybackRateOptions>
                     )}
                   </ButtonWrapper>
-                  <Button onClick={togglePlayPause}>
+                  <Button
+                    className="play-pause"
+                    ref={playPauseRef}
+                    onClick={togglePlayPause}
+                  >
                     {isYouTubePlaying ? (
                       <FaPause
                         style={{ fontSize: "15px", marginBottom: "3px" }}
@@ -666,7 +779,13 @@ export const Practice: React.FC = () => {
                     )}
                     {isYouTubePlaying ? "일시정지" : "재생"}
                   </Button>
-                  <button onClick={handleChangeButtonClick}>영상변경</button>
+                  <button
+                    className="change-video"
+                    ref={changeVideoRef}
+                    onClick={handleChangeButtonClick}
+                  >
+                    영상변경
+                  </button>
                 </Buttons>
               )}
             </VideoContainer>
@@ -706,14 +825,19 @@ export const Practice: React.FC = () => {
               <Buttons>
                 {videoId &&
                   (!isRecording ? (
-                    <Button
-                      onClick={startRecording}
-                      disabled={countdown !== null}
-                      style={{ opacity: countdown !== null ? 0.5 : 1 }}
-                    >
-                      <BiVideoRecording style={{ fontSize: "20px" }} />
-                      녹화
-                    </Button>
+                    <>
+                      <Button onClick={startGuide}>가이드</Button>
+                      <Button
+                        className="record"
+                        ref={recordRef}
+                        onClick={startRecording}
+                        disabled={countdown !== null}
+                        style={{ opacity: countdown !== null ? 0.5 : 1 }}
+                      >
+                        <BiVideoRecording style={{ fontSize: "20px" }} />
+                        녹화
+                      </Button>
+                    </>
                   ) : (
                     <Button onClick={resetRecording}>
                       <FaRedo style={{ fontSize: "20px" }} />
@@ -736,7 +860,7 @@ export const Practice: React.FC = () => {
           setRecordedChunks([]);
         }}
         onSubmit={handleSubmit}
-        isPending={submitVideoMutation.isPending}
+        isPending={submitVideoMutation.isPending || isAnalyzing}
       />
     </>
   );

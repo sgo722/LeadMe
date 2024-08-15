@@ -7,7 +7,6 @@ import { BrowserRouter } from "react-router-dom";
 import { RecoilRoot, useSetRecoilState } from "recoil";
 import { accessTokenState } from "./stores/authAtom";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 const queryClient = new QueryClient();
 
 const Root = () => {
@@ -29,7 +28,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <Root />
-          <ReactQueryDevtools />
         </QueryClientProvider>
       </React.StrictMode>
     </BrowserRouter>

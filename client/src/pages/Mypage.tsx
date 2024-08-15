@@ -12,8 +12,10 @@ import { CiImageOff } from "react-icons/ci";
 import { useRecoilValue } from "recoil";
 import { accessTokenState } from "stores/authAtom";
 import { ensureHttps } from "utils/urlUtils";
+import { FaLock } from "react-icons/fa";
 
 interface FeedProps {
+  access: string;
   userChallengeId: number;
   title: string;
   thumbnail: string;
@@ -190,9 +192,12 @@ const Mypage: React.FC = () => {
     if (!confirmation) return;
 
     try {
-      const response = await axios.delete(`${baseUrl}/api/v1/user/delete/${user.id}`, {
-        headers: {Authorization: `Bearer ${accessToken}`},
-      });
+      const response = await axios.delete(
+        `${baseUrl}/api/v1/user/delete/${user.id}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
 
       if (response.status === 200) {
         alert("회원 탈퇴가 완료되었습니다.");
@@ -239,6 +244,12 @@ const Mypage: React.FC = () => {
         followUser.mutate(user.id);
       }
     }
+  };
+
+  const handleClickThumbnail = (index: number) => {
+    navigate(`/feed/${user?.id}`, {
+      state: { selectedVideoIndex: index },
+    });
   };
 
   if (!user) {
@@ -319,13 +330,23 @@ const Mypage: React.FC = () => {
           <FeedTitle>Feed</FeedTitle>
           <FeedContainer>
             {feed && feed.length > 0 ? (
-              feed.map((item) => (
-                <OneFeed key={item.userChallengeId}>
+              feed.map((item, index) => (
+                <OneFeed
+                  key={item.userChallengeId}
+                  onClick={() => {
+                    handleClickThumbnail(index);
+                  }}
+                >
                   <OneImg
                     src={`data:image/jpeg;base64,${item.thumbnail}`}
                     alt={item.title}
                   />
                   <OneTitle>{item.title}</OneTitle>
+                  {item.access === "private" ? (
+                    <OneAccess>
+                      <FaLock color="rgba(255, 255, 255, 0.5)" size={16} />
+                    </OneAccess>
+                  ) : null}
                 </OneFeed>
               ))
             ) : (
@@ -428,7 +449,7 @@ interface TdProps {
 const Td = styled.td.withConfig({
   shouldForwardProp: (prop) => prop !== "first",
 })<TdProps>`
-  font-family: "Noto Sans", sans-serif;
+  font-family: "Noto Sans KR", sans-serif;
   font-size: ${(props) => (props.first ? "20px" : "14px")};
   font-weight: ${(props) => (props.first ? "500" : "400")};
   color: #ee5050;
@@ -468,11 +489,13 @@ const OneFeed = styled.div`
   flex-direction: column;
   flex-wrap: wrap;
   margin: 12px 0;
+  position: relative;
+  transition: transform 0.3s ease;
+
   &:hover {
-    img {
-      transform: scale(1.05);
-    }
+    transform: scale(1.05);
   }
+
   &:not(:nth-child(4n)) {
     margin-right: 66.6px;
   }
@@ -485,7 +508,7 @@ const OneImg = styled.img`
   border-radius: 8px;
   object-fit: cover;
   margin: 10px 0 12px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
   cursor: pointer;
 `;
 
@@ -503,6 +526,7 @@ const OneTitle = styled.div`
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  transition: transform 0.3s ease;
 `;
 
 const None = styled.div`
@@ -527,6 +551,13 @@ const TrCursor = styled.tr`
     background-color: rgba(255, 255, 255, 0.3);
     border-radius: 8px;
   }
+`;
+
+const OneAccess = styled.div`
+  position: absolute;
+  top: 24px;
+  right: 12px;
+  transition: transform 0.3s ease;
 `;
 
 export default Mypage;

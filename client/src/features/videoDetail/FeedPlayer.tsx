@@ -2,23 +2,32 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { FeedDetail } from "types/index";
 import { InteractionButtons } from "features/videoDetail/InteractionButtons";
-import { CommentSection } from "features/videoDetail/CommentSection";
+import { axiosInstance } from "axiosInstance/apiClient";
+import { getJWTHeader } from "axiosInstance/apiClient";
 
 interface VideoPlayerProps {
   video: FeedDetail;
-  showComments: boolean;
-  onToggleComments: () => void;
   userChallengeId: number;
+  isActive: boolean;
 }
 
 const FeedPlayer: React.FC<VideoPlayerProps> = ({
   video,
-  showComments,
-  onToggleComments,
   userChallengeId,
+  isActive,
 }) => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(!isActive);
+  const [isLiked, setIsLiked] = useState(video.isLiked);
+  const [likes, setLikes] = useState(video.likes);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const fetchSessionUserData = () => {
+    const userData = sessionStorage.getItem("user_profile");
+    return userData ? JSON.parse(userData) : null;
+  };
+
+  const sessionUser = fetchSessionUserData();
 
   useEffect(() => {
     if (video.video) {
@@ -33,26 +42,83 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
     }
   }, [video.video]);
 
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isActive;
+      setIsMuted(!isActive);
+    }
+  }, [isActive]);
+
+  const toggleSound = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
+
+  const toggleLike = async () => {
+    try {
+      if (isLiked) {
+        await axiosInstance.delete("/api/v1/userChallenge/like", {
+          headers: getJWTHeader(),
+          data: { userChallengeId },
+        });
+        setLikes(likes - 1);
+      } else {
+        await axiosInstance.post(
+          "/api/v1/userChallenge/like",
+          { userChallengeId },
+          { headers: getJWTHeader() }
+        );
+        setLikes(likes + 1);
+      }
+
+      setIsLiked(!isLiked);
+    } catch (error) {
+      console.error("좋아요 토글 중 오류 발생:", error);
+    }
+  };
+
+  const deleteVideo = async () => {
+    try {
+      await axiosInstance.delete(`/api/v1/userChallenge/${userChallengeId}`, {
+        headers: getJWTHeader(),
+      });
+      // 삭제 후 필요한 추가 동작 (예: 피드에서 해당 비디오 제거 등)
+    } catch (error) {
+      console.error("영상 삭제 중 오류 발생:", error);
+    }
+  };
+
   return (
-    <VideoPlayerWrapper $showComments={showComments}>
+    <VideoPlayerWrapper>
       <VideoContent>
         {videoUrl && (
-          <VideoElement ref={videoRef} src={videoUrl} controls autoPlay loop />
+          <VideoElement
+            ref={videoRef}
+            src={videoUrl}
+            controls
+            autoPlay
+            loop
+            muted={isMuted}
+            playsInline
+          />
         )}
         <InteractionButtons
-          likes={video.likes}
-          commentCount={0}
-          onToggleComments={onToggleComments}
+          likes={likes}
+          isMuted={isMuted}
+          isLiked={isLiked}
+          isOwner={sessionUser?.id === video.userId} // 소유자 여부 확인
+          onToggleSound={toggleSound}
+          onToggleLike={toggleLike}
+          onDelete={deleteVideo} // 삭제 함수 전달
         />
       </VideoContent>
-      <CommentSection show={showComments} userChallengeId={userChallengeId} />
     </VideoPlayerWrapper>
   );
 };
 
-const VideoPlayerWrapper = styled.div<{
-  $showComments: boolean;
-}>`
+const VideoPlayerWrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;

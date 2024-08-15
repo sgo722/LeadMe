@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useRecoilValue } from "recoil";
-import { IsShortsVisibleAtom, CurrentYoutubeIdAtom } from "stores/index";
+import { IsShortsVisibleAtom, RecordedVideoUrlAtom } from "stores/index";
 import styled from "styled-components";
 import { FaExpandAlt, FaCompressAlt } from "react-icons/fa";
-import YouTube from "react-youtube";
+import { useLocation } from "react-router-dom";
 
 type ShortsSize = "default" | "maximized";
 
 export const ShortsModal: React.FC = () => {
   const isShortsVisible = useRecoilValue(IsShortsVisibleAtom);
-  const youtubeId = useRecoilValue(CurrentYoutubeIdAtom);
+  const recordedVideoUrl = useRecoilValue(RecordedVideoUrlAtom);
   const [shortsSize, setShortsSize] = useState<ShortsSize>("default");
   const shortsContentRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+
   useEffect(() => {
     //이거 그냥 보였다안보였다 하는거라 언마운트될때 클린업함수에 써봤자 shortsSize 초기화 못함
     // Recoil 상태에 따라 초기화 하는걸로
@@ -54,26 +56,22 @@ export const ShortsModal: React.FC = () => {
     maximized: { width: "330px", height: "586px" },
   };
 
-  if (!isShortsVisible) return null;
+  if (!isShortsVisible || location.pathname.startsWith("/report")) return null;
 
   return (
     <ShortsContainer $shortsSize={shortsSize}>
-      <ShortsContent $shortsSize={shortsSize} ref={shortsContentRef}>
-        {youtubeId ? (
-          <YouTube
-            videoId={youtubeId}
-            opts={{
-              width: videoDimensions[shortsSize].width,
-              height: videoDimensions[shortsSize].height,
-              playerVars: {
-                autoplay: 1,
-                modestbranding: 1,
-                mute: 1,
-              },
-            }}
-          />
+      <ShortsContent
+        $shortsSize={shortsSize}
+        ref={shortsContentRef}
+        style={{
+          width: videoDimensions[shortsSize].width,
+          height: videoDimensions[shortsSize].height,
+        }}
+      >
+        {recordedVideoUrl ? (
+          <Video src={recordedVideoUrl} controls loop muted autoPlay />
         ) : (
-          <AnalyzingText>영상 준비중</AnalyzingText>
+          <AnalyzingText>영상 분석 중...</AnalyzingText>
         )}
         <SizeButton
           onClick={shortsSize === "default" ? maximizeShorts : minimizeShorts}
@@ -146,4 +144,10 @@ const SizeButton = styled.button`
   &:hover {
     background: rgba(0, 0, 0, 0.7);
   }
+`;
+
+const Video = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
