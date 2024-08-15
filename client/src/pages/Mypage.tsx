@@ -231,18 +231,26 @@ const Mypage: React.FC = () => {
   };
 
   const handleSendMessageClick = () => {
-    if (user) {
-      navigate("/chat", { state: user });
+    if (sessionUser) {
+      if (user) {
+        navigate("/chat", { state: user });
+      }
+    } else {
+      alert("로그인 후 이용 가능한 서비스입니다.");
     }
   };
 
   const handleToggleFollowClick = () => {
-    if (user) {
-      if (isFollowing === "follow") {
-        unfollowUser.mutate(user.id);
-      } else {
-        followUser.mutate(user.id);
+    if (sessionUser) {
+      if (user) {
+        if (isFollowing === "follow") {
+          unfollowUser.mutate(user.id);
+        } else {
+          followUser.mutate(user.id);
+        }
       }
+    } else {
+      alert("로그인 후 이용 가능한 서비스입니다.");
     }
   };
 
