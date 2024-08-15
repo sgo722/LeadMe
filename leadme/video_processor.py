@@ -179,7 +179,7 @@ def process_video(youtubeId, video_path):
                 keypoints_list.append(keypoints)
 
                 # 프레임에 랜드마크 그리기 (선택 사항)
-                mp.solutions.drawing_utils.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+                # mp.solutions.drawing_utils.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
             # 프레임 표시 (선택 사항)
             # 화면 보고싶으면 cv2.imshow('Frame', frame)
@@ -266,7 +266,7 @@ def process_video_user(video_path):
                 keypoints_list.append(keypoints)
 
                 # 프레임에 랜드마크 그리기 (선택 사항)
-                mp.solutions.drawing_utils.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+                # mp.solutions.drawing_utils.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
             # 프레임 표시 (선택 사항)
             # 화면 보고싶으면 cv2.imshow('Frame', frame)

@@ -140,10 +140,10 @@ pipeline {
                                 -e JAVA_OPTS="-D${VM_OPTION_NAME}=${VM_OPTION_PASSWORD}" \
                                 ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest
 
-                                        docker pull ${DOCKERHUB_USERNAME}/client-image:latest
-                                        docker stop client || true
-                                        docker rm client || true
-                                        docker run --name client -d -p 5173:80  ${DOCKERHUB_USERNAME}/client-image:latest
+                                        # docker pull ${DOCKERHUB_USERNAME}/client-image:latest
+                                        # docker stop client || true
+                                        # docker rm client || true
+                                        # docker run --name client -d -p 5173:80  ${DOCKERHUB_USERNAME}/client-image:latest
 
                                         docker image prune -f
                                         """,

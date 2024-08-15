@@ -65,6 +65,8 @@ const Report = ({
   const [isDataLoaded, setIsDataLoaded] = useState(false); // 데이터 로딩 상태 추가
   const [isModalOpen, setModalOpen] = useState(false); // 모달 열림 상태 추가
   const reportIdRef = useRef<string | null>(null); // 이전 요청 ID 저장
+  const [isLogin, setIsLogin] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
 
   const mutation = useMutation<scoreData, Error, string>({
     mutationFn: async (value: string): Promise<scoreData> => {
@@ -107,6 +109,11 @@ const Report = ({
       });
     }
   }, [reportData]);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("access_token");
+    setIsLogin(!!token);
+  }, []);
 
   const chunkArray: ChunkArrayFunction = (array, chunkSize) => {
     const result = [];
@@ -217,9 +224,17 @@ const Report = ({
     navigate(`/guide`);
   };
 
+  const handleLoginPromptClick = () => {
+    setShowLoginModal(true);
+  };
+
   return (
     <>
-      <Header stickyOnly />
+      <Header
+        loginModal={showLoginModal}
+        setLoginModal={setShowLoginModal}
+        stickyOnly
+      />
       <Container>
         <MainSection>
           <div>
@@ -259,10 +274,17 @@ const Report = ({
                   도전하기
                 </SearchBtn>
               </div>
-              <UploadBtn onClick={openModal}>
-                <StyledFiUpload size="22" color="#ee5050" />
-                upload
-              </UploadBtn>
+              {isLogin ? (
+                <UploadBtn onClick={openModal}>
+                  <StyledFiUpload size="22" color="#ee5050" />
+                  upload
+                </UploadBtn>
+              ) : (
+                <Info onClick={handleLoginPromptClick}>
+                  <div>로그인 후</div>
+                  <div>영상 업로드가 가능합니다</div>
+                </Info>
+              )}
             </BtnContainer>
           </ReportContainer>
         </MainSection>
@@ -440,6 +462,30 @@ const Score = styled.div`
   & > div {
     font-size: 18px;
     font-weight: 600;
+  }
+`;
+
+const Info = styled.div`
+  width: 190px;
+  height: 54px;
+  margin-left: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: "Noto Sans", sans-serif;
+  text-align: center;
+  line-height: 1.4;
+  background-color: rgba(244, 244, 244, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  & > div:last-child {
+    font-size: 12px;
   }
 `;
 

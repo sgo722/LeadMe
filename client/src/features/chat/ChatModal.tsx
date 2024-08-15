@@ -76,13 +76,19 @@ export const ChatModal: React.FC<ChatModalProps> = ({
             `/sub/chat/message/${createdRoomId}`,
             (message: ChatMessageDto) => {
               // 현재 사용자가 보낸 메시지는 이미 화면에 표시되었으므로 중복 방지
+              console.log("111new!", message);
+              console.log("111past!", messages);
               if (message.userId !== currentUserId) {
+                console.log("222new!", message);
+                console.log("222past!", messages);
+
                 setMessages((prevMessages) => {
                   // 같은 메시지가 두 번 들어오지 않도록 메시지 ID 또는 고유 시간 기반 중복 체크
                   if (
                     prevMessages.some(
                       (m) =>
-                        m.time === message.time && m.message === message.message
+                        m.time === formatTime(message.time) &&
+                        m.message === message.message
                     )
                   ) {
                     return prevMessages; // 중복 메시지 무시
