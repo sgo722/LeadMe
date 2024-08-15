@@ -93,8 +93,13 @@ const Feed = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
-      const reversedData = data.reverse();
-      setFeed(reversedData);
+      if (data.length > 0) {
+        const reversedData = data.reverse();
+        setFeed(reversedData);
+      } else {
+        alert("해당 유저는 업로드한 영상이 없습니다.");
+        navigate(`/mypage/${userId}`);
+      }
       setIsLoading(false);
       setHasMore(false);
     },
@@ -117,7 +122,11 @@ const Feed = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
-      setFeed(data);
+      if (data.length > 0) {
+        setFeed(data);
+      } else {
+        alert("검색 결과가 없습니다.");
+      }
       setIsLoading(false);
       setHasMore(false);
     },
