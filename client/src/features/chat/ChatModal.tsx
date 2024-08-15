@@ -75,13 +75,16 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           subscribeToChannel(
             `/sub/chat/message/${createdRoomId}`,
             (message: ChatMessageDto) => {
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                { ...message, time: formatTime(message.time) },
-              ]);
-              if (modalBodyRef.current) {
-                modalBodyRef.current.scrollTop =
-                  modalBodyRef.current.scrollHeight;
+              // 현재 사용자가 보낸 메시지는 이미 화면에 표시되었으므로 중복 방지
+              if (message.userId !== currentUserId) {
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  { ...message, time: formatTime(message.time) },
+                ]);
+                if (modalBodyRef.current) {
+                  modalBodyRef.current.scrollTop =
+                    modalBodyRef.current.scrollHeight;
+                }
               }
             }
           );
