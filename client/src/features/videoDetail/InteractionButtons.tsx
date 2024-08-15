@@ -23,6 +23,12 @@ export const InteractionButtons: React.FC<InteractionButtonsProps> = ({
   onDelete,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const fetchSessionUserData = () => {
+    const userData = sessionStorage.getItem("user_profile");
+    return userData ? JSON.parse(userData) : null;
+  };
+
+  const sessionUser = fetchSessionUserData();
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -57,7 +63,11 @@ export const InteractionButtons: React.FC<InteractionButtonsProps> = ({
           </Delete>
         )}
         <Button onClick={handleLikeClick}>
-          {isLiked ? <HeartIconLike size={17} /> : <HeartIcon size={17} />}
+          {isLiked && sessionUser ? (
+            <HeartIconLike size={17} />
+          ) : (
+            <HeartIcon size={17} />
+          )}
           <span>{likes}</span>
         </Button>
         <Button onClick={onToggleSound}>
