@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { FeedDetail } from "types/index";
 import { InteractionButtons } from "features/videoDetail/InteractionButtons";
-import { axiosInstance } from "axiosInstance/apiClient"; // axios 인스턴스 가져오기
+import { axiosInstance } from "axiosInstance/apiClient";
+import { getJWTHeader } from "axiosInstance/apiClient";
 
 interface VideoPlayerProps {
   video: FeedDetail;
@@ -50,20 +51,31 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
 
   const toggleLike = async () => {
     try {
+      console.log("토글 전 상태: ", { isLiked, userChallengeId }); // 현재 상태 확인
+
       if (isLiked) {
         // 좋아요 취소 API 요청
         await axiosInstance.delete("/api/v1/commentLike", {
+          headers: getJWTHeader(),
           data: { userChallengeId }, // 요청 데이터로 userChallengeId 전송
         });
+        console.log("좋아요 취소 요청:", { userChallengeId });
         setLikes(likes - 1); // 좋아요 수 감소
       } else {
         // 좋아요 추가 API 요청
-        await axiosInstance.post("/api/v1/commentLike", { userChallengeId });
+        await axiosInstance.post(
+          "/api/v1/commentLike",
+          { userChallengeId },
+          { headers: getJWTHeader() }
+        );
+        console.log("좋아요 추가 요청:", { userChallengeId });
         setLikes(likes + 1); // 좋아요 수 증가
       }
+
       setIsLiked(!isLiked); // 좋아요 여부 토글
+      console.log("토글 후 상태: ", { isLiked, likes }); // 토글 후 상태 확인
     } catch (error) {
-      console.error("Error toggling like:", error);
+      console.error("좋아요 토글 중 오류 발생:", error);
     }
   };
 
