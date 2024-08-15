@@ -23,7 +23,7 @@ export const Loader: React.FC<LoaderProps> = ({ isCompleted = false }) => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [setIsEntered]);
+  }, [setIsEntered, progress]);
 
   if (isEntered) return null;
   return (
@@ -35,6 +35,7 @@ export const Loader: React.FC<LoaderProps> = ({ isCompleted = false }) => {
           onClick={() => {
             setIsEntered(true);
           }}
+          disabled={progress.progress !== 100}
         >
           Enter
         </EnterBtn>
