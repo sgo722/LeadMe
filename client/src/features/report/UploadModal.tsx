@@ -96,7 +96,7 @@ const UpdateModal: React.FC<ModalProps> = ({ isOpen, onClose, reportData }) => {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
-          <Info>공개 비공개 여부는 추후에도 수정이 가능합니다.</Info>
+          <Info>공개 비공개 여부를 선택해주세요.</Info>
           <Flex>
             <PrivateBtn
               disabled={isDisabled}

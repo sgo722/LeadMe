@@ -1,32 +1,65 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import { FaHeart, FaVolumeUp, FaVolumeMute } from "react-icons/fa";
+import { FaHeart, FaVolumeUp, FaVolumeMute, FaTrash } from "react-icons/fa";
+import { DeleteConfirmationModal } from "./DeleteConfirmationModal"; // 새로 만든 모달 파일을 import
 
 interface InteractionButtonsProps {
   likes: number;
   isMuted: boolean;
   isLiked: boolean;
+  isOwner: boolean;
   onToggleSound: () => void;
   onToggleLike: () => void;
+  onDelete: () => void;
 }
 
 export const InteractionButtons: React.FC<InteractionButtonsProps> = ({
   likes,
   isMuted,
   isLiked,
+  isOwner,
   onToggleSound,
   onToggleLike,
+  onDelete,
 }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleDelete = () => {
+    onDelete();
+    closeModal();
+  };
+
   return (
-    <ButtonsWrapper>
-      <Button onClick={onToggleLike}>
-        <Heart size={17} isLiked={isLiked} />
-        <span>{likes}</span>
-      </Button>
-      <Button onClick={onToggleSound}>
-        {isMuted ? <FaVolumeMute size={20} /> : <FaVolumeUp size={20} />}
-      </Button>
-    </ButtonsWrapper>
+    <>
+      <ButtonsWrapper>
+        {isOwner && (
+          <Delete onClick={openModal}>
+            <FaTrash size={19} />
+          </Delete>
+        )}
+        <Button onClick={onToggleLike}>
+          <Heart size={17} isLiked={isLiked} />
+          <span>{likes}</span>
+        </Button>
+        <Button onClick={onToggleSound}>
+          {isMuted ? <FaVolumeMute size={20} /> : <FaVolumeUp size={20} />}
+        </Button>
+      </ButtonsWrapper>
+
+      <DeleteConfirmationModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onDelete={handleDelete}
+      />
+    </>
   );
 };
 
@@ -65,7 +98,27 @@ const Button = styled.button`
   }
 `;
 
-const Heart = styled(FaHeart)<{ isLiked: boolean }>`
+const Delete = styled.button`
+  background: #fff;
+  opacity: 0.8;
+  border: none;
+  color: #cdcdcd;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 304px;
+`;
+
+const Heart = styled(FaHeart).attrs<{ isLiked: boolean }>((props) => ({
+  color: props.isLiked ? "#ee5050" : "#d2d2d2",
+}))<{ isLiked: boolean }>`
   margin-bottom: 8px;
-  color: ${({ isLiked }) => (isLiked ? "#ee5050" : "#d2d2d2")};
 `;
