@@ -484,6 +484,14 @@ export const Practice: React.FC = () => {
     }
   };
 
+  // 좌표 좌우 변환 함수
+  function flipPoseLandmarks(landmarks: Landmark[]): Landmark[] {
+    return landmarks.map((landmark) => ({
+      ...landmark,
+      x: 1 - landmark.x, // x 좌표만 반전
+    }));
+  }
+
   // 웹캠 포즈 감지
   const predictWebcam = useCallback(() => {
     if (!poseLandmarker || !videoRef.current) return;
@@ -502,8 +510,9 @@ export const Practice: React.FC = () => {
           timestamp
         );
         if (results.landmarks && results.landmarks.length > 0) {
-          // 사용자의 현재 포즈를 userPoseRef에 저장
-          userPoseRef.current = results.landmarks[0];
+          // 사용자의 현재 포즈를 좌우반전해서 userPoseRef에 저장
+          const flippedLandmarks = flipPoseLandmarks(results.landmarks[0]);
+          userPoseRef.current = flippedLandmarks;
         }
       }
       animationFrameId = requestAnimationFrame(detectPose);
@@ -535,9 +544,10 @@ export const Practice: React.FC = () => {
               challengePose
             );
             setPerformanceRating(rating);
+            console.log(rating);
           }
         }
-      }, 2000); // 2초마다 실행
+      }, 1000); // 2초마다 실행
     }
 
     return () => {
