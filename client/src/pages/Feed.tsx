@@ -4,6 +4,7 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import Header from "components/Header";
 import { SearchBar } from "components/SearchBar";
 import FeedPlayer from "features/videoDetail/FeedPlayer";
+import { LoadingSpinner } from "components/LoadingSpinner";
 import { ResponseData, FeedDetail } from "types/index";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "axiosInstance/apiClient";
@@ -20,6 +21,7 @@ interface FeedProps {
 const Feed = () => {
   const [feed, setFeed] = useState<FeedDetail[]>([]);
   const [activeVideoId, setActiveVideoId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // 로딩 상태 추가
   const videoRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const location = useLocation();
   const navigate = useNavigate();
@@ -40,9 +42,9 @@ const Feed = () => {
     },
     onSuccess: (data) => {
       const newFeed = data.content;
-
       console.log("피드", newFeed);
       setFeed(newFeed);
+      setIsLoading(false);
 
       // if (newFeed.length > 0) {
       //   const firstNewFeedId = newFeed[0].userChallengeId;
@@ -59,6 +61,7 @@ const Feed = () => {
     },
     onError: (error: Error) => {
       console.error("Error fetching user Feed:", error);
+      setIsLoading(false); // 에러 발생 시에도 로딩 상태 false로 변경
     },
   });
 
@@ -76,9 +79,11 @@ const Feed = () => {
       const reversedData = data.reverse(); // 데이터를 뒤집어서 저장
       console.log("특정유저 피드", reversedData);
       setFeed(reversedData);
+      setIsLoading(false); // 데이터 로드 완료 후 로딩 상태 false로 변경
     },
     onError: (error: Error) => {
       console.error("Error fetching user Feed:", error);
+      setIsLoading(false); // 에러 발생 시에도 로딩 상태 false로 변경
       alert("로그인 후 이용 가능한 서비스 입니다.");
       navigate("/home");
     },
@@ -97,9 +102,11 @@ const Feed = () => {
     onSuccess: (data) => {
       console.log("검색결과:", data);
       setFeed(data);
+      setIsLoading(false); // 데이터 로드 완료 후 로딩 상태 false로 변경
     },
     onError: (error: Error) => {
       console.error("Error fetching search results:", error);
+      setIsLoading(false); // 에러 발생 시에도 로딩 상태 false로 변경
     },
   });
 
@@ -147,6 +154,7 @@ const Feed = () => {
 
   const handleSearch = (searchTerm: string) => {
     console.log(searchTerm);
+    setIsLoading(true); // 검색할 때 로딩 상태 true로 설정
     mutationSearchFeed.mutate(searchTerm);
   };
 
@@ -185,30 +193,34 @@ const Feed = () => {
         <SearchBar width={600} navigation={false} onSearch={handleSearch} />
       </SearchBarWrapper>
       <VideoContainer>
-        {feed.map((video, index) => (
-          <div
-            key={video.userChallengeId}
-            ref={(el) => (videoRefs.current[index] = el)}
-            data-video-id={video.userChallengeId}
-          >
-            <FeedPlayer
-              video={video}
-              userChallengeId={video.userChallengeId}
-              isActive={activeVideoId === video.userChallengeId}
-              onVideoDeleted={() => handleVideoDeleted(video.userChallengeId)} // 콜백 함수 전달
-            />
-            <Profile>
-              <div>
-                <ProfileImg
-                  src={video.profileImg}
-                  alt={video.nickname}
-                  onClick={() => handleProfileClick(video.userId)}
-                />
-              </div>
-              <Title>{video.title}</Title>
-            </Profile>
-          </div>
-        ))}
+        {isLoading ? ( // 로딩 중일 때 로딩 스피너 표시
+          <LoadingSpinner />
+        ) : (
+          feed.map((video, index) => (
+            <div
+              key={video.userChallengeId}
+              ref={(el) => (videoRefs.current[index] = el)}
+              data-video-id={video.userChallengeId}
+            >
+              <FeedPlayer
+                video={video}
+                userChallengeId={video.userChallengeId}
+                isActive={activeVideoId === video.userChallengeId}
+                onVideoDeleted={() => handleVideoDeleted(video.userChallengeId)} // 콜백 함수 전달
+              />
+              <Profile>
+                <div>
+                  <ProfileImg
+                    src={video.profileImg}
+                    alt={video.nickname}
+                    onClick={() => handleProfileClick(video.userId)}
+                  />
+                </div>
+                <Title>{video.title}</Title>
+              </Profile>
+            </div>
+          ))
+        )}
       </VideoContainer>
     </PageLayout>
   );
