@@ -41,7 +41,6 @@ const FollowModal: React.FC<FollowModalProps> = ({ onClose, type }) => {
       return response.data.data;
     },
     onSuccess: (data: PeopleProps[]) => {
-      console.log(data);
       setPeople(data);
     },
     onError: (error: Error) => {

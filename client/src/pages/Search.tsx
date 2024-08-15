@@ -10,8 +10,6 @@ export const Search: React.FC = () => {
       <Container>
         <SearchBar width={750} navigation />
         <SearchResult platform={"YouTube"} />
-        {/* <FakeSearchResult platform={"TikTok"} /> */}
-        {/* <FakeSearchResult platform={"Instagram"} /> */}
       </Container>
     </>
   );

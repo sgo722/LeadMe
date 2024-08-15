@@ -10,8 +10,26 @@ interface KeywordProps {
   hashtagName: string;
 }
 
+interface FormDataInterface {
+  youtubeId: string;
+  url: string;
+  title: string;
+}
+
+interface HashtagResponse {
+  hashtagId: number;
+  hashtagName: string;
+}
+
+interface ChallengeSubmitData {
+  youtubeId: string;
+  url: string;
+  title: string;
+  hashtags: number[];
+}
+
 const Admin = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataInterface>({
     youtubeId: "",
     url: "",
     title: "",
@@ -26,17 +44,19 @@ const Admin = () => {
     mutationKeyword.mutate();
   }, []);
 
-  const mutationNew = useMutation<any, Error, string>({
+  const mutationNew = useMutation<HashtagResponse, Error, string>({
     mutationFn: async (keyword: string) => {
-      const response = await axios.post<any>(`${baseUrl}/api/v1/hashtag`, {
-        hashtagName: keyword,
-      });
+      const response = await axios.post<HashtagResponse>(
+        `${baseUrl}/api/v1/hashtag`,
+        {
+          hashtagName: keyword,
+        }
+      );
       return response.data;
     },
     onSuccess: () => {
       // 키워드 추가 후 해시태그 목록 갱신
       mutationKeyword.mutate();
-      console.log("키워드 추가 성공");
     },
     onError: (error) => {
       console.error("키워드 추가 실패", error);
@@ -58,9 +78,13 @@ const Admin = () => {
     },
   });
 
-  const mutationForm = useMutation<ResponseData<any>, Error, FormData>({
+  const mutationForm = useMutation<
+    ResponseData<ChallengeSubmitData>,
+    Error,
+    FormData
+  >({
     mutationFn: async (data: FormData) => {
-      const response = await axios.post<ResponseData<any>>(
+      const response = await axios.post<ResponseData<ChallengeSubmitData>>(
         `${baseUrl}/api/v1/admin/challenge`,
         data
       );

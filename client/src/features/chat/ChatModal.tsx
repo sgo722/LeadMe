@@ -24,6 +24,15 @@ interface ChatModalProps {
   partnerProfile: string | null;
 }
 
+interface WebSocketHook {
+  sendMessage: (destination: string, body: ChatMessageDto) => void;
+  subscribeToChannel: (
+    channel: string,
+    callback: (message: ChatMessageDto) => void
+  ) => void;
+  // connectWebSocket: () => void;
+}
+
 const formatTime = (timeString: string) => {
   const date = new Date(timeString);
   const options: Intl.DateTimeFormatOptions = {
@@ -50,7 +59,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   const [newMessage, setNewMessage] = useState<string>("");
   const [roomId, setRoomId] = useState<number | null>(null);
 
-  const { sendMessage, subscribeToChannel } = useWebSocket();
+  const { sendMessage, subscribeToChannel } = useWebSocket() as WebSocketHook;
 
   useEffect(() => {
     if (isOpen && partnerId) {
@@ -69,7 +78,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         )
         .then((response) => {
           const createdRoomId = response.data.data;
-          console.log("roomId:", createdRoomId);
           setRoomId(createdRoomId);
 
           subscribeToChannel(
@@ -107,7 +115,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           });
         })
         .then((response) => {
-          console.log(response.data);
           const formattedMessages = response.data.data.map(
             (message: ChatMessageDto) => ({
               ...message,

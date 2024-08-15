@@ -97,7 +97,6 @@ export const Chat: React.FC = () => {
           }
         )
         .then((response) => {
-          console.log("채팅 목록", response.data);
           const chatRooms = response.data.data;
           if (Array.isArray(chatRooms)) {
             setChatList(chatRooms);

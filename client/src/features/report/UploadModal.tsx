@@ -61,7 +61,6 @@ const UpdateModal: React.FC<ModalProps> = ({ isOpen, onClose, reportData }) => {
       if (!response.data.isSuccess) {
         throw new Error(response.data.message);
       }
-      console.log(requestData);
 
       return response.data.data;
     },

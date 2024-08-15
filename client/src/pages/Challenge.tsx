@@ -21,7 +21,6 @@ const Challenge: React.FC = () => {
       return response.data.data;
     },
     onSuccess: (data: ChallengeItem[]) => {
-      console.log(data);
       setChallenges(data);
       setIsLoading(false); // 데이터 로드 완료
     },

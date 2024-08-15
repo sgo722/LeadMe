@@ -58,7 +58,6 @@ const fetchVideos = async ({
     maxResults: 4,
     pageToken: pageParam,
   });
-  console.log(response.data.data);
   return response.data;
 };
 
