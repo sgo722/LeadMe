@@ -19,10 +19,10 @@ public class UserChallengeLikeController {
     private final TokenProvider tokenProvider;
 
     // 유저 게시글 좋아요 기능
-    @PostMapping("/userChallenge/like")
+    @PostMapping("/userChallenge/like/{userChallengeId}")
     public SuccessResponse<?> likeUserChallenge(
             @RequestHeader("Authorization") String authorization,
-            @RequestParam("userChallengeId") Long userChallengeId
+            @PathVariable("userChallengeId") Long userChallengeId
     ) {
 
         String accessToken = authorization.split(" ")[1];
