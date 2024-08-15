@@ -43,6 +43,8 @@ interface VideoDataItem {
   title: string;
 }
 
+type PerformanceRating = "Perfect" | "Good" | "Bad" | null;
+
 // 가이드 step
 const steps: Step[] = [
   {
@@ -133,12 +135,15 @@ export const Practice: React.FC = () => {
   const [runGuide, setRunGuide] = useState<boolean>(false); // practice/:videoId 가이드 상태
   const [isPoseDetectionRunning, setIsPoseDetectionRunning] =
     useState<boolean>(false); // blazepose 사용자 감지 상태
+  const [performanceRating, setPerformanceRating] =
+    useState<PerformanceRating | null>(null); // 퍼포먼스 평가를 저장할 state
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
   const youtubeCanvasRef = useRef<HTMLCanvasElement>(null);
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오
+  const userPoseRef = useRef<Landmark[]>([]);
 
   // 가이드 Ref
   const playbackRateRef = useRef<HTMLButtonElement>(null);
@@ -485,7 +490,7 @@ export const Practice: React.FC = () => {
 
     let animationFrameId: number;
 
-    const detectPose = async () => {
+    const detectPose = async (timestamp: number) => {
       if (!isPoseDetectionRunning) {
         cancelAnimationFrame(animationFrameId);
         return;
@@ -494,18 +499,18 @@ export const Practice: React.FC = () => {
       if (videoRef.current) {
         const results = await poseLandmarker.detectForVideo(
           videoRef.current,
-          performance.now()
+          timestamp
         );
-        if (results.landmarks) {
-          console.log("포즈 감지됨:", results.landmarks);
-          // 여기서 감지된 포즈 데이터를 처리할 수 있음
+        if (results.landmarks && results.landmarks.length > 0) {
+          // 사용자의 현재 포즈를 userPoseRef에 저장
+          userPoseRef.current = results.landmarks[0];
         }
       }
       animationFrameId = requestAnimationFrame(detectPose);
     };
 
     console.log("블레이즈포즈 시작");
-    detectPose();
+    animationFrameId = requestAnimationFrame(detectPose);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
@@ -513,20 +518,35 @@ export const Practice: React.FC = () => {
     };
   }, [poseLandmarker, isPoseDetectionRunning]);
 
-  // useEffect(() => {
-  //   const videoElement = videoRef.current;
-  //   if (isPoseDetectionRunning && videoElement) {
-  //     videoElement.addEventListener("loadeddata", predictWebcam);
-  //   }
-  //   return () => {
-  //     if (videoElement) {
-  //       videoElement.removeEventListener("loadeddata", predictWebcam);
-  //     }
-  //     if (!isPoseDetectionRunning) {
-  //       console.log("블레이즈 포즈 중지");
-  //     }
-  //   };
-  // }, [isPoseDetectionRunning, predictWebcam]);
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    if (isRecording && isPoseDetectionRunning && youtubeBlazePoseQuery.data) {
+      intervalId = setInterval(() => {
+        if (youtubePlayerRef.current && youtubeBlazePoseQuery.data) {
+          const currentTime = youtubePlayerRef.current.getCurrentTime();
+          const frameIndex = Math.floor(currentTime * 30); // 30 fps 고정
+          const challengePose =
+            youtubeBlazePoseQuery.data.landmarks[frameIndex];
+
+          if (userPoseRef.current.length > 0 && challengePose) {
+            const rating = evaluatePerformance(
+              userPoseRef.current,
+              challengePose
+            );
+            setPerformanceRating(rating);
+          }
+        }
+      }, 2000); // 2초마다 실행
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isRecording, isPoseDetectionRunning, youtubeBlazePoseQuery.data]);
+
   useEffect(() => {
     let cleanup: (() => void) | undefined;
 
@@ -688,6 +708,65 @@ export const Practice: React.FC = () => {
   const handlePick = (id: string) => {
     nav(`/challenge/${id}`);
   };
+
+  // blazepose 데이터 정규화
+  function l2Normalize(pose: Landmark[]): Landmark[] {
+    let sumOfSquare = 0;
+    const normalized: Landmark[] = [];
+
+    for (let i = 7; i < pose.length; i++) {
+      const kp = pose[i];
+      if (kp.visibility && kp.visibility < 0.8) {
+        kp.x = 0;
+        kp.y = 0;
+        kp.z = 0;
+      }
+      sumOfSquare += kp.x * kp.x + kp.y * kp.y + kp.z * kp.z;
+    }
+
+    const l2Norm = Math.sqrt(sumOfSquare);
+
+    for (let i = 7; i < pose.length; i++) {
+      const kp = pose[i];
+      normalized.push({
+        x: kp.x / l2Norm,
+        y: kp.y / l2Norm,
+        z: kp.z / l2Norm,
+        visibility: kp.visibility,
+      });
+    }
+
+    return normalized;
+  }
+
+  // blazepose 코사인 유사도
+  function cosineSimilarity(pose1: Landmark[], pose2: Landmark[]): number {
+    let dotProduct = 0;
+    for (let i = 0; i < pose1.length; i++) {
+      const kp1 = pose1[i];
+      const kp2 = pose2[i];
+      dotProduct += kp1.x * kp2.x + kp1.y * kp2.y + kp1.z * kp2.z;
+    }
+    return dotProduct;
+  }
+
+  // blazepose 성능 평가
+  function evaluatePerformance(
+    userPose: Landmark[],
+    challengePose: Landmark[]
+  ): PerformanceRating {
+    const normalizedUserPose = l2Normalize(userPose);
+    const normalizedChallengePose = l2Normalize(challengePose);
+
+    const similarity = cosineSimilarity(
+      normalizedUserPose,
+      normalizedChallengePose
+    );
+
+    if (similarity > 0.75) return "Perfect";
+    if (similarity > 0.5) return "Good";
+    return "Bad";
+  }
 
   return (
     <>
@@ -910,6 +989,11 @@ export const Practice: React.FC = () => {
                       />
                       <span>REC</span>
                     </RecordingIndicator>
+                  )}
+                  {isRecording && performanceRating !== null && (
+                    <PerformanceIndicator rating={performanceRating}>
+                      {performanceRating}
+                    </PerformanceIndicator>
                   )}
                 </Webcam>
               </WebcamWrapper>
@@ -1251,4 +1335,23 @@ const Title = styled.h1`
   line-height: normal;
   letter-spacing: -0.6px;
   margin-bottom: 12px;
+`;
+
+const PerformanceIndicator = styled.div<{ rating: PerformanceRating }>`
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  color: white;
+  background-color: ${(props) =>
+    props.rating === "Perfect"
+      ? "green"
+      : props.rating === "Good"
+      ? "yellow"
+      : props.rating === "Bad"
+      ? "red"
+      : "transparent"};
+  display: ${(props) => (props.rating === null ? "none" : "block")};
 `;
