@@ -132,8 +132,23 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         time: new Date().toISOString(), // ISO 문자열로 시간 저장
         status: "UNREAD",
       };
+
+      // 로컬 상태에 메시지를 즉시 추가하여 화면에 보이도록 함
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { ...message, time: formatTime(message.time) },
+      ]);
+
+      // 서버에 메시지 전송
       sendMessage(`/pub/chat/message/${roomId}`, message);
+
+      // 입력 필드를 초기화
       setNewMessage("");
+
+      // 스크롤을 맨 아래로 이동
+      if (modalBodyRef.current) {
+        modalBodyRef.current.scrollTop = modalBodyRef.current.scrollHeight;
+      }
     }
   };
 
