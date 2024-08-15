@@ -43,6 +43,60 @@ interface VideoDataItem {
   title: string;
 }
 
+// 가이드 step
+const steps: Step[] = [
+  {
+    target: ".playback-rate",
+    content: (
+      <>
+        재생 속도를 조절해서
+        <br />
+        원하는 속도로 연습할 수 있어요!
+      </>
+    ),
+    disableBeacon: true,
+    placement: "right",
+  },
+  {
+    target: ".play-pause",
+    content: (
+      <>
+        챌린지 영상을 재생하거나
+        <br />
+        일시정지할 수 있어요 !
+      </>
+    ),
+    disableBeacon: true,
+    placement: "right",
+  },
+  {
+    target: ".change-video",
+    content: (
+      <>
+        챌린지 영상을
+        <br />
+        변경할 수 있어요 !
+      </>
+    ),
+    disableBeacon: true,
+    placement: "right",
+  },
+  {
+    target: ".record",
+    content: (
+      <>
+        당신의 춤을 녹화하고
+        <br />
+        AI 평가 시스템으로
+        <br />
+        점수를 받아보세요 !
+      </>
+    ),
+    disableBeacon: true,
+    placement: "right",
+  },
+];
+
 const fetchYoutubeBlazePoseData = async (
   videoId: string
 ): Promise<YoutubeBlazePoseData> => {
@@ -62,7 +116,6 @@ export const Practice: React.FC = () => {
   const setRecordedVideoUrl = useSetRecoilState(RecordedVideoUrlAtom);
 
   const [isYouTubePlaying, setIsYouTubePlaying] = useState<boolean>(false);
-  const [webcamRunning, setWebcamRunning] = useState<boolean>(false);
   const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(
     null
   );
@@ -78,6 +131,8 @@ export const Practice: React.FC = () => {
   const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
   const [runPracticeGuide, setRunPracticeGuide] = useState<boolean>(false); // practice 가이드 상태
   const [runGuide, setRunGuide] = useState<boolean>(false); // practice/:videoId 가이드 상태
+  const [isPoseDetectionRunning, setIsPoseDetectionRunning] =
+    useState<boolean>(false); // blazepose 사용자 감지 상태
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -90,60 +145,6 @@ export const Practice: React.FC = () => {
   const playPauseRef = useRef<HTMLButtonElement>(null);
   const changeVideoRef = useRef<HTMLButtonElement>(null);
   const recordRef = useRef<HTMLButtonElement>(null);
-
-  // 가이드 step
-  const steps: Step[] = [
-    {
-      target: ".playback-rate",
-      content: (
-        <>
-          재생 속도를 조절해서
-          <br />
-          원하는 속도로 연습할 수 있어요!
-        </>
-      ),
-      disableBeacon: true,
-      placement: "right",
-    },
-    {
-      target: ".play-pause",
-      content: (
-        <>
-          챌린지 영상을 재생하거나
-          <br />
-          일시정지할 수 있어요 !
-        </>
-      ),
-      disableBeacon: true,
-      placement: "right",
-    },
-    {
-      target: ".change-video",
-      content: (
-        <>
-          챌린지 영상을
-          <br />
-          변경할 수 있어요 !
-        </>
-      ),
-      disableBeacon: true,
-      placement: "right",
-    },
-    {
-      target: ".record",
-      content: (
-        <>
-          당신의 춤을 녹화하고
-          <br />
-          AI 평가 시스템으로
-          <br />
-          점수를 받아보세요 !
-        </>
-      ),
-      disableBeacon: true,
-      placement: "right",
-    },
-  ];
 
   const practiceSteps: Step[] = [
     {
@@ -272,7 +273,6 @@ export const Practice: React.FC = () => {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          setWebcamRunning(true);
         }
       } catch (error) {
         console.error("웹캠 활성화 실패:", error);
@@ -450,6 +450,7 @@ export const Practice: React.FC = () => {
   const handleYouTubeEnd = () => {
     if (isRecording) {
       setIsRecording(false);
+      setIsPoseDetectionRunning(false); // blazepose 감지 중지
       if (mediaRecorder) {
         mediaRecorder.stop();
       }
@@ -480,32 +481,67 @@ export const Practice: React.FC = () => {
   // 웹캠 포즈 감지
   const predictWebcam = useCallback(() => {
     if (!poseLandmarker || !videoRef.current) return;
+
+    let animationFrameId: number;
+
     const detectPose = async () => {
+      if (!isPoseDetectionRunning) {
+        cancelAnimationFrame(animationFrameId);
+        return;
+      }
+
       if (videoRef.current) {
         const results = await poseLandmarker.detectForVideo(
           videoRef.current,
           performance.now()
         );
         if (results.landmarks) {
+          console.log("포즈 감지됨:", results.landmarks);
           // 여기서 감지된 포즈 데이터를 처리할 수 있음
         }
       }
-      if (webcamRunning) requestAnimationFrame(detectPose);
+      animationFrameId = requestAnimationFrame(detectPose);
     };
-    detectPose();
-  }, [poseLandmarker, webcamRunning]);
 
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    if (webcamRunning && videoElement) {
-      videoElement.addEventListener("loadeddata", predictWebcam);
-    }
+    console.log("블레이즈포즈 시작");
+    detectPose();
+
     return () => {
-      if (videoElement) {
-        videoElement.removeEventListener("loadeddata", predictWebcam);
+      cancelAnimationFrame(animationFrameId);
+      console.log("블레이즈포즈 중지");
+    };
+  }, [poseLandmarker, isPoseDetectionRunning]);
+
+  // useEffect(() => {
+  //   const videoElement = videoRef.current;
+  //   if (isPoseDetectionRunning && videoElement) {
+  //     videoElement.addEventListener("loadeddata", predictWebcam);
+  //   }
+  //   return () => {
+  //     if (videoElement) {
+  //       videoElement.removeEventListener("loadeddata", predictWebcam);
+  //     }
+  //     if (!isPoseDetectionRunning) {
+  //       console.log("블레이즈 포즈 중지");
+  //     }
+  //   };
+  // }, [isPoseDetectionRunning, predictWebcam]);
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+
+    if (isPoseDetectionRunning) {
+      console.log("블레이즈포즈 감지 시작");
+      cleanup = predictWebcam();
+    } else {
+      console.log("블레이즈포즈 감지 중지");
+    }
+
+    return () => {
+      if (cleanup) {
+        cleanup();
       }
     };
-  }, [webcamRunning, predictWebcam]);
+  }, [isPoseDetectionRunning, predictWebcam]);
 
   // UI 이벤트 핸들러
   const handleBackButtonClick = () => nav(-1);
@@ -531,6 +567,7 @@ export const Practice: React.FC = () => {
 
   const startActualRecording = () => {
     setIsRecording(true);
+    setIsPoseDetectionRunning(true); // BlazePose 감지 시작
     if (youtubePlayerRef.current) {
       youtubePlayerRef.current.seekTo(0);
       youtubePlayerRef.current.setPlaybackRate(1);
@@ -554,6 +591,7 @@ export const Practice: React.FC = () => {
 
   const resetRecording = () => {
     setIsRecording(false);
+    setIsPoseDetectionRunning(false); // blazepose 감지 중지
     if (youtubePlayerRef.current) {
       youtubePlayerRef.current.seekTo(0);
       youtubePlayerRef.current.pauseVideo();
