@@ -49,7 +49,7 @@ public class UserChallengeLikeService {
                     UserChallengeLike newUserChallengeLike = UserChallengeLike.builder()
                             .user(user)
                             .userChallenge(userChallenge)
-                            .isLike(false)
+                            .isLike(true)
                             .build();
                     userChallengeLikeRepository.save(newUserChallengeLike);
                 }
@@ -67,12 +67,12 @@ public class UserChallengeLikeService {
         boolean isLikedInRedis = userLikeScore != null && userLikeScore > 0;
 
         log.info("여기는?");
-        if(isLikeBefore || isLikedInRedis) {
+        if(isLikeBefore && !isLikedInRedis) {
             // 좋아요 취소 -> redis에 저장된 유저 좋아요 수 감소
             zSetOperations.incrementScore(key, user.getNickname(), -1);
             userChallenge.clickLike(-1);
         }
-        else {
+        else if (isLikedInRedis){
             // 좋아요 -> redis에 저장된 유저 좋아요 수 증가
             zSetOperations.incrementScore(key, user.getNickname(), 1);
             userChallenge.clickLike(1);
