@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { FaHeart, FaVolumeUp, FaVolumeMute, FaTrash } from "react-icons/fa";
-import { DeleteConfirmationModal } from "./DeleteConfirmationModal"; // 새로 만든 모달 파일을 import
+import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
 
 interface InteractionButtonsProps {
   likes: number;
@@ -37,6 +37,17 @@ export const InteractionButtons: React.FC<InteractionButtonsProps> = ({
     closeModal();
   };
 
+  const handleLikeClick = () => {
+    const isLoggedIn = Boolean(sessionStorage.getItem("user_profile")); // 로그인 여부 확인
+
+    if (!isLoggedIn) {
+      alert("로그인 후 이용 가능한 서비스입니다.");
+      return;
+    }
+
+    onToggleLike(); // 로그인된 상태에서만 좋아요 토글
+  };
+
   return (
     <>
       <ButtonsWrapper>
@@ -45,8 +56,8 @@ export const InteractionButtons: React.FC<InteractionButtonsProps> = ({
             <FaTrash size={19} />
           </Delete>
         )}
-        <Button onClick={onToggleLike}>
-          <Heart size={17} isLiked={isLiked} />
+        <Button onClick={handleLikeClick}>
+          {isLiked ? <HeartIconLike size={17} /> : <HeartIcon size={17} />}
           <span>{likes}</span>
         </Button>
         <Button onClick={onToggleSound}>
@@ -117,8 +128,12 @@ const Delete = styled.button`
   margin-bottom: 304px;
 `;
 
-const Heart = styled(FaHeart).attrs<{ isLiked: boolean }>((props) => ({
-  color: props.isLiked ? "#ee5050" : "#d2d2d2",
-}))<{ isLiked: boolean }>`
+const HeartIconLike = styled(FaHeart)`
+  color: #ee5050;
+  margin-bottom: 8px;
+`;
+
+const HeartIcon = styled(FaHeart)`
+  color: #d2d2d2;
   margin-bottom: 8px;
 `;
