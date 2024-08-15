@@ -1,5 +1,5 @@
 import Header from "components/Header";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import YouTube from "react-youtube";
 import { YouTubeEvent, YouTubePlayer } from "react-youtube";
 import { FaChevronLeft, FaRedo, FaPlay, FaPause } from "react-icons/fa";
@@ -137,6 +137,8 @@ export const Practice: React.FC = () => {
     useState<boolean>(false); // blazepose 사용자 감지 상태
   const [performanceRating, setPerformanceRating] =
     useState<PerformanceRating | null>(null); // 퍼포먼스 평가를 저장할 state
+  const [combo, setCombo] = useState(0);
+  const [showComboAnimation, setShowComboAnimation] = useState(false);
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -544,18 +546,26 @@ export const Practice: React.FC = () => {
               challengePose
             );
             setPerformanceRating(rating);
-            console.log(rating);
+
+            if (rating === "Perfect" || rating === "Good") {
+              setCombo((prev) => prev + 1);
+              if (combo > 0 && combo % 5 === 0) {
+                // 5콤보마다 애니메이션 표시
+                setShowComboAnimation(true);
+                setTimeout(() => setShowComboAnimation(false), 1000);
+              }
+            } else {
+              setCombo(0);
+            }
           }
         }
-      }, 1000); // 2초마다 실행
+      }, 500); // 0.5초마다 실행하여 더 빈번한 업데이트
     }
 
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
+      if (intervalId) clearInterval(intervalId);
     };
-  }, [isRecording, isPoseDetectionRunning, youtubeBlazePoseQuery.data]);
+  }, [isRecording, isPoseDetectionRunning, youtubeBlazePoseQuery.data, combo]);
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
@@ -773,8 +783,8 @@ export const Practice: React.FC = () => {
       normalizedChallengePose
     );
 
-    if (similarity > 0.75) return "Perfect";
-    if (similarity > 0.5) return "Good";
+    if (similarity > 0.45) return "Perfect";
+    if (similarity > 0.2) return "Good";
     return "Bad";
   }
 
@@ -1000,10 +1010,16 @@ export const Practice: React.FC = () => {
                       <span>REC</span>
                     </RecordingIndicator>
                   )}
-                  {isRecording && performanceRating !== null && (
+                  {isRecording && performanceRating && (
                     <PerformanceIndicator rating={performanceRating}>
                       {performanceRating}
                     </PerformanceIndicator>
+                  )}
+                  {isRecording && combo > 0 && (
+                    <ComboIndicator>{combo} Combo!</ComboIndicator>
+                  )}
+                  {showComboAnimation && (
+                    <ComboAnimation>Great Job!</ComboAnimation>
                   )}
                 </Webcam>
               </WebcamWrapper>
@@ -1039,6 +1055,7 @@ export const Practice: React.FC = () => {
         onClose={() => {
           setShowSubmitModal(false);
           setRecordedChunks([]);
+          window.location.reload();
         }}
         onSubmit={handleSubmit}
         isPending={submitVideoMutation.isPending || isAnalyzing}
@@ -1347,21 +1364,76 @@ const Title = styled.h1`
   margin-bottom: 12px;
 `;
 
+const neonFlicker = keyframes`
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 
+      0 0 4px #fff,
+      0 0 11px #fff,
+      0 0 19px #fff,
+      0 0 40px var(--color),
+      0 0 80px var(--color),
+      0 0 90px var(--color),
+      0 0 100px var(--color),
+      0 0 150px var(--color);
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+  }
+`;
+
 const PerformanceIndicator = styled.div<{ rating: PerformanceRating }>`
   position: absolute;
   top: 50px;
-  left: 10px;
-  padding: 5px 10px;
-  border-radius: 5px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "DOSIyagiMedium", sans-serif;
   font-weight: bold;
-  color: white;
-  background-color: ${(props) =>
-    props.rating === "Perfect"
-      ? "green"
-      : props.rating === "Good"
-      ? "yellow"
-      : props.rating === "Bad"
-      ? "red"
-      : "transparent"};
-  display: ${(props) => (props.rating === null ? "none" : "block")};
+  font-size: ${({ rating }) =>
+    rating === "Perfect" ? "48px" : rating === "Good" ? "45px" : "40px"};
+  --color: ${({ rating }) =>
+    rating === "Perfect"
+      ? "#06e02e"
+      : rating === "Good"
+      ? "#2731f2"
+      : "#ee5050"};
+  color: ${({ rating }) =>
+    rating === "Perfect"
+      ? "#06e02e"
+      : rating === "Good"
+      ? "#2731f2"
+      : "#ee5050"};
+  animation: ${neonFlicker} 1.5s infinite alternate;
+  z-index: 10;
+`;
+
+const ComboIndicator = styled.div`
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "DOSIyagiMedium", sans-serif;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 28px;
+  color: #ffffff;
+  z-index: 10;
+  text-shadow: 2px 2px 4px rgba(224, 40, 129, 1);
+`;
+
+const comboAnimation = keyframes`
+  0% { transform: scale(0.8) translateY(0); opacity: 0; }
+  50% { transform: scale(1.2) translateY(-20px); opacity: 1; }
+  100% { transform: scale(1) translateY(-40px); opacity: 0; }
+`;
+
+const ComboAnimation = styled.div`
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  font-size: 38px;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+  animation: ${comboAnimation} 1s ease-out forwards;
 `;
