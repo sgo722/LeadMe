@@ -73,7 +73,8 @@ export const Practice: React.FC = () => {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]); // 녹화영상 관리
   const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false); // 제출 모달 상태
   const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
-  const [runGuide, setRunGuide] = useState(false);
+  const [runPracticeGuide, setRunPracticeGuide] = useState<boolean>(false); // practice 가이드 상태
+  const [runGuide, setRunGuide] = useState<boolean>(false); // practice/:videoId 가이드 상태
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -93,26 +94,41 @@ export const Practice: React.FC = () => {
       target: ".playback-rate",
       content: "재생 속도를 조절할 수 있어요.",
       disableBeacon: true,
+      placement: "right",
     },
     {
       target: ".play-pause",
-      content: "영상을 재생하거나 일시정지할 수 있어요.",
+      content: "챌린지 영상을 재생하거나 일시정지할 수 있어요.",
       disableBeacon: true,
+      placement: "right",
     },
     {
       target: ".change-video",
-      content: "다른 영상으로 변경할 수 있어요.",
+      content: "챌린지 영상을 변경할 수 있어요.",
       disableBeacon: true,
+      placement: "right",
     },
     {
       target: ".record",
-      content: "자신의 영상을 녹화해보세요!",
+      content: "당신의 춤을 녹화하고 AI 평가 시스템으로 점수를 받아보세요!",
       disableBeacon: true,
+      placement: "right",
     },
+  ];
+
+  const practiceSteps: Step[] = [
+    {
+      target: ".challenge-list",
+      content: "챌린지 목록에서 원하는 챌린지를 선택해주세요.",
+      disableBeacon: true,
+      placement: "right",
+    },
+    // 필요한 경우 추가 단계를 여기에 추가할 수 있습니다.
   ];
 
   // 맨 처음 방문시에만 자동으로 가이드 뜨도록
   useEffect(() => {
+    // url이 /practice/:videoId 일 경우
     if (videoId) {
       const hasSeenGuide = localStorage.getItem("hasSeenGuide");
       if (!hasSeenGuide) {
@@ -120,17 +136,38 @@ export const Practice: React.FC = () => {
         localStorage.setItem("hasSeenGuide", "true");
       }
     }
+    // url이 /practice 일 경우
+    if (!videoId) {
+      const hasSeenPracticeGuide = localStorage.getItem("hasSeenPracticeGuide");
+      if (!hasSeenPracticeGuide) {
+        setRunPracticeGuide(true);
+        localStorage.setItem("hasSeenPracticeGuide", "true");
+      }
+    }
   }, [videoId]);
 
-  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
-    const { status } = data;
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      setRunGuide(false);
-    }
-  }, []);
+  const handleJoyrideCallback = useCallback(
+    (data: CallBackProps) => {
+      const { status } = data;
+      if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+        if (videoId) {
+          setRunGuide(false);
+        }
+        if (!videoId) {
+          setRunPracticeGuide(false);
+        }
+      }
+    },
+    [videoId]
+  );
 
   const startGuide = () => {
-    setRunGuide(true);
+    if (videoId) {
+      setRunGuide(true);
+    }
+    if (!videoId) {
+      setRunPracticeGuide(true);
+    }
   };
 
   const fetchSessionUserData = () => {
@@ -586,8 +623,8 @@ export const Practice: React.FC = () => {
   return (
     <>
       <Joyride
-        steps={steps}
-        run={runGuide}
+        steps={videoId ? steps : practiceSteps}
+        run={videoId ? runGuide : runPracticeGuide}
         continuous
         showSkipButton
         showProgress
@@ -596,8 +633,55 @@ export const Practice: React.FC = () => {
         spotlightClicks
         styles={{
           options: {
+            arrowColor: "#ffffff",
+            backgroundColor: "#ffffff",
+            overlayColor: "rgba(0, 0, 0, 0.5)",
             primaryColor: "#ee5050",
+            textColor: "#333333",
             zIndex: 99999,
+          },
+          tooltip: {
+            backgroundColor: "#ffffff",
+            borderRadius: "14px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            padding: "16px",
+          },
+          tooltipContainer: {
+            textAlign: "center",
+          },
+
+          tooltipContent: {
+            fontSize: "20px",
+            lineHeight: "1.5",
+            color: "#ee5050",
+          },
+          buttonNext: {
+            backgroundColor: "#ee5050",
+            borderRadius: "4px",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            padding: "8px 16px",
+            transition: "background-color 0.3s ease",
+          },
+          buttonBack: {
+            color: "#ee5050",
+            backgroundColor: "#ffffff",
+            border: "1px solid #ee5050",
+            borderRadius: "4px",
+            fontSize: "14px",
+            fontWeight: "500",
+            marginRight: "8px",
+            padding: "8px 16px",
+          },
+          buttonSkip: {
+            color: "#999999",
+            fontSize: "14px",
+          },
+          buttonClose: {
+            color: "#ee5050",
+            fontSize: "14px",
+            fontWeight: "500",
           },
         }}
         callback={handleJoyrideCallback}
@@ -635,7 +719,7 @@ export const Practice: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <ChallengeList>
+                  <ChallengeList className="challenge-list">
                     <Title>Challenge!</Title>
                     <ScrollableList>
                       {Array.isArray(videoList) && videoList.length > 0 ? (
