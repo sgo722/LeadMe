@@ -449,7 +449,7 @@ interface TdProps {
 const Td = styled.td.withConfig({
   shouldForwardProp: (prop) => prop !== "first",
 })<TdProps>`
-  font-family: "Noto Sans", sans-serif;
+  font-family: "Noto Sans KR", sans-serif;
   font-size: ${(props) => (props.first ? "20px" : "14px")};
   font-weight: ${(props) => (props.first ? "500" : "400")};
   color: #ee5050;

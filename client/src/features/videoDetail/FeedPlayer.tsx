@@ -22,6 +22,13 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
   const [likes, setLikes] = useState(video.likes);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const fetchSessionUserData = () => {
+    const userData = sessionStorage.getItem("user_profile");
+    return userData ? JSON.parse(userData) : null;
+  };
+
+  const sessionUser = fetchSessionUserData();
+
   useEffect(() => {
     if (video.video) {
       const base64String = video.video;
@@ -51,31 +58,35 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
 
   const toggleLike = async () => {
     try {
-      console.log("토글 전 상태: ", { isLiked, userChallengeId }); // 현재 상태 확인
-
       if (isLiked) {
-        // 좋아요 취소 API 요청
-        await axiosInstance.delete("/api/v1/commentLike", {
+        await axiosInstance.delete("/api/v1/userChallenge/like", {
           headers: getJWTHeader(),
-          data: { userChallengeId }, // 요청 데이터로 userChallengeId 전송
+          data: { userChallengeId },
         });
-        console.log("좋아요 취소 요청:", { userChallengeId });
-        setLikes(likes - 1); // 좋아요 수 감소
+        setLikes(likes - 1);
       } else {
-        // 좋아요 추가 API 요청
         await axiosInstance.post(
-          "/api/v1/commentLike",
+          "/api/v1/userChallenge/like",
           { userChallengeId },
           { headers: getJWTHeader() }
         );
-        console.log("좋아요 추가 요청:", { userChallengeId });
-        setLikes(likes + 1); // 좋아요 수 증가
+        setLikes(likes + 1);
       }
 
-      setIsLiked(!isLiked); // 좋아요 여부 토글
-      console.log("토글 후 상태: ", { isLiked, likes }); // 토글 후 상태 확인
+      setIsLiked(!isLiked);
     } catch (error) {
       console.error("좋아요 토글 중 오류 발생:", error);
+    }
+  };
+
+  const deleteVideo = async () => {
+    try {
+      await axiosInstance.delete(`/api/v1/userChallenge/${userChallengeId}`, {
+        headers: getJWTHeader(),
+      });
+      // 삭제 후 필요한 추가 동작 (예: 피드에서 해당 비디오 제거 등)
+    } catch (error) {
+      console.error("영상 삭제 중 오류 발생:", error);
     }
   };
 
@@ -97,8 +108,10 @@ const FeedPlayer: React.FC<VideoPlayerProps> = ({
           likes={likes}
           isMuted={isMuted}
           isLiked={isLiked}
+          isOwner={sessionUser?.id === video.userId} // 소유자 여부 확인
           onToggleSound={toggleSound}
           onToggleLike={toggleLike}
+          onDelete={deleteVideo} // 삭제 함수 전달
         />
       </VideoContent>
     </VideoPlayerWrapper>
