@@ -17,6 +17,7 @@ import { TiMediaRecord } from "react-icons/ti";
 import { MdOutlineSpeed } from "react-icons/md";
 import countdownSound from "assets/audio/countdown.mp3";
 import { UserProfile } from "types";
+import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
 
 interface Landmark {
   x: number;
@@ -51,7 +52,6 @@ export const Practice: React.FC = () => {
   // URL 파라미터에서 videoId 추출
   const { videoId } = useParams<{ videoId?: string }>();
   const nav = useNavigate();
-
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const setIsShortsVisible = useSetRecoilState(IsShortsVisibleAtom);
   const setRecordedVideoUrl = useSetRecoilState(RecordedVideoUrlAtom);
@@ -73,12 +73,65 @@ export const Practice: React.FC = () => {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]); // 녹화영상 관리
   const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false); // 제출 모달 상태
   const [countdown, setCountdown] = useState<number | null>(null); // 카운트다운 상태
+  const [runGuide, setRunGuide] = useState(false);
 
   // Ref 설정
   const videoRef = useRef<HTMLVideoElement>(null);
   const youtubeCanvasRef = useRef<HTMLCanvasElement>(null);
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
   const countdownAudio = useRef<HTMLAudioElement | null>(null); // 카운트다운 오디오
+
+  // 가이드 Ref
+  const playbackRateRef = useRef<HTMLButtonElement>(null);
+  const playPauseRef = useRef<HTMLButtonElement>(null);
+  const changeVideoRef = useRef<HTMLButtonElement>(null);
+  const recordRef = useRef<HTMLButtonElement>(null);
+
+  // 가이드 step
+  const steps: Step[] = [
+    {
+      target: ".playback-rate",
+      content: "재생 속도를 조절할 수 있어요.",
+      disableBeacon: true,
+    },
+    {
+      target: ".play-pause",
+      content: "영상을 재생하거나 일시정지할 수 있어요.",
+      disableBeacon: true,
+    },
+    {
+      target: ".change-video",
+      content: "다른 영상으로 변경할 수 있어요.",
+      disableBeacon: true,
+    },
+    {
+      target: ".record",
+      content: "자신의 영상을 녹화해보세요!",
+      disableBeacon: true,
+    },
+  ];
+
+  // 맨 처음 방문시에만 자동으로 가이드 뜨도록
+  useEffect(() => {
+    if (videoId) {
+      const hasSeenGuide = localStorage.getItem("hasSeenGuide");
+      if (!hasSeenGuide) {
+        setRunGuide(true);
+        localStorage.setItem("hasSeenGuide", "true");
+      }
+    }
+  }, [videoId]);
+
+  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
+    const { status } = data;
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setRunGuide(false);
+    }
+  }, []);
+
+  const startGuide = () => {
+    setRunGuide(true);
+  };
 
   const fetchSessionUserData = () => {
     const userData = sessionStorage.getItem("user_profile");
@@ -532,6 +585,23 @@ export const Practice: React.FC = () => {
 
   return (
     <>
+      <Joyride
+        steps={steps}
+        run={runGuide}
+        continuous
+        showSkipButton
+        showProgress
+        disableOverlayClose
+        disableCloseOnEsc
+        spotlightClicks
+        styles={{
+          options: {
+            primaryColor: "#ee5050",
+            zIndex: 99999,
+          },
+        }}
+        callback={handleJoyrideCallback}
+      />
       <Header stickyOnly />
       <Container>
         {videoId && (
@@ -588,6 +658,8 @@ export const Practice: React.FC = () => {
                 <Buttons>
                   <ButtonWrapper>
                     <Button
+                      className="playback-rate"
+                      ref={playbackRateRef}
                       onClick={() => setShowPlaybackRates(!showPlaybackRates)}
                     >
                       <MdOutlineSpeed style={{ fontSize: "25px" }} />
@@ -607,7 +679,11 @@ export const Practice: React.FC = () => {
                       </PlaybackRateOptions>
                     )}
                   </ButtonWrapper>
-                  <Button onClick={togglePlayPause}>
+                  <Button
+                    className="play-pause"
+                    ref={playPauseRef}
+                    onClick={togglePlayPause}
+                  >
                     {isYouTubePlaying ? (
                       <FaPause
                         style={{ fontSize: "15px", marginBottom: "3px" }}
@@ -619,7 +695,13 @@ export const Practice: React.FC = () => {
                     )}
                     {isYouTubePlaying ? "일시정지" : "재생"}
                   </Button>
-                  <button onClick={handleChangeButtonClick}>영상변경</button>
+                  <button
+                    className="change-video"
+                    ref={changeVideoRef}
+                    onClick={handleChangeButtonClick}
+                  >
+                    영상변경
+                  </button>
                 </Buttons>
               )}
             </VideoContainer>
@@ -659,14 +741,19 @@ export const Practice: React.FC = () => {
               <Buttons>
                 {videoId &&
                   (!isRecording ? (
-                    <Button
-                      onClick={startRecording}
-                      disabled={countdown !== null}
-                      style={{ opacity: countdown !== null ? 0.5 : 1 }}
-                    >
-                      <BiVideoRecording style={{ fontSize: "20px" }} />
-                      녹화
-                    </Button>
+                    <>
+                      <Button onClick={startGuide}>가이드</Button>
+                      <Button
+                        className="record"
+                        ref={recordRef}
+                        onClick={startRecording}
+                        disabled={countdown !== null}
+                        style={{ opacity: countdown !== null ? 0.5 : 1 }}
+                      >
+                        <BiVideoRecording style={{ fontSize: "20px" }} />
+                        녹화
+                      </Button>
+                    </>
                   ) : (
                     <Button onClick={resetRecording}>
                       <FaRedo style={{ fontSize: "20px" }} />
