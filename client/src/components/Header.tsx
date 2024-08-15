@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
@@ -9,7 +9,6 @@ import {
   userProfileState,
 } from "stores/authAtom";
 import styled from "styled-components";
-import { FaTiktok } from "react-icons/fa6";
 import { FaYoutube } from "react-icons/fa";
 import { LoginModal } from "components/LoginModal";
 import useAuth from "hooks/useAuth";
@@ -17,20 +16,107 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { baseUrl } from "axiosInstance/constants";
 import { UserProfile } from "types";
+import Joyride, {
+  CallBackProps,
+  Step,
+  STATUS,
+  EVENTS,
+  ACTIONS,
+} from "react-joyride";
 
 interface HeaderProps {
   stickyOnly?: boolean;
   loginModal?: boolean;
   setLoginModal?: React.Dispatch<React.SetStateAction<boolean>>;
+  showGuide?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
   stickyOnly = false,
   loginModal: externalLoginModal,
   setLoginModal: externalSetLoginModal,
+  showGuide = false,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [runGuide, setRunGuide] = useState<boolean>(false);
+
+  // 가이드
+  useEffect(() => {
+    if (showGuide) {
+      const hasSeenGuide = localStorage.getItem("hasSeenHomeGuide");
+      if (!hasSeenGuide) {
+        setRunGuide(true);
+        localStorage.setItem("hasSeenHomeGuide", "true");
+      }
+    }
+  }, [showGuide]);
+
+  // 가이드 멘트
+  const steps: Step[] = [
+    {
+      target: '[data-joyride="feed"]',
+      content: (
+        <>
+          회원들의 피드를
+          <br />볼 수 있어요 !
+        </>
+      ),
+      disableBeacon: true,
+    },
+    {
+      target: '[data-joyride="challenge"]',
+      content: (
+        <>
+          챌린지를 연습, 녹화
+          <br />할 수 있어요 !
+        </>
+      ),
+      disableBeacon: true,
+    },
+    {
+      target: '[data-joyride="battle"]',
+      content: (
+        <>
+          친구와 챌린지
+          <br />
+          대결을 할 수 있어요 !
+        </>
+      ),
+      disableBeacon: true,
+    },
+    {
+      target: '[data-joyride="guide"]',
+      content: (
+        <>
+          원하는 챌린지를
+          <br />
+          골라 연습할 수 있어요!
+        </>
+      ),
+      disableBeacon: true,
+    },
+    {
+      target: '[data-joyride="rank"]',
+      content: (
+        <>
+          사용자들의 랭킹을
+          <br />
+          확인할 수 있어요!
+        </>
+      ),
+      disableBeacon: true,
+    },
+  ];
+
+  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
+    const { action, status, type } = data;
+    if (type === EVENTS.STEP_AFTER && action === ACTIONS.CLOSE) {
+      setRunGuide(false);
+    } else if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setRunGuide(false);
+    }
+  }, []);
 
   //props로 상태를 받으면 받은걸 사용하고 없으면 내부 상태 사용
   const [internalLoginModal, setInternalLoginModal] = useState<boolean>(false);
@@ -162,6 +248,92 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
+      <Joyride
+        steps={steps}
+        run={runGuide}
+        showSkipButton
+        showProgress
+        continuous
+        disableOverlayClose
+        disableCloseOnEsc
+        disableScrolling={true}
+        disableScrollParentFix
+        spotlightClicks={false}
+        disableOverlay={false}
+        styles={{
+          options: {
+            arrowColor: "#ffffff",
+            backgroundColor: "#ffffff",
+            overlayColor: "rgba(0, 0, 0, 0.5)",
+            primaryColor: "#ee5050",
+            textColor: "#333333",
+            zIndex: 99999,
+          },
+          overlay: {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            zIndex: 99999,
+            overflow: "hidden",
+            pointerEvents: "auto",
+          },
+          tooltip: {
+            backgroundColor: "#ffffff",
+            borderRadius: "14px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            padding: "16px",
+            width: "300px",
+          },
+          tooltipContainer: {
+            textAlign: "center",
+          },
+
+          tooltipContent: {
+            fontSize: "20px",
+            lineHeight: "1.5",
+            color: "#ee5050",
+            marginTop: "20px",
+            padding: "0px",
+            fontFamily: "Rajdhani",
+            fontWeight: "700",
+          },
+          buttonNext: {
+            backgroundColor: "#ee5050",
+            borderRadius: "4px",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            transition: "background-color 0.3s ease",
+            border: "1px solid #ee5050",
+          },
+          buttonBack: {
+            color: "#ee5050",
+            backgroundColor: "#ffffff",
+            border: "1px solid #ee5050",
+            borderRadius: "4px",
+            fontSize: "14px",
+            fontWeight: "500",
+            marginRight: "8px",
+            padding: "8px 16px",
+          },
+          buttonSkip: {
+            color: "#999999",
+            fontSize: "14px",
+          },
+          buttonClose: {
+            color: "#ee5050",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+          spotlight: {
+            borderRadius: "12px",
+            transition: "none",
+          },
+        }}
+        callback={handleJoyrideCallback}
+      />
       {loginModal ? <LoginModal onClose={handleCloseModal} /> : null}
       {!stickyOnly && (
         <HeaderWrapper>
@@ -190,11 +362,21 @@ const Header: React.FC<HeaderProps> = ({
       <StickyNav>
         <NavContent>
           <StyledLink to="/home">home</StyledLink>
-          <StyledLink to="/feed">feed</StyledLink>
-          <StyledLink to="/challenge">challenge</StyledLink>
-          <StyledLink to="/battle">battle</StyledLink>
-          <StyledLink to="/guide">guide</StyledLink>
-          <StyledLink to="/rank">rank</StyledLink>
+          <StyledLink to="/feed" data-joyride="feed">
+            feed
+          </StyledLink>
+          <StyledLink to="/challenge" data-joyride="challenge">
+            challenge
+          </StyledLink>
+          <StyledLink to="/battle" data-joyride="battle">
+            battle
+          </StyledLink>
+          <StyledLink to="/guide" data-joyride="guide">
+            guide
+          </StyledLink>
+          <StyledLink to="/rank" data-joyride="rank">
+            rank
+          </StyledLink>
           {isLogin && sessionUser ? (
             <LeftContainer>
               <Mypage>

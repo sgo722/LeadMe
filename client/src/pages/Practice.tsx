@@ -17,7 +17,13 @@ import { TiMediaRecord } from "react-icons/ti";
 import { MdOutlineSpeed } from "react-icons/md";
 import countdownSound from "assets/audio/countdown.mp3";
 import { UserProfile } from "types";
-import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
+import Joyride, {
+  CallBackProps,
+  STATUS,
+  EVENTS,
+  ACTIONS,
+  Step,
+} from "react-joyride";
 
 interface Landmark {
   x: number;
@@ -92,25 +98,51 @@ export const Practice: React.FC = () => {
   const steps: Step[] = [
     {
       target: ".playback-rate",
-      content: "재생 속도를 조절할 수 있어요.",
+      content: (
+        <>
+          재생 속도를 조절해서
+          <br />
+          원하는 속도로 연습할 수 있어요!
+        </>
+      ),
       disableBeacon: true,
       placement: "right",
     },
     {
       target: ".play-pause",
-      content: "챌린지 영상을 재생하거나 일시정지할 수 있어요.",
+      content: (
+        <>
+          챌린지 영상을 재생하거나
+          <br />
+          일시정지할 수 있어요 !
+        </>
+      ),
       disableBeacon: true,
       placement: "right",
     },
     {
       target: ".change-video",
-      content: "챌린지 영상을 변경할 수 있어요.",
+      content: (
+        <>
+          챌린지 영상을
+          <br />
+          변경할 수 있어요 !
+        </>
+      ),
       disableBeacon: true,
       placement: "right",
     },
     {
       target: ".record",
-      content: "당신의 춤을 녹화하고 AI 평가 시스템으로 점수를 받아보세요!",
+      content: (
+        <>
+          당신의 춤을 녹화하고
+          <br />
+          AI 평가 시스템으로
+          <br />
+          점수를 받아보세요 !
+        </>
+      ),
       disableBeacon: true,
       placement: "right",
     },
@@ -119,11 +151,16 @@ export const Practice: React.FC = () => {
   const practiceSteps: Step[] = [
     {
       target: ".challenge-list",
-      content: "챌린지 목록에서 원하는 챌린지를 선택해주세요.",
+      content: (
+        <>
+          원하는 챌린지를
+          <br />
+          선택해주세요 !
+        </>
+      ),
       disableBeacon: true,
       placement: "right",
     },
-    // 필요한 경우 추가 단계를 여기에 추가할 수 있습니다.
   ];
 
   // 맨 처음 방문시에만 자동으로 가이드 뜨도록
@@ -148,12 +185,20 @@ export const Practice: React.FC = () => {
 
   const handleJoyrideCallback = useCallback(
     (data: CallBackProps) => {
-      const { status } = data;
-      if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      const { action, status, type } = data;
+
+      if (type === EVENTS.STEP_AFTER && action === ACTIONS.CLOSE) {
+        // X 버튼 클릭 시
         if (videoId) {
           setRunGuide(false);
+        } else {
+          setRunPracticeGuide(false);
         }
-        if (!videoId) {
+      } else if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+        // 가이드 완료 또는 건너뛰기 시
+        if (videoId) {
+          setRunGuide(false);
+        } else {
           setRunPracticeGuide(false);
         }
       }
@@ -625,12 +670,15 @@ export const Practice: React.FC = () => {
       <Joyride
         steps={videoId ? steps : practiceSteps}
         run={videoId ? runGuide : runPracticeGuide}
-        continuous
         showSkipButton
         showProgress
+        continuous
         disableOverlayClose
         disableCloseOnEsc
-        spotlightClicks
+        disableScrolling={true}
+        spotlightClicks={false}
+        disableOverlay={false}
+        scrollOffset={0}
         styles={{
           options: {
             arrowColor: "#ffffff",
@@ -640,11 +688,22 @@ export const Practice: React.FC = () => {
             textColor: "#333333",
             zIndex: 99999,
           },
+          overlay: {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            zIndex: 99999,
+            overflow: "hidden",
+            pointerEvents: "auto",
+          },
           tooltip: {
             backgroundColor: "#ffffff",
             borderRadius: "14px",
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
             padding: "16px",
+            width: "300px",
           },
           tooltipContainer: {
             textAlign: "center",
@@ -654,6 +713,10 @@ export const Practice: React.FC = () => {
             fontSize: "20px",
             lineHeight: "1.5",
             color: "#ee5050",
+            marginTop: "20px",
+            padding: "0px",
+            fontFamily: "Rajdhani",
+            fontWeight: "700",
           },
           buttonNext: {
             backgroundColor: "#ee5050",
@@ -661,8 +724,8 @@ export const Practice: React.FC = () => {
             color: "#ffffff",
             fontSize: "14px",
             fontWeight: "500",
-            padding: "8px 16px",
             transition: "background-color 0.3s ease",
+            border: "1px solid #ee5050",
           },
           buttonBack: {
             color: "#ee5050",
@@ -682,6 +745,10 @@ export const Practice: React.FC = () => {
             color: "#ee5050",
             fontSize: "14px",
             fontWeight: "500",
+          },
+          spotlight: {
+            borderRadius: "12px",
+            transition: "none",
           },
         }}
         callback={handleJoyrideCallback}
