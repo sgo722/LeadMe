@@ -77,10 +77,23 @@ export const ChatModal: React.FC<ChatModalProps> = ({
             (message: ChatMessageDto) => {
               // 현재 사용자가 보낸 메시지는 이미 화면에 표시되었으므로 중복 방지
               if (message.userId !== currentUserId) {
-                setMessages((prevMessages) => [
-                  ...prevMessages,
-                  { ...message, time: formatTime(message.time) },
-                ]);
+                setMessages((prevMessages) => {
+                  // 같은 메시지가 두 번 들어오지 않도록 메시지 ID 또는 고유 시간 기반 중복 체크
+                  if (
+                    prevMessages.some(
+                      (m) =>
+                        m.time === message.time && m.message === message.message
+                    )
+                  ) {
+                    return prevMessages; // 중복 메시지 무시
+                  }
+                  return [
+                    ...prevMessages,
+                    { ...message, time: formatTime(message.time) },
+                  ];
+                });
+
+                // 스크롤을 맨 아래로 이동
                 if (modalBodyRef.current) {
                   modalBodyRef.current.scrollTop =
                     modalBodyRef.current.scrollHeight;

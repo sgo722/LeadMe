@@ -10,7 +10,8 @@ const useWebSocket = () => {
   const [subscriptions, setSubscriptions] = useState<Record<string, any>>({});
 
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken || (clientRef.current && clientRef.current.connected))
+      return;
 
     const client = new Client({
       brokerURL: `${sockUrl}/ws-stomp`,
@@ -70,6 +71,8 @@ const useWebSocket = () => {
     if (clientRef.current && !clientRef.current.connected) {
       clientRef.current.activate();
       console.log("WebSocket connection activated");
+    } else if (clientRef.current && clientRef.current.connected) {
+      console.log("WebSocket is already connected");
     }
   }, []);
 
