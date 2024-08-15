@@ -46,6 +46,8 @@ const Feed = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
+      const currentActiveId = lastActiveVideoId.current;
+
       setFeed((prevFeed) => {
         const newFeed = data.content.filter(
           (newVideo) =>
@@ -65,8 +67,13 @@ const Feed = () => {
       setIsFetchingMore(false);
       setHasMore(data.content.length > 0);
 
-      // 현재 보고 있는 영상이 계속 유지되도록 함 (스크롤 없이)
-      lastActiveVideoId.current = activeVideoId;
+      // 새 피드를 가져온 후, 사용자가 보고 있던 위치로 복원
+      if (currentActiveId !== null && videoRefs.current[currentActiveId]) {
+        videoRefs.current[currentActiveId]?.scrollIntoView({
+          behavior: "auto", // 스크롤 애니메이션 없이 이동
+          block: "start",
+        });
+      }
     },
     onError: (error: Error) => {
       console.error("Error fetching user Feed:", error);
@@ -145,6 +152,7 @@ const Feed = () => {
           if (entry.isIntersecting) {
             const videoId = Number(entry.target.getAttribute("data-video-id"));
             setActiveVideoId(videoId);
+            lastActiveVideoId.current = videoId; // 현재 활성화된 비디오 ID 저장
 
             const lastIndex = feed.length - 1;
             if (
@@ -215,10 +223,10 @@ const Feed = () => {
         {isLoading ? (
           <LoadingSpinner />
         ) : (
-          feed.map((video, index) => (
+          feed.map((video, _) => (
             <div
               key={video.userChallengeId}
-              ref={(el) => (videoRefs.current[index] = el)}
+              ref={(el) => (videoRefs.current[video.userChallengeId] = el)}
               data-video-id={video.userChallengeId}
             >
               <FeedPlayer
