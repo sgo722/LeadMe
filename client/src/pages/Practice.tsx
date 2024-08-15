@@ -163,14 +163,15 @@ export const Practice: React.FC = () => {
 
   // 맨 처음 방문시에만 자동으로 가이드 뜨도록
   useEffect(() => {
+    // 맨 처음 한번 뜨도록 하려면 아래 주석 풀면 됨
     // url이 /practice/:videoId 일 경우
-    if (videoId) {
-      const hasSeenGuide = localStorage.getItem("hasSeenGuide");
-      if (!hasSeenGuide) {
-        setRunGuide(true);
-        localStorage.setItem("hasSeenGuide", "true");
-      }
-    }
+    // if (videoId) {
+    //   const hasSeenGuide = localStorage.getItem("hasSeenGuide");
+    //   if (!hasSeenGuide) {
+    //     setRunGuide(true);
+    //     localStorage.setItem("hasSeenGuide", "true");
+    //   }
+    // }
     // url이 /practice 일 경우
     if (!videoId) {
       const hasSeenPracticeGuide = localStorage.getItem("hasSeenPracticeGuide");
