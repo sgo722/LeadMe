@@ -152,6 +152,7 @@ Comunication
 ## 🏗 아키텍처
 
 ![아키텍처](/uploads/38760df4e89520a10bf307ea44ae7686/image__4_.png)
+![아키텍처](/uploads/38760df4e89520a10bf307ea44ae7686/architecture_leadme.png)
 
 
 <br/>
