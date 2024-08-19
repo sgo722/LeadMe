@@ -158,7 +158,7 @@ Comunication
 
 ## 📐 ERD
 
-![ERD](/uploads/d353ae5e0f69e5de0ea6e4e4127d2081/image.png)
+![ERD](./image.png)
 
 
 
