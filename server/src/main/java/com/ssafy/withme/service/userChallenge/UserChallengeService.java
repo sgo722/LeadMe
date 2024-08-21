@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,6 +96,8 @@ public class UserChallengeService {
     private final LandmarkRepository landmarkRepository;
 
     private final ReportRepository reportRepository;
+
+    private final RedisTemplate<String, String> redisTemplate;
 
     /**
      * * 유저의 스켈레톤 데이터를 받아와서 알고리즘으로 분석률을 반환한다.
@@ -342,7 +345,6 @@ public class UserChallengeService {
      * @param pageable
      * @return
      */
-
     public UserChallengeFeedResponses findUserChallengeByPageable(Pageable pageable, User loginUser) {
         //유저 영상 중 access = "public" 인 영상들을 페이징 조회한다.
         Page<UserChallenge> findUserChallenge = userChallengeRepository.findByAccessOrderByCreatedDateDesc("public", pageable);
@@ -352,7 +354,7 @@ public class UserChallengeService {
                         log.info("페이징 조회 한번만");
                         User user = userChallenge.getUser();
                         byte[] video = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
-                        return UserChallengeFeedResponse.ofResponse(userChallenge, user, loginUser, video);
+                        return UserChallengeFeedResponse.ofResponse(userChallenge, user, loginUser, video, redisTemplate, userChallengeRepository);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();

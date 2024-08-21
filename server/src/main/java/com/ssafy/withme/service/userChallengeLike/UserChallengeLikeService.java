@@ -54,7 +54,8 @@ public class UserChallengeLikeService {
         );
 
         ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
-        String key = "user_likes";
+        String userLikeskey = "user_likes"; // 사용자가 받은 총 좋아요 수를 저장하는 Redis 키
+        String challengeLikesKey = "challenge_likes_" + userChallengeId; // 각 게시글의 좋아요 수를 저장하는 Redis 키
 
         // 해당 유저 챌린지 좋아요가 테이블내에 존재하고 현재 좋아요 상태이면
         boolean isLikeBefore = userChallengeLikeOptional.isPresent() && userChallengeLikeOptional.get().getIsLike();
@@ -62,12 +63,14 @@ public class UserChallengeLikeService {
         log.info("여기는?");
         if(isLikeBefore) {
             // 좋아요 취소 -> redis에 저장된 유저 좋아요 수 감소
-            zSetOperations.incrementScore(key, user.getNickname(), -1);
+            zSetOperations.incrementScore(userLikeskey, user.getNickname(), -1); // 작성자 좋아요 수 감소
+            zSetOperations.incrementScore(challengeLikesKey, userChallenge.getFileName(), -1); // 게시글 좋아요 수 감소
             userChallenge.clickLike(-1);
         }
         else {
             // 좋아요 -> redis에 저장된 유저 좋아요 수 증가
-            zSetOperations.incrementScore(key, user.getNickname(), 1);
+            zSetOperations.incrementScore(userLikeskey, user.getNickname(), 1); // 작성자 좋아요 수 증가
+            zSetOperations.incrementScore(challengeLikesKey, userChallenge.getFileName(), 11); // 게시글 좋아요 수 증가
             userChallenge.clickLike(1);
         }
 
