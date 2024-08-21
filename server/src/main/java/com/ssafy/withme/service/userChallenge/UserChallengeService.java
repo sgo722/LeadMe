@@ -349,6 +349,7 @@ public class UserChallengeService {
         List<UserChallengeFeedResponse> userChallengeFeedResponse = findUserChallenge.stream()
                 .map(userChallenge -> {
                     try {
+                        log.info("페이징 조회 한번만");
                         User user = userChallenge.getUser();
                         byte[] video = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
                         return UserChallengeFeedResponse.ofResponse(userChallenge, user, loginUser, video);
