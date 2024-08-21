@@ -37,18 +37,17 @@ public class UserChallengeLikeService {
         UserChallenge userChallenge = userChallengeRepository.findById(userChallengeId).orElse(null);
 
         Optional<UserChallengeLike> userChallengeLikeOptional = userChallengeLikeRepository.findByUserIdAndUserChallengeId(user.getId(), userChallenge.getId());
-        // 해당 유저 챌린지 좋아요가 테이블내에 존재하고 현재 좋아요 상태이면
-        boolean isLikeBefore = userChallengeLikeOptional.isPresent() && userChallengeLikeOptional.get().getIsLike();
 
         log.info("여기까지옴?");
         // 좋아요 상태 변경
+        // 좋아요 처음 누르는 것이므로 false -> true
         userChallengeLikeOptional.ifPresentOrElse(
                 UserChallengeLike::updateLike,
                 () -> {
                     UserChallengeLike newUserChallengeLike = UserChallengeLike.builder()
                             .user(user)
                             .userChallenge(userChallenge)
-                            .isLike(false)
+                            .isLike(true)
                             .build();
                     userChallengeLikeRepository.save(newUserChallengeLike);
                 }
@@ -56,6 +55,9 @@ public class UserChallengeLikeService {
 
         ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
         String key = "user_likes";
+
+        // 해당 유저 챌린지 좋아요가 테이블내에 존재하고 현재 좋아요 상태이면
+        boolean isLikeBefore = userChallengeLikeOptional.isPresent() && userChallengeLikeOptional.get().getIsLike();
 
         log.info("여기는?");
         if(isLikeBefore) {
