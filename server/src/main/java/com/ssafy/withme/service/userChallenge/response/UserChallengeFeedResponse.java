@@ -54,16 +54,17 @@ public class UserChallengeFeedResponse {
                 .likes(userChallenge.getLikes())
                 .video(video)
                 .isLiked(
-                        !userChallenge.getUserChallengeLikeList().stream()
+                        userChallenge.getUserChallengeLikeList().stream()
                                 .filter(c -> {
                                     log.info("Checking like for user ID : {}", c.getUser().getId());
                                     return c.getUser().getId() == loginUser.getId();
                                 })
-                                .filter(c -> {
+                                .map(c -> {
                                     log.info("isLike : {}", c.getIsLike());
                                     return c.getIsLike();
                                 })
-                                .toList().isEmpty()
+                                .findFirst()
+                                .orElse(false)
                 )
                 .build();
     }
