@@ -2,27 +2,28 @@ package com.ssafy.withme.service.userChallenge.response;
 
 import com.ssafy.withme.domain.user.User;
 import com.ssafy.withme.domain.userchallenge.UserChallenge;
+import com.ssafy.withme.domain.userchallengeLike.UserChallengeLike;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 public class UserChallengeFeedResponse {
 
-    private Long userId;
+    private final Long userId;
 
-    private String nickname;
+    private final String nickname;
 
-    private String profileImg;
+    private final String profileImg;
 
-    private String title;
+    private final String title;
 
-    private Long userChallengeId;
+    private final Long userChallengeId;
 
-    private int likes;
+    private final int likes;
 
-    private byte[] video;
+    private final byte[] video;
 
-    private Boolean isLiked;
+    private final Boolean isLiked;
 
 
     @Builder
@@ -37,7 +38,7 @@ public class UserChallengeFeedResponse {
         this.isLiked = isLiked;
     }
 
-    public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, User user, byte[] video){
+    public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, User user, User loginUser, byte[] video){
         return UserChallengeFeedResponse.builder()
                 .nickname(user.getNickname())
                 .profileImg(user.getProfileImg())
@@ -47,9 +48,10 @@ public class UserChallengeFeedResponse {
                 .likes(userChallenge.getLikes())
                 .video(video)
                 .isLiked(
-                        userChallenge.getUserChallengeLikeList().stream()
-                                .filter(c -> c.getUser().getId() == user.getId())
-                                .toList().size() == 1
+                        !userChallenge.getUserChallengeLikeList().stream()
+                                .filter(c -> c.getUser().getId() == loginUser.getId())
+                                .filter(c -> c.getIsLike())
+                                .toList().isEmpty()
                 )
                 .build();
     }

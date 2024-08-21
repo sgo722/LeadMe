@@ -343,7 +343,7 @@ public class UserChallengeService {
      * @return
      */
 
-    public UserChallengeFeedResponses findUserChallengeByPageable(Pageable pageable) {
+    public UserChallengeFeedResponses findUserChallengeByPageable(Pageable pageable, User loginUser) {
         //유저 영상 중 access = "public" 인 영상들을 페이징 조회한다.
         Page<UserChallenge> findUserChallenge = userChallengeRepository.findByAccessOrderByCreatedDateDesc("public", pageable);
         List<UserChallengeFeedResponse> userChallengeFeedResponse = findUserChallenge.stream()
@@ -351,7 +351,7 @@ public class UserChallengeService {
                     try {
                         User user = userChallenge.getUser();
                         byte[] video = Files.readAllBytes(Paths.get(userChallenge.getVideoPath()));
-                        return UserChallengeFeedResponse.ofResponse(userChallenge, user, video);
+                        return UserChallengeFeedResponse.ofResponse(userChallenge, user, loginUser, video);
                     } catch (Exception e) {
                         // 예외 처리 로직을 여기에 추가
                         e.printStackTrace();
