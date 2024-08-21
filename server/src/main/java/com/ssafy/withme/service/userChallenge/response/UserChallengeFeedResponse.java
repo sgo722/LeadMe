@@ -5,8 +5,10 @@ import com.ssafy.withme.domain.userchallenge.UserChallenge;
 import com.ssafy.withme.domain.userchallengeLike.UserChallengeLike;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
+@Slf4j
 public class UserChallengeFeedResponse {
 
     private final Long userId;
@@ -39,6 +41,10 @@ public class UserChallengeFeedResponse {
     }
 
     public static UserChallengeFeedResponse ofResponse(UserChallenge userChallenge, User user, User loginUser, byte[] video){
+
+        log.info("loginUser Id : {}", loginUser.getId());
+        log.info("UserChallengeLikeList size : {}", userChallenge.getUserChallengeLikeList().size());
+
         return UserChallengeFeedResponse.builder()
                 .nickname(user.getNickname())
                 .profileImg(user.getProfileImg())
@@ -49,8 +55,14 @@ public class UserChallengeFeedResponse {
                 .video(video)
                 .isLiked(
                         !userChallenge.getUserChallengeLikeList().stream()
-                                .filter(c -> c.getUser().getId() == loginUser.getId())
-                                .filter(c -> c.getIsLike())
+                                .filter(c -> {
+                                    log.info("Checking like for user ID : {}", c.getUser().getId());
+                                    return c.getUser().getId() == loginUser.getId();
+                                })
+                                .filter(c -> {
+                                    log.info("isLike : {}", c.getIsLike());
+                                    return c.getIsLike();
+                                })
                                 .toList().isEmpty()
                 )
                 .build();
