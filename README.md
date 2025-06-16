@@ -1,7 +1,13 @@
 # SSAFY 11기 공통프로젝트 : LeadMe
-![LEADME_LOGO](/uploads/d373b866f74d442994a9ec7aa594f358/LEADME-최종_1920px___2_.png)
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center">
+  <img src="./readmeImages/3d.png" width="400"/>
+  <img src="./readmeImages/main.png" width="400"/>
+</div>
 
-
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center">
+  <img src="./readmeImages/challenge.png" width="400"/>
+  <img src="./readmeImages/battle.png" width="400"/>
+</div>
 <br/>
 
 ## 🖥️ 프로젝트 소개
@@ -18,34 +24,25 @@
 <br/>
 
 ## 📹 프로젝트 시연 영상
-
-<br/>
-
-## 🧑‍🤝‍🧑 멤버 구성 및 역할
-
-|FE/BE|이름|역할|
-|---|---|-------|
-|FE|윤하연|자신이 개발한 내용 기입!|
-|FE|임준희|자신이 개발한 내용 기입!|
-|BE|남보우|자신이 개발한 내용 기입!|
-|BE|박준엽|자신이 개발한 내용 기입!|
-|BE|박진우|자신이 개발한 내용 기입!|
-|BE|양준영|자신이 개발한 내용 기입!|
-
+https://youtu.be/Szto2ESb9Ss
 <br/>
 
 ## ⚙️ 개발 환경
 
 FE
 ---
+1. 노드 버전 : v20.17.0
+2. React 버전 : 18.3.1
+3. TypeScript 버전 : 5.2.2
+4. 패키지 매니저 : npm 10.9.0
 
 
 BE
 ---
-1. 자바 버전 : 
-2. Springboot 버전 : 
-3. 빌드 & 빌드 도구 :
-4. Git branch 전략 :  
+1. 자바 버전 : OpenJDK 17
+2. Springboot 버전 : 3.3.1
+3. 빌드 & 빌드 도구 : Gradle, Jenkins
+  
 
 
 
@@ -62,11 +59,13 @@ FE
 
 **Library**
 <br/>
+
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![Threejs](https://img.shields.io/badge/threejs-black?style=for-the-badge&logo=three.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 <br/>
 ![React Query](https://img.shields.io/badge/-React%20Query-FF4154?style=for-the-badge&logo=react%20query&logoColor=white)
+
 
 BE
 ---
@@ -151,14 +150,13 @@ Comunication
 
 ## 🏗 아키텍처
 
-![아키텍처](/uploads/38760df4e89520a10bf307ea44ae7686/image__4_.png)
+![아키텍처](./readmeImages/architecture.png)
 
 
 <br/>
 
 ## 📐 ERD
 
-![ERD](/uploads/d353ae5e0f69e5de0ea6e4e4127d2081/image.png)
-
+![ERD](./readmeImages/erd.png)
 
 
